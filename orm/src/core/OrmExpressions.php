@@ -25,7 +25,7 @@ class OrmExpressions {
 			// manyToOne = '/ManyToOne\(.+\)/i',
 			// manyToMany = '/ManyToMany\(.+\)/i',
 
-			joinColumn = '/@JoinColumn\(.+\)/i',
+			joinColumn = '/JoinColumn\(.+\)/i',
 			joinColumns = '/@JoinColumns\(\{(.+)\}\)/i',
 			joinTable = '/@JoinTable\(.+\)/i',
 

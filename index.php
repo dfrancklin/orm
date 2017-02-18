@@ -13,6 +13,8 @@ spl_autoload_register(function ($class) {
 
 use App\Models\GreeningU\Usuario;
 
+use App\Models\RFID\Aluno;
+
 use App\Models\Store\Client;
 use App\Models\Store\Order;
 use App\Models\Store\Product;
@@ -29,11 +31,20 @@ Orm::addConnection('GreeningU');
 
 $query = Orm::query('GreeningU');
 $rs = $query->from(Usuario::class)->all();
+echo '<br>';
 
+$query = Orm::query('RFID');
+$rs = $query->from(Aluno::class)->all();
 echo '<br>';
 
 $query = Orm::query();
-$query->from(Client::class)->joins([Order::class, ItemOrder::class, Product::class])->all();
+$query->from(Client::class)->joins([Order::class])->all();
+echo '<br>';
+
+$query = Orm::query();
+$query->from(Order::class)->joins([Client::class])->all();
+
+// $query->from(Client::class)->joins([Order::class, ItemOrder::class, Product::class])->all();
 //var_dump($query);
 
 // $client = Orm::getShadow(Client::class);

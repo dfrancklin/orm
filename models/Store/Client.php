@@ -30,7 +30,7 @@ class Client {
 	public $address;
 
 	/**
-	 * @ORM/HasMany(class=App\Model\Order)
+	 * @ORM/HasMany(class=App\Models\Store\Order)
 	 */
 	public $orders;
 

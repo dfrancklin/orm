@@ -70,9 +70,14 @@ class Annotation {
 			$reference = $this->resolver->get('className', $has);
 
 			if (!$reference) {
-				throw new Exception('É obrigatório informar a classe de referência', 1);
+				throw new \Exception('É obrigatório informar a classe de referência', 1);
+			}
+
+			if (!class_exists($reference)) {
+				throw new \Exception("A classe \"$reference\" não existe", 1);
 			}
 		}
+		
 
 		$join->setReference($reference);
 		$join->setProperty($property->getName());

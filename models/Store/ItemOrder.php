@@ -3,9 +3,11 @@ namespace App\Models\Store;
 
 /**
  * @ORM/Entity
- * @ORM/Table(name=items_order)
+ * @ORM/Table(name=item_order)
  */
 class ItemOrder {
+
+	private $id;
 
 	private $order;
 

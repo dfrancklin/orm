@@ -7,13 +7,22 @@ namespace App\Models\Store;
  */
 class Order {
 
+	/**
+	 * @ORM/Id
+	 * @ORM/Generated
+	 * @ORM/Column(type=int)
+	 */
 	private $id;
 
 	/**
-	 * @ORM/BelongsTo(class=App\Model\Client)
+	 * @ORM/BelongsTo(class=App\Models\Store\Client)
+	 * @ORM/JoinColumn(name=client_id)
 	 */
 	private $client;
 
+	/**
+	 * @ORM/HasMany(class=App\Models\Store\ItemOrder)
+	 */
 	private $items;
 
 	public function getId() {

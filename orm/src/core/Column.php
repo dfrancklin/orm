@@ -27,7 +27,7 @@ class Column {
 		$this->shadow = $shadow;
 	}
 
-	public function getId() {
+	public function isId() {
 		return $this->id;
 	}
 
