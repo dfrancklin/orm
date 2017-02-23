@@ -7,6 +7,8 @@ class Join {
 
 	private $reference;
 
+	private $name;
+
 	private $property;
 
 	private $type;
@@ -34,7 +36,15 @@ class Join {
 	public function setReference($reference) {
 		$this->reference = $reference;
 	}
-
+	
+	public function getName() {
+		return $this->name;
+	}
+	
+	public function setName($name) {
+		$this->name = $name;
+	}
+	
 	public function getProperty() {
 		return $this->property;
 	}

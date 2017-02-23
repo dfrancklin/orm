@@ -76,10 +76,20 @@ class Annotation {
 			if (!class_exists($reference)) {
 				throw new \Exception("A classe \"$reference\" não existe", 1);
 			}
-		}
-		
 
-		$join->setReference($reference);
+			$join->setReference($reference);
+		}
+		echo '<pre>';
+		
+		if ($column = $this->resolver->get('joinColumn', $prop)) {
+			$name = $this->resolver->get('name', $column);
+			$join->setName($name ? $name : $property->getName());
+		} else {
+			$join->setName($property->getName());
+		}
+
+		echo '</pre>';
+
 		$join->setProperty($property->getName());
 		$join->setType($type);
 

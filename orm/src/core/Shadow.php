@@ -49,8 +49,12 @@ class Shadow {
 		array_push($this->hasMany, $join);
 	}
 
-	public function getHasMany() {
-		return $this->hasMany;
+	public function getHasMany($class = null) {
+		if ($class) {
+			return $this->findByClass('hasMany', $class);
+		} else {
+			return $this->hasMany;
+		}
 	}
 
 	public function addHasOne(Join $join) {
@@ -58,8 +62,12 @@ class Shadow {
 		array_push($this->hasOne, $join);
 	}
 
-	public function getHasOne() {
-		return $this->hasOne;
+	public function getHasOne($class = null) {
+		if ($class) {
+			return $this->findByClass('hasOne', $class);
+		} else {
+			return $this->hasOne;
+		}
 	}
 
 	public function addBelongsTo(Join $join) {
@@ -67,8 +75,12 @@ class Shadow {
 		array_push($this->belongsTo, $join);
 	}
 
-	public function getBelongsTo() {
-		return $this->belongsTo;
+	public function getBelongsTo($class = null) {
+		if ($class) {
+			return $this->findByClass('belongsTo', $class);
+		} else {
+			return $this->belongsTo;
+		}
 	}
 
 	public function getId() {
@@ -85,6 +97,14 @@ class Shadow {
 		}
 
 		return $id[0];
+	}
+
+	private function findByClass($property, $class) {
+		foreach ($this->$property as $prop) {
+			if ($prop->getReference() === $class) {
+				return $prop;
+			}
+		}
 	}
 
 }

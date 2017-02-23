@@ -16,7 +16,6 @@ class Order {
 
 	/**
 	 * @ORM/BelongsTo(class=App\Models\Store\Client)
-	 * @ORM/JoinColumn(name=client_id)
 	 */
 	private $client;
 

@@ -11,6 +11,12 @@ spl_autoload_register(function ($class) {
 	}
 });
 
+function vd($v) {
+	echo '<pre>';
+	var_dump($v);
+	echo '</pre>';
+}
+
 use App\Models\GreeningU\Usuario;
 
 use App\Models\RFID\Aluno;
