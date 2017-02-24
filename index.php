@@ -20,6 +20,9 @@ function vd($v) {
 use App\Models\GreeningU\Usuario;
 
 use App\Models\RFID\Aluno;
+use App\Models\RFID\Ambiente;
+use App\Models\RFID\Log;
+use App\Models\RFID\Responsavel;
 
 use App\Models\Store\Client;
 use App\Models\Store\Order;
@@ -35,16 +38,27 @@ Orm::setConnection('default');
 Orm::addConnection('RFID');
 Orm::addConnection('GreeningU');
 
-$query = Orm::query('GreeningU');
-$rs = $query->from(Usuario::class)->all();
-echo '<br>';
-
 $query = Orm::query('RFID');
 $rs = $query->from(Aluno::class)->all();
 echo '<br>';
 
+$query = Orm::query('RFID');
+$rs = $query->from(Log::class)->joins([Aluno::class, Ambiente::class])->all();
+echo '<br><br>';
+
+
+$query = Orm::query('GreeningU');
+$rs = $query->from(Usuario::class)->all();
+echo '<br><br>';
+
+
+//OK 
 $query = Orm::query();
-$query->from(Client::class)->joins([Order::class])->all();
+$query->from(Client::class)->all();
+echo '<br>';
+
+$query = Orm::query();
+$query->from(Client::class)->joins([Order::class, ItemOrder::class, Product::class])->all();
 echo '<br>';
 
 $query = Orm::query();

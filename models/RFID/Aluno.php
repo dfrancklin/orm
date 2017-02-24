@@ -24,7 +24,7 @@ class Aluno {
 	private $tag;
 
 	/**
-	 * @ORM/ManyToMany(class=Responsavel, mappedBy=alunos)
+	 * @ORM/ManyToMany(class=App\Models\RFID\Responsavel, mappedBy=alunos)
 	 */
 	private $responsaveis;
 

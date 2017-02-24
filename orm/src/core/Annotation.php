@@ -79,7 +79,6 @@ class Annotation {
 
 			$join->setReference($reference);
 		}
-		echo '<pre>';
 		
 		if ($column = $this->resolver->get('joinColumn', $prop)) {
 			$name = $this->resolver->get('name', $column);
@@ -87,8 +86,6 @@ class Annotation {
 		} else {
 			$join->setName($property->getName());
 		}
-
-		echo '</pre>';
 
 		$join->setProperty($property->getName());
 		$join->setType($type);

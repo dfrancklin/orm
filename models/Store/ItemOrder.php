@@ -7,10 +7,21 @@ namespace App\Models\Store;
  */
 class ItemOrder {
 
+	/**
+	 * @ORM/Id
+	 * @ORM/Generated
+	 * @ORM/Column(type=int)
+	 */
 	private $id;
 
+	/**
+	 * @ORM/BelongsTo(class=App\Models\Store\Order)
+	 */
 	private $order;
 
+	/**
+	 * @ORM/HasOne(class=App\Models\Store\Product)
+	 */
 	private $product;
 
 	private $quantity;

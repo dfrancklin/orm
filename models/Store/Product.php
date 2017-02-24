@@ -7,6 +7,11 @@ namespace App\Models\Store;
  */
 class Product {
 
+	/**
+	 * @ORM/Id
+	 * @ORM/Generated
+	 * @ORM/Column(type=int)
+	 */
 	private $id;
 
 	private $description;

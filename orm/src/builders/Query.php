@@ -94,7 +94,24 @@ class Query extends Orm {
 	}
 
 	private function resolveJoinHasOne($join, $shadow) {
-		vd('hasOne');
+		$sql = ' INNER JOIN ';
+		$sql .= $shadow->getTableName();
+		$sql .= ' ON ';
+		$sql .= $join->getShadow()->getTableName() . '.';
+		
+		$belongsTo = $shadow->getBelongsTo($join->getShadow()->getClass());
+		
+		if (!is_array($belongsTo) && $belongsTo) {
+			$sql .= $belongsTo->getName() . ' = ';
+		} else {
+			$sql .= $shadow->getTableName() . '_';
+			$sql .= $shadow->getId()->getName() . ' = ';
+		}
+
+		$sql .= $shadow->getTableName() . '.';
+		$sql .= $shadow->getId()->getName();
+
+		return $sql;
 	}
 	
 	private function resolveJoinHasMany($join, $shadow) {
