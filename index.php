@@ -57,6 +57,9 @@ $rs = $query
 		->all();
 
 $query = Orm::query('GreeningU');
+$rs = $query->from(Comunidade::class)->all();
+
+$query = Orm::query('GreeningU');
 $rs = $query->from(Comunidade::class)->joins([Post::class, Voto::class])->all();
 
 $query = Orm::query('GreeningU');
