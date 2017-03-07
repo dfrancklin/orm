@@ -11,6 +11,8 @@ class Query extends Orm {
 
 	private $query;
 
+	private $distinct;
+
 	private $from;
 
 	private $joins;
@@ -32,6 +34,14 @@ class Query extends Orm {
 		$this->usedTables = [];
 	}
 
+	public function distinct(bool $distinct) {
+		vd($distinct);
+		
+		$this->distinct = $distinct;
+
+		return $this;
+	}
+
 	public function from($from) {
 		$this->from = self::getShadow($from);
 
@@ -43,8 +53,14 @@ class Query extends Orm {
 	public function joins($joins) {
 		$this->joins = [];
 
-		foreach($joins as $join)
-			$this->joins[$join] = self::getShadow($join);
+		foreach($joins as $join) {
+			if (is_array($join)) {
+				$this->joins[$join[0]][0] = self::getShadow($join[0]);
+				$this->joins[$join[0]][1] = $join[1];
+			} else {
+				$this->joins[$join] = self::getShadow($join);
+			}
+		}
 
 		return $this;
 	}
@@ -62,7 +78,13 @@ class Query extends Orm {
 	}
 
 	private function generateQuery() {
-		$this->query = 'SELECT ' . $this->from->getTableName() . '.* FROM ' . $this->from->getTableName();
+		$this->query = 'SELECT ';
+		
+		if ($this->distinct) {
+			$this->query .= 'DISTINCT ';
+		}
+		
+		$this->query .= $this->from->getTableName() . '.* FROM ' . $this->from->getTableName();
 
 		if (count($this->joins)) {
 			$this->query .= $this->generateJoins($this->from);

@@ -50,7 +50,11 @@ Orm::addConnection('GreeningU');
 
 echo 'GreeningU';
 $query = Orm::query('GreeningU');
-$rs = $query->from(Comunidade::class)->joins([Post::class, Voto::class, Usuario::class])->all();
+$rs = $query
+		->distinct(true)
+		->from(Comunidade::class)
+		->joins([Post::class, Voto::class, Usuario::class])
+		->all();
 
 $query = Orm::query('GreeningU');
 $rs = $query->from(Comunidade::class)->joins([Post::class, Voto::class])->all();
