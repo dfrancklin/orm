@@ -1,6 +1,6 @@
-<meta http-equiv="refresh" content="3">
 <?php
 // echo phpinfo(); die();
+header("refresh:2");
 spl_autoload_register(function ($class) {
 	if (substr($class, 0, 3) !== 'App') return;
 
