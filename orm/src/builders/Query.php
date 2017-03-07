@@ -35,8 +35,6 @@ class Query extends Orm {
 	}
 
 	public function distinct(bool $distinct) {
-		vd($distinct);
-		
 		$this->distinct = $distinct;
 
 		return $this;
