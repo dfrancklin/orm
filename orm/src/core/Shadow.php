@@ -9,17 +9,20 @@ class Shadow {
 
 	private $columns;
 
+	private $hasOne;
+
 	private $hasMany;
 
-	private $hasOne;
+	private $manyToMany;
 
 	private $belongsTo;
 
 	public function __construct($class) {
 		$this->class = $class;
 		$this->columns = [];
-		$this->hasMany = [];
 		$this->hasOne = [];
+		$this->hasMany = [];
+		$this->manyToMany = [];
 		$this->belongsTo = [];
 	}
 
@@ -44,29 +47,42 @@ class Shadow {
 		return $this->columns;
 	}
 
-	public function addHasMany(Join $join) {
-		$join->setShadow($this);
-		array_push($this->hasMany, $join);
-	}
-
-	public function getHasMany($class = null) {
-		if ($class) {
-			return $this->findByClass('hasMany', $class);
-		} else {
-			return $this->hasMany;
-		}
-	}
-
 	public function addHasOne(Join $join) {
 		$join->setShadow($this);
 		array_push($this->hasOne, $join);
 	}
 
-	public function getHasOne($class = null) {
-		if ($class) {
-			return $this->findByClass('hasOne', $class);
+	public function getHasOne($property = null, $value = null) {
+		if ($property && $value) {
+			return $this->findByClass('hasOne', $property, $value);
 		} else {
 			return $this->hasOne;
+		}
+	}
+
+	public function addHasMany(Join $join) {
+		$join->setShadow($this);
+		array_push($this->hasMany, $join);
+	}
+
+	public function getHasMany($property = null, $value = null) {
+		if ($property && $value) {
+			return $this->findByClass('hasMany', $property, $value);
+		} else {
+			return $this->hasMany;
+		}
+	}
+
+	public function addManyToMany(Join $join) {
+		$join->setShadow($this);
+		array_push($this->manyToMany, $join);
+	}
+
+	public function getManyToMany($property = null, $value = null) {
+		if ($property && $value) {
+			return $this->findByClass('manyToMany', $property, $value);
+		} else {
+			return $this->manyToMany;
 		}
 	}
 
@@ -75,9 +91,9 @@ class Shadow {
 		array_push($this->belongsTo, $join);
 	}
 
-	public function getBelongsTo($class = null) {
-		if ($class) {
-			return $this->findByClass('belongsTo', $class);
+	public function getBelongsTo($property = null, $value = null) {
+		if ($property && $value) {
+			return $this->findByClass('belongsTo', $property, $value);
 		} else {
 			return $this->belongsTo;
 		}
@@ -99,10 +115,12 @@ class Shadow {
 		return $id[0];
 	}
 
-	private function findByClass($property, $class) {
-		foreach ($this->$property as $prop) {
-			if ($prop->getReference() === $class) {
-				return $prop;
+	private function findByClass($where, $property, $value) {
+		$method = 'get' . ucfirst($property);
+
+		foreach ($this->$where as $column) {
+			if ($column->$method() === $value) {
+				return $column;
 			}
 		}
 	}

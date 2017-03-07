@@ -55,6 +55,8 @@ class Annotation {
 			$this->resolveJoin($property, 'hasOne');
 		} elseif ($this->resolver->get('hasMany', $prop)) {
 			$this->resolveJoin($property, 'hasMany');
+		} elseif ($this->resolver->get('manyToMany', $prop)) {
+			$this->resolveJoin($property, 'manyToMany');
 		} elseif ($this->resolver->get('belongsTo', $prop)) {
 			$this->resolveJoin($property, 'belongsTo');
 		} else {
@@ -80,16 +82,41 @@ class Annotation {
 			$join->setReference($reference);
 		}
 		
-		if ($column = $this->resolver->get('joinColumn', $prop)) {
-			$name = $this->resolver->get('name', $column);
-			$join->setName($name ? $name : $property->getName());
-		} else {
-			$join->setName($property->getName());
-		}
-
 		$join->setProperty($property->getName());
 		$join->setType($type);
 
+		if ($type === 'manyToMany') {
+			if ($mappedBy = $this->resolver->get('mappedBy', $has)) {
+				$join->setMappedBy($mappedBy);
+			} else {
+				$table = new JoinTable();
+				
+				if ($joinTable = $this->resolver->get('joinTable', $prop)) {
+					$table->setTableName($this->resolver->get('tableName', $joinTable));
+					
+					if ($joinColumn = $this->resolver->get('join', $joinTable)) {
+						$table->setJoinColumnName($this->resolver->get('name', $joinColumn));
+					}
+
+					if ($inverseJoinColumn = $this->resolver->get('inverse', $joinTable)) {
+						$table->setInverseJoinColumnName($this->resolver->get('name', $inverseJoinColumn));
+					}
+				}
+
+				$join->setJoinTable($table);
+			}
+		} else {
+			if ($column = $this->resolver->get('joinColumn', $prop)) {
+				$name = $this->resolver->get('name', $column);
+				$join->setName($name);
+			}
+
+			if (!$join->getName()) {
+				$id = $this->shadow->getId()->getName();
+				$join->setName($property->getName() . '_' . $id);
+			}
+		}
+		
 		$method = 'add' . ucfirst($type);
 		$this->shadow->$method($join);
 	}

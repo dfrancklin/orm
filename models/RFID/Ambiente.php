@@ -10,7 +10,7 @@ class Ambiente {
 	/**
 	 * @ORM/Id
 	 * @ORM/Generated
-	 * @ORM/Column(type=integer)
+	 * @ORM/Column(type=int)
 	 */
 	private $id;
 

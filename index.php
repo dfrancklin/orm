@@ -1,5 +1,6 @@
 <meta http-equiv="refresh" content="3">
 <?php
+// echo phpinfo(); die();
 spl_autoload_register(function ($class) {
 	if (substr($class, 0, 3) !== 'App') return;
 
@@ -17,7 +18,16 @@ function vd($v) {
 	echo '</pre>';
 }
 
+function pr($v) {
+	echo '<pre>';
+	print_r($v);
+	echo '</pre>';
+}
+
 use App\Models\GreeningU\Usuario;
+use App\Models\GreeningU\Voto;
+use App\Models\GreeningU\Post;
+use App\Models\GreeningU\Comunidade;
 
 use App\Models\RFID\Aluno;
 use App\Models\RFID\Ambiente;
@@ -38,43 +48,55 @@ Orm::setConnection('default');
 Orm::addConnection('RFID');
 Orm::addConnection('GreeningU');
 
-$query = Orm::query('RFID');
-$rs = $query->from(Aluno::class)->all();
-echo '<br>';
+echo 'GreeningU';
+$query = Orm::query('GreeningU');
+$rs = $query->from(Comunidade::class)->joins([Post::class, Voto::class, Usuario::class])->all();
 
-$query = Orm::query('RFID');
-$rs = $query->from(Log::class)->joins([Aluno::class, Ambiente::class])->all();
-echo '<br><br>';
+$query = Orm::query('GreeningU');
+$rs = $query->from(Comunidade::class)->joins([Post::class, Voto::class])->all();
 
+$query = Orm::query('GreeningU');
+$rs = $query->from(Comunidade::class)->joins([Post::class])->all();
+
+$query = Orm::query('GreeningU');
+$rs = $query->from(Comunidade::class)->all();
+
+$query = Orm::query('GreeningU');
+$rs = $query->from(Post::class)->joins([Voto::class, Usuario::class])->all();
+
+$query = Orm::query('GreeningU');
+$rs = $query->from(Post::class)->joins([Voto::class])->all();
+
+$query = Orm::query('GreeningU');
+$rs = $query->from(Post::class)->joins([Usuario::class])->all();
+
+$query = Orm::query('GreeningU');
+$rs = $query->from(Usuario::class)->joins([Voto::class])->all();
 
 $query = Orm::query('GreeningU');
 $rs = $query->from(Usuario::class)->all();
 echo '<br><br>';
 
+echo 'RFID';
+$query = Orm::query('RFID');
+$rs = $query->from(Responsavel::class)->all();
 
-//OK 
+$query = Orm::query('RFID');
+$rs = $query->from(Aluno::class)->all();
+
+$query = Orm::query('RFID');
+$rs = $query->from(Log::class)->joins([Responsavel::class, Ambiente::class, Aluno::class])->all();
+
+$query = Orm::query('RFID');
+$rs = $query->from(Aluno::class)->joins([Responsavel::class])->all();
+echo '<br><br>';
+
+echo 'Store';
 $query = Orm::query();
 $query->from(Client::class)->all();
-echo '<br>';
 
 $query = Orm::query();
 $query->from(Client::class)->joins([Order::class, ItemOrder::class, Product::class])->all();
-echo '<br>';
 
 $query = Orm::query();
 $query->from(Order::class)->joins([Client::class])->all();
-
-// $query->from(Client::class)->joins([Order::class, ItemOrder::class, Product::class])->all();
-//var_dump($query);
-
-// $client = Orm::getShadow(Client::class);
-// var_dump($client);
-
-// $order = Orm::getShadow(Order::class);
-// var_dump($order);
-
-// $itemOrder = Orm::getShadow(ItemOrder::class);
-// var_dump($itemOrder);
-
-// $product = Orm::getShadow(Product::class);
-// var_dump($product);

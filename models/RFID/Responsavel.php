@@ -34,10 +34,8 @@ class Responsavel {
 	private $nivel;
 
 	/**
-	 * @ORM\ManyToMany(class=App\Models\RFID\Aluno)
-	 * @ORM\JoinTable(tableName=responsavel_aluno,
-	 *					joinColumns={@JoinColumn(name=resp_id, referencedColumnName=id_resp)},
-	 *					inverseJoinColumns={@JoinColumn(name=aluno_id, referencedColumnName=matricula)})
+	 * @ORM/ManyToMany(class=App\Models\RFID\Aluno)
+	 * @ORM/JoinTable(tableName=responsavel_aluno, join={name=resp_id}, inverse={name=aluno_id})
 	 */
 	private $alunos;
 

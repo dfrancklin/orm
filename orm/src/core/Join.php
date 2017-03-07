@@ -11,6 +11,10 @@ class Join {
 
 	private $property;
 
+	private $mappedBy;
+
+	private $joinTable;
+
 	private $type;
 
 	public function getShadow() {
@@ -51,6 +55,23 @@ class Join {
 
 	public function setProperty($property) {
 		$this->property = $property;
+	}
+
+	public function getMappedBy() {
+		return $this->mappedBy;
+	}
+	
+	public function setMappedBy($mappedBy) {
+		$this->mappedBy = $mappedBy;
+	}
+	
+
+	public function getJoinTable() {
+		return $this->joinTable;
+	}
+
+	public function setJoinTable($joinTable) {
+		$this->joinTable = $joinTable;
 	}
 
 	public function getType() {

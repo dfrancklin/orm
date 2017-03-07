@@ -35,7 +35,7 @@ class Query extends Orm {
 	public function from($from) {
 		$this->from = self::getShadow($from);
 
-		$this->usedTables[$this->from->getTableName()] = $from;
+		$this->usedTables[$this->from->getClass()] = $this->from;
 
 		return $this;
 	}
@@ -52,7 +52,7 @@ class Query extends Orm {
 	public function all() {
 		$this->generateQuery();
 
-		echo $this->query;
+		vd($this->query);
 
 		$query = $this->connection->query($this->query);
 
@@ -64,21 +64,24 @@ class Query extends Orm {
 	private function generateQuery() {
 		$this->query = 'SELECT ' . $this->from->getTableName() . '.* FROM ' . $this->from->getTableName();
 
-		if (count($this->joins))
+		if (count($this->joins)) {
 			$this->query .= $this->generateJoins($this->from);
+		}
 	}
 
 	private function generateJoins($shadow) {
 		if (!$shadow) return;
 		
-		$joins = array_merge($shadow->getHasOne(), $shadow->getHasMany(), $shadow->getBelongsTo());
+		$joins = array_merge($shadow->getHasOne(), $shadow->getHasMany(), $shadow->getManyToMany(), $shadow->getBelongsTo());
 		
 		foreach($joins as $join) {
 			$reference = $join->getReference();
 
-			if (array_key_exists($reference, $this->joins) && !array_key_exists($reference, $this->usedTables)) {
+			if (array_key_exists($reference, $this->joins)) {
 				$this->query .= $this->resolveJoin($join, $this->joins[$reference]);
 				$this->usedTables[$reference] = $this->joins[$reference];
+			} elseif ($this->from->getClass() === $reference) {
+				$this->query .= $this->resolveJoin($join,  $this->from);
 			}
 		}
 		
@@ -88,18 +91,23 @@ class Query extends Orm {
 	}
 
 	private function resolveJoin($join, $shadow) {
+		if (array_key_exists($join->getShadow()->getClass(), $this->usedTables) &&
+			array_key_exists($shadow->getClass(), $this->usedTables)) {
+			return;
+		}
+		
 		$method = 'resolveJoin' . ucfirst($join->getType());
 
 		return $this->$method($join, $shadow);
 	}
 
 	private function resolveJoinHasOne($join, $shadow) {
-		$sql = ' INNER JOIN ';
+		$sql = "\n\t" . ' INNER JOIN ';
 		$sql .= $shadow->getTableName();
 		$sql .= ' ON ';
 		$sql .= $join->getShadow()->getTableName() . '.';
 		
-		$belongsTo = $shadow->getBelongsTo($join->getShadow()->getClass());
+		$belongsTo = $shadow->getBelongsTo('reference', $join->getShadow()->getClass());
 		
 		if (!is_array($belongsTo) && $belongsTo) {
 			$sql .= $belongsTo->getName() . ' = ';
@@ -115,14 +123,19 @@ class Query extends Orm {
 	}
 	
 	private function resolveJoinHasMany($join, $shadow) {
-		$sql = ' INNER JOIN ';
+		if (array_key_exists($join->getShadow()->getClass(), $this->usedTables) &&
+			array_key_exists($shadow->getClass(), $this->usedTables)) {
+			return;
+		}
+
+		$sql = "\n\t" . ' INNER JOIN ';
 		$sql .= $shadow->getTableName();
 		$sql .= ' ON ';
 		$sql .= $join->getShadow()->getTableName() . '.';
 		$sql .= $join->getShadow()->getId()->getName() . ' = ';
 		$sql .= $shadow->getTableName() . '.';
 
-		$belongsTo = $shadow->getBelongsTo($join->getShadow()->getClass());
+		$belongsTo = $shadow->getBelongsTo('reference', $join->getShadow()->getClass());
 		
 		if (!is_array($belongsTo) && $belongsTo) {
 			$sql .= $belongsTo->getName();
@@ -134,9 +147,45 @@ class Query extends Orm {
 		return $sql;
 	}
 
+	public function resolveJoinManyToMany($join, $shadow) {
+		if ($join->getMappedBy()) {
+			$tempJoin = $shadow->getManyToMany('property', $join->getMappedBy());
+			$shadow = $join->getShadow();
+			$join = $tempJoin;
+		}
+
+		$sql = "\n\t" . ' INNER JOIN ';
+		
+		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
+			$sql .= $join->getJoinTable()->getTableName();
+			$sql .= ' ON ';
+			$sql .= $shadow->getTableName() . '.';
+			$sql .= $shadow->getId()->getName() . ' = ';
+			$sql .= $join->getJoinTable()->getTableName() . '.';
+			$sql .= $join->getJoinTable()->getInverseJoinColumnName();
+		}
+
+
+		$sql .= "\n\t" . ' INNER JOIN ';
+		$sql .= $join->getShadow()->getTableName();
+		$sql .= ' ON ';
+		$sql .= $join->getShadow()->getTableName() . '.';
+		$sql .= $join->getShadow()->getId()->getName() . ' = ';
+		$sql .= $join->getJoinTable()->getTableName() . '.';
+		$sql .= $join->getJoinTable()->getJoinColumnName();
+
+		return $sql;
+	}
+
 	private function resolveJoinBelongsTo($join, $shadow) {
-		$sql = ' INNER JOIN ';
-		$sql .= $shadow->getTableName();
+		$sql = "\n\t" . ' INNER JOIN ';
+
+		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
+			$sql .= $join->getShadow()->getTableName();	
+		} else {
+			$sql .= $shadow->getTableName();
+		}
+
 		$sql .= ' ON ';
 		$sql .= $shadow->getTableName() . '.';
 		$sql .= $shadow->getId()->getName() . ' = ';
