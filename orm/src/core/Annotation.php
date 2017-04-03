@@ -1,7 +1,9 @@
 <?php
 namespace ORM\Core;
 
-class Annotation {
+use ORM\Orm;
+
+class Annotation extends Orm {
 
 	private $class;
 
@@ -95,12 +97,21 @@ class Annotation {
 					$table->setTableName($this->resolver->get('tableName', $joinTable));
 					
 					if ($joinColumn = $this->resolver->get('join', $joinTable)) {
-						$table->setJoinColumnName($this->resolver->get('name', $joinColumn));
+						$name = $this->resolver->get('name', $joinColumn);
+					} else {
+						$name = $this->shadow->getTableName() . '_' . $this->shadow->getId()->getName();
 					}
+					
+					$table->setJoinColumnName($name ? $name : 'id');
 
 					if ($inverseJoinColumn = $this->resolver->get('inverse', $joinTable)) {
-						$table->setInverseJoinColumnName($this->resolver->get('name', $inverseJoinColumn));
-					}
+						$name = $this->resolver->get('name', $inverseJoinColumn);
+					} else {
+						$shadow = self::getShadow($join->getReference());
+						$name = $shadow->getTableName() . '_' . $shadow->getId()->getName();
+					} 
+
+					$table->setInverseJoinColumnName($name ? $name : 'id');
 				}
 
 				$join->setJoinTable($table);
@@ -117,8 +128,7 @@ class Annotation {
 			}
 		}
 		
-		$method = 'add' . ucfirst($type);
-		$this->shadow->$method($join);
+		$this->shadow->addJoin($join);
 	}
 
 

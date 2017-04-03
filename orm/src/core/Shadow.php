@@ -9,21 +9,12 @@ class Shadow {
 
 	private $columns;
 
-	private $hasOne;
-
-	private $hasMany;
-
-	private $manyToMany;
-
-	private $belongsTo;
+	private $joins;
 
 	public function __construct($class) {
 		$this->class = $class;
 		$this->columns = [];
-		$this->hasOne = [];
-		$this->hasMany = [];
-		$this->manyToMany = [];
-		$this->belongsTo = [];
+		$this->joins = [];
 	}
 
 	public function getClass() {
@@ -47,82 +38,46 @@ class Shadow {
 		return $this->columns;
 	}
 
-	public function addHasOne(Join $join) {
+	public function addJoin(Join $join) {
 		$join->setShadow($this);
-		array_push($this->hasOne, $join);
+		array_push($this->joins, $join);
 	}
 
-	public function getHasOne($property = null, $value = null) {
+	public function getJoins($property = null, $value = null) {
 		if ($property && $value) {
-			return $this->findByClass('hasOne', $property, $value);
+			return $this->findByProperty('joins', $property, $value);
 		} else {
-			return $this->hasOne;
-		}
-	}
-
-	public function addHasMany(Join $join) {
-		$join->setShadow($this);
-		array_push($this->hasMany, $join);
-	}
-
-	public function getHasMany($property = null, $value = null) {
-		if ($property && $value) {
-			return $this->findByClass('hasMany', $property, $value);
-		} else {
-			return $this->hasMany;
-		}
-	}
-
-	public function addManyToMany(Join $join) {
-		$join->setShadow($this);
-		array_push($this->manyToMany, $join);
-	}
-
-	public function getManyToMany($property = null, $value = null) {
-		if ($property && $value) {
-			return $this->findByClass('manyToMany', $property, $value);
-		} else {
-			return $this->manyToMany;
-		}
-	}
-
-	public function addBelongsTo(Join $join) {
-		$join->setShadow($this);
-		array_push($this->belongsTo, $join);
-	}
-
-	public function getBelongsTo($property = null, $value = null) {
-		if ($property && $value) {
-			return $this->findByClass('belongsTo', $property, $value);
-		} else {
-			return $this->belongsTo;
+			return $this->joins;
 		}
 	}
 
 	public function getId() {
-		$id = [];
+		$ids = [];
 		
 		foreach($this->columns as $column) {
 			if ($column->isId()) {
-				$id[] = $column;
+				array_push($ids, $column);
 			}
 		}
 
-		if (!count($id)) {
+		if (!count($ids)) {
 			throw new \Exception("A classe \"{$this->class}\" precisa ter pelo menos uma chave primária", 1);
 		}
 
-		return $id[0];
+		return $ids[0];
 	}
 
-	private function findByClass($where, $property, $value) {
+	private function findByProperty($list, $property, $value) {
 		$method = 'get' . ucfirst($property);
+		$columns = [];
 
-		foreach ($this->$where as $column) {
+		foreach ($this->$list as $column) {
 			if ($column->$method() === $value) {
-				return $column;
+				array_push($columns, $column);
 			}
 		}
+
+		return $columns;
 	}
 
 }

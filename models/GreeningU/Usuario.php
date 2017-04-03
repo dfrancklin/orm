@@ -49,14 +49,30 @@ class Usuario {
     private $pontuacao;
 
     /**
-     * @ORM/HasMany(class=App\Models\GreeningU\Voto)
+     * @ORM/HasMany(class=App\Models\GreeningU\Comunidade)
      */
-    private $votos;
+    private $comunidades;
+
+    /**
+     * @ORM/ManyToMany(class=App\Models\GreeningU\Comunidade)
+     * @ORM/JoinTable(tableName=usuario_comunidade)
+     */
+    private $assinaturas;
 
     /**
      * @ORM/HasMany(class=App\Models\GreeningU\Post)
      */
     private $posts;
+
+    /**
+     * @ORM/HasMany(class=App\Models\GreeningU\Comentario)
+     */
+    private $comentarios;
+
+    /**
+     * @ORM/HasMany(class=App\Models\GreeningU\Voto)
+     */
+    private $votos;
 
     public function getId() {
         return $this->id;
@@ -122,20 +138,44 @@ class Usuario {
         $this->pontuacao = $pontuacao;
     }
 
+    public function getComunidades() {
+        return $this->comunidades;
+    }
+    
+    public function setComunidades($comunidades) {
+        $this->comunidades = $comunidades;
+    }
+
+    public function getAssinaturas() {
+        return $this->assinaturas;
+    }
+    
+    public function setAssinaturas($assinaturas) {
+        $this->assinaturas = $assinaturas;
+    }
+    
+    public function getPosts() {
+        return $this->posts;
+    }
+    
+    public function setPosts($posts) {
+        $this->posts = $posts;
+    }
+    
+    public function getComentarios() {
+        return $this->comentarios;
+    }
+    
+    public function setComentarios($comentarios) {
+        $this->comentarios = $comentarios;
+    }
+    
     public function getVotos() {
         return $this->votos;
     }
     
     public function setVotos($votos) {
         $this->votos = $votos;
-    }
-
-    public function getPost() {
-        return $this->post;
-    }
-    
-    public function setPost($post) {
-        $this->post = $post;
     }
 
 }
