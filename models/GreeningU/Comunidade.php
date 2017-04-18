@@ -25,9 +25,13 @@ class Comunidade {
 
     /**
      * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
-     * @ORM/JoinColumn(name=usuario_lider)
      */
-    private $usuario;
+    private $lider;
+
+    /**
+     * @ORM/ManyToMany(class=App\Models\GreeningU\Usuario, mappedBy=assinaturas)
+     */
+    private $usuarios;
 
     /**
      * @ORM/HasMany(class=App\Models\GreeningU\Post)
@@ -58,12 +62,20 @@ class Comunidade {
         $this->data = $data;
     }
     
-    public function getUsuario() {
-        return $this->usuario;
+    public function getLider() {
+        return $this->lider;
     }
     
-    public function setUsuario($usuario) {
-        $this->usuario = $usuario;
+    public function setLider($lider) {
+        $this->lider = $lider;
+    }
+    
+    public function getUsuarios() {
+        return $this->usuarios;
+    }
+    
+    public function setUsuarios($usuarios) {
+        $this->usuarios = $usuarios;
     }
     
     public function getPosts() {
