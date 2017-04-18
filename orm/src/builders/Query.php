@@ -84,6 +84,7 @@ class Query extends Orm {
 
 		if (count($this->joins)) {
 			$this->preProcessJoins($this->from, $this->joins);
+			vd(array_keys($this->relations));
 			$this->query .= $this->generateJoins(null, $this->relations);
 		}
 	}
@@ -153,7 +154,8 @@ class Query extends Orm {
 
 	private function resolveJoin(Shadow $shadow, Join $join) {
 		if (array_key_exists($join->getShadow()->getClass(), $this->usedTables) &&
-				array_key_exists($shadow->getClass(), $this->usedTables)) {
+				array_key_exists($shadow->getClass(), $this->usedTables) &&
+				$join->getType() !== 'manyToMany') {
 			return;
 		}
 
