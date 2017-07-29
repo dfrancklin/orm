@@ -1,33 +1,50 @@
 <?php
 namespace ORM;
 
+use ORM\Core\Shadow;
 use ORM\Core\Annotation;
 use ORM\Builders\Query;
 
 class Orm {
 
-	private static $shadows = [];
+	private static $instance;
 
-	private static $connections = [];
+	private $shadows;
 
-	private static $defaultConnection;
+	private $connections;
 
-	public static function setConnection($name = 'default') {
-		$config = self::getConfiguration($name);
-		self::$connections[$name] = self::createConnection($config);
-		self::$defaultConnection = $name;
+	private $defaultConnection;
+
+	protected function __construct() {
+		$this->shadows = [];
+		$this->connections = [];
+		$this->defaultConnection = 'default';
 	}
 
-	public static function addConnection($name) {
-		$config = self::getConfiguration($name);
-		self::$connections[$name] = self::createConnection($config);
+	public static function getInstance() : Orm {
+		if (is_null(self::$instance)) {
+			self::$instance = new Orm();
+		}
+
+		return self::$instance;
 	}
 
-	public static function setDefaultConnection($name) {
-		self::$defaultConnection = $name;
+	public function setConnection(String $name = 'default') {
+		$config = $this->getConfiguration($name);
+		$this->connections[$name] = $this->createConnection($config);
+		$this->defaultConnection = $name;
 	}
 
-	private static function createConnection($config) {
+	public function addConnection(String $name) {
+		$config = $this->getConfiguration($name);
+		$this->connections[$name] = $this->createConnection($config);
+	}
+
+	public function setDefaultConnection(String $name) {
+		$this->defaultConnection = $name;
+	}
+
+	private function createConnection(Array $config) : \PDO {
 		foreach(['db', 'host', 'schema', 'user', 'pass'] as $field) {
 			if (!isset($config[$field])) {
 				throw new \Exception("O campo $config[$field] não foi definido na definição de conexão", 1);
@@ -39,7 +56,7 @@ class Orm {
 		return new \PDO($dsn, $config['user'], $config['pass']);
 	}
 
-	private static function getConfiguration($name) {
+	private function getConfiguration(String $name) : Array {
 		$configFile = __DIR__ . '/../connection.config.php';
 
 		if (!file_exists($configFile)) {
@@ -59,41 +76,41 @@ class Orm {
 		return $connections[$name];
 	}
 
-	protected static function getConnection($name = '') {
-		if (!count(self::$connections)) {
-			self::setConnection($name);
-			return self::getConnection($name);
+	protected function getConnection(String $name = '') : \PDO {
+		if (!count($this->connections)) {
+			$this->setConnection($name);
+			return $this->getConnection($name);
 		}
 
-		if ($name && isset(self::$connections[$name])) {
-			return self::$connections[$name];
+		if ($name && isset($this->connections[$name])) {
+			return $this->connections[$name];
 		} elseif ($name) {
 			throw new \Exception("Não foram encontradas conexões definidas para \"$name\"", 1);
 		}
 
-		if (self::$defaultConnection && isset(self::$connections[self::$defaultConnection])) {
-			return self::$connections[self::$defaultConnection];
+		if ($this->defaultConnection && isset($this->connections[$this->defaultConnection])) {
+			return $this->connections[$this->defaultConnection];
 		}
 
 		throw new \Exception('Não foram encontradas conexões definidas', 1);
 	}
 
-	protected static function getShadow($class) {
+	public function getShadow(String $class) : Shadow {
 		if (!$class) {
 			throw new \Exception('Necessário informar o nome da classe', 1);
 		}
 
-		if (!array_key_exists($class, self::$shadows)) {
-			$annotation = new Annotation($class);
+		if (!array_key_exists($class, $this->shadows)) {
+			$annotation = new Annotation($this, $class);
 			$shadow = $annotation->mapper();
-			self::$shadows[$class] = $shadow;
+			$this->shadows[$class] = $shadow;
 		}
 
-		return self::$shadows[$class];
+		return $this->shadows[$class];
 	}
 
-	public static function query($connection = '') {
-		return new Query(self::getConnection($connection));
+	public function createQuery(String $connection = '') : Query {
+		return new Query($this, $this->getConnection($connection));
 	}
 
 }

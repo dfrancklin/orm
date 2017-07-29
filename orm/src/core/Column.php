@@ -5,6 +5,8 @@ class Column {
 
 	private $shadow;
 
+	private $property;
+
 	private $id;
 
 	private $generated;
@@ -25,6 +27,14 @@ class Column {
 
 	public function setShadow($shadow) {
 		$this->shadow = $shadow;
+	}
+
+	public function getProperty() {
+		return $this->property;
+	}
+	
+	public function setProperty($property) {
+		$this->property = $property;
 	}
 
 	public function isId() {
