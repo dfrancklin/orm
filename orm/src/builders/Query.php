@@ -6,35 +6,40 @@ use ORM\Orm;
 use ORM\Core\Shadow;
 use ORM\Core\Join;
 
-class Query extends Orm {
+class Query {
 
 	use Where;
 
+	private $orm;
+
 	private $connection;
+
 	private $query;
+
 	private $distinct;
-	private $from;
+
+	private $target;
+
 	private $joins;
+
 	private $relations;
+
+  private $usedTables;
+
 	private $usedTables;
 
-	public function __construct($connection, $from = '', $joins = []) {
+	public function __construct(Orm $orm, \PDO $connection) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida', 1);
 		}
 
+		$this->orm = $orm;
 		$this->connection = $connection;
-
-		if ($from) {
-			$this->from($from);
-		}
-
-		if (count($joins)) {
-			$this->joins($joins);
-		}
-
+		$this->joins = [];
 		$this->relations = [];
 		$this->usedTables = [];
+		$this->conditions = [];
+		$this->values = [];
 	}
 
 	public function distinct(bool $distinct) {
@@ -43,8 +48,18 @@ class Query extends Orm {
 		return $this;
 	}
 
-	public function from(String $from) {
-		$this->from = self::getShadow($from);
+	public function from(String $from, String $alias) {
+		$shadow = $this->orm->getShadow($from);
+		$shadow->setAlias($alias);
+		$this->target = $shadow;
+
+		return $this;
+	}
+
+	public function join(String $join, String $alias) {
+		$shadow = $this->orm->getShadow($join);
+		$shadow->setAlias($alias);
+		$this->joins[$join] = $shadow;
 
 		return $this;
 	}
@@ -53,7 +68,11 @@ class Query extends Orm {
 		$this->joins = [];
 
 		foreach ($joins as $join) {
-			$this->joins[$join] = self::getShadow($join);
+			if (!is_array($join)) {
+				throw new \InvalidArgumentException('');
+			}
+
+			$this->join($join[0], $join[1]);
 		}
 
 		return $this;
@@ -62,7 +81,8 @@ class Query extends Orm {
 	public function all() {
 		$this->generateQuery();
 
-		pre($this->query);
+		pr($this->query);
+		vd($this->values);
 
 		$query = $this->connection->query($this->query);
 
@@ -78,15 +98,17 @@ class Query extends Orm {
 			$this->query .= 'DISTINCT ';
 		}
 
-		$this->query .= $this->from->getTableName() . '.* FROM ' . $this->from->getTableName();
+		$this->query .= $this->target->getAlias() . '.* FROM ' . $this->target->getTableName();
+		$this->query .= ' ' . $this->target->getAlias();
 
-		$this->usedTables[$this->from->getClass()] = $this->from;
+		$this->usedTables[$this->target->getClass()] = $this->target;
 
 		if (count($this->joins)) {
-			$this->preProcessJoins($this->from, $this->joins);
-			vd(array_keys($this->relations));
+			$this->preProcessJoins($this->target, $this->joins);
 			$this->query .= $this->generateJoins(null, $this->relations);
 		}
+
+		$this->query .= $this->resolveWhere();
 	}
 
 	private function preProcessJoins($shadow, $shadows) {
@@ -101,7 +123,7 @@ class Query extends Orm {
 
 			if (!array_key_exists($name, $this->relations)) {
 				$reference = $join->getReference();
-				$inverseShadow = self::getShadow($reference);
+				$inverseShadow = $this->orm->getShadow($reference);
 				$inverseJoins = $inverseShadow->getJoins('reference', $shadow->getClass());
 
 				if (count($inverseJoins)) {
@@ -170,9 +192,9 @@ class Query extends Orm {
 		$sql = "\n\t" . ' INNER JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= $join->getShadow()->getTableName();
+			$sql .= $join->getShadow()->getTableName() . ' ' . $join->getShadow()->getAlias();
 		} else {
-			$sql .= $shadow->getTableName();
+			$sql .= $shadow->getTableName() . ' ' . $shadow->getAlias();
 		}
 
 		$sql .= "\n\t\t" . ' ON ';
@@ -197,15 +219,15 @@ class Query extends Orm {
 		$sql = "\n\t" . ' INNER JOIN ';
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= $shadow->getTableName();
+			$sql .= $shadow->getTableName() . ' ' . $shadow->getAlias();
 		} else {
 			$sql .= $join->getShadow()->getTableName();
 		}
 
 		$sql .= "\n\t\t" . ' ON ';
-		$sql .= $join->getShadow()->getTableName() . '.';
+		$sql .= $join->getShadow()->getAlias() . '.';
 		$sql .= $join->getShadow()->getId()->getName() . ' = ';
-		$sql .= $shadow->getTableName() . '.';
+		$sql .= $shadow->getAlias() . '.';
 
 		$belongsTo = $shadow->getJoins('reference', $join->getShadow()->getClass());
 
@@ -230,12 +252,14 @@ class Query extends Orm {
 
 		if (!array_key_exists($join->getShadow()->getClass(), $this->usedTables)) {
 			$sql .= $join->getShadow()->getTableName();
+			$sql .= ' ' . $join->getShadow()->getAlias();
 		} else {
 			$sql .= $join->getJoinTable()->getTableName();
 		}
 
 		$sql .= "\n\t\t" . ' ON ';
-		$sql .= $join->getShadow()->getTableName() . '.' . $join->getShadow()->getId()->getName() . ' = ';
+		$sql .= $join->getShadow()->getAlias() . '.';
+		$sql .= $join->getShadow()->getId()->getName() . ' = ';
 		$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getJoinColumnName();
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {

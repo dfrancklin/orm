@@ -3,7 +3,9 @@ namespace ORM\Core;
 
 use ORM\Orm;
 
-class Annotation extends Orm {
+class Annotation {
+
+	private $orm;
 
 	private $class;
 
@@ -13,14 +15,15 @@ class Annotation extends Orm {
 
 	private $reflect;
 
-	public function __construct(String $class) {
+	public function __construct(Orm $orm, String $class) {
+		$this->orm = $orm;
 		$this->class = $class;
 		$this->shadow = new Shadow($class);
 		$this->resolver = new ExpressionResolver();
 		$this->reflect = new \ReflectionClass($class);
 	}
 
-	public function mapper() {
+	public function mapper() : Shadow {
 		$class = $this->resolveClass();
 
 		foreach($this->reflect->getProperties() as $property) {
@@ -107,7 +110,7 @@ class Annotation extends Orm {
 					if ($inverseJoinColumn = $this->resolver->get('inverse', $joinTable)) {
 						$name = $this->resolver->get('name', $inverseJoinColumn);
 					} else {
-						$shadow = self::getShadow($join->getReference());
+						$shadow = $this->orm->getShadow($join->getReference());
 						$name = $shadow->getTableName() . '_' . $shadow->getId()->getName();
 					} 
 
@@ -154,6 +157,7 @@ class Annotation extends Orm {
 			$shadowColumn->setUnique($unique === 'true' || is_null($unique) && !$id);
 		}
 
+		$shadowColumn->setProperty($property->getName());
 		$this->shadow->addColumn($shadowColumn);
 	}
 

@@ -4,11 +4,13 @@ namespace ORM\Core;
 class Shadow {
 
 	private $class;
-
+	
 	private $tableName;
-
+	
+	private $alias;
+	
 	private $columns;
-
+	
 	private $joins;
 
 	public function __construct($class) {
@@ -27,6 +29,14 @@ class Shadow {
 
 	public function setTableName($tableName) {
 		$this->tableName = $tableName;
+	}
+
+	function getAlias() {
+		return $this->alias;
+	}
+
+	function setAlias($alias) {
+		$this->alias = $alias;
 	}
 
 	public function addColumn(Column $column) {
@@ -53,8 +63,8 @@ class Shadow {
 
 	public function getId() {
 		$ids = [];
-		
-		foreach($this->columns as $column) {
+
+		foreach ($this->columns as $column) {
 			if ($column->isId()) {
 				array_push($ids, $column);
 			}

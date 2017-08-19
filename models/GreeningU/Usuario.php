@@ -77,63 +77,63 @@ class Usuario {
     public function getId() {
         return $this->id;
     }
-    
+
     public function setId($id) {
         $this->id = $id;
     }
-    
+
     public function getNome() {
         return $this->nome;
     }
-    
+
     public function setNome($nome) {
         $this->nome = $nome;
     }
-    
+
     public function getSobrenome() {
         return $this->sobrenome;
     }
-    
+
     public function setSobrenome($sobrenome) {
         $this->sobrenome = $sobrenome;
     }
-    
+
     public function getEmail() {
         return $this->email;
     }
-    
+
     public function setEmail($email) {
         $this->email = $email;
     }
-    
+
     public function getLogin() {
         return $this->login;
     }
-    
+
     public function setLogin($login) {
         $this->login = $login;
     }
-    
+
     public function getSenha() {
         return $this->senha;
     }
-    
+
     public function setSenha($senha) {
         $this->senha = $senha;
     }
-    
+
     public function getSexo() {
         return $this->sexo;
     }
-    
+
     public function setSexo($sexo) {
         $this->sexo = $sexo;
     }
-    
+
     public function getPontuacao() {
         return $this->pontuacao;
     }
-    
+
     public function setPontuacao($pontuacao) {
         $this->pontuacao = $pontuacao;
     }
@@ -141,7 +141,7 @@ class Usuario {
     public function getComunidades() {
         return $this->comunidades;
     }
-    
+
     public function setComunidades($comunidades) {
         $this->comunidades = $comunidades;
     }
@@ -149,31 +149,31 @@ class Usuario {
     public function getAssinaturas() {
         return $this->assinaturas;
     }
-    
+
     public function setAssinaturas($assinaturas) {
         $this->assinaturas = $assinaturas;
     }
-    
+
     public function getPosts() {
         return $this->posts;
     }
-    
+
     public function setPosts($posts) {
         $this->posts = $posts;
     }
-    
+
     public function getComentarios() {
         return $this->comentarios;
     }
-    
+
     public function setComentarios($comentarios) {
         $this->comentarios = $comentarios;
     }
-    
+
     public function getVotos() {
         return $this->votos;
     }
-    
+
     public function setVotos($votos) {
         $this->votos = $votos;
     }
