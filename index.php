@@ -1,4 +1,5 @@
 <?php
+
 // echo phpinfo(); die();
 header("refresh:2");
 
@@ -32,6 +33,7 @@ function pr($v) {
 }
 
 use ORM\Orm;
+use ORM\Builders\Query;
 
 use App\Models\GreeningU\Post;
 use App\Models\GreeningU\Voto;
@@ -71,6 +73,23 @@ $rs = $query
 		->where("v.data")->isNull()->and("v.data")->isNotNull()
 		->where("u.nome")->equals("Aline")->and('u.nome')->notEquals('Diego')
 		->where("u.nome")->like("Aline%")->and('u.nome')->notLike('Diego%')
+
+$query = Orm::query('GreeningU');
+$rs = $query
+		->from(Post::class)
+		->joins([
+			Voto::class,
+			Usuario::class,
+			Comentario::class,
+			Comunidade::class,
+		])
+		->all();
+
+$query = Orm::query('GreeningU');
+$rs = $query
+		->distinct(true)
+		->from(Comunidade::class)
+		->joins([Post::class, Voto::class, Usuario::class])
 		->all();
 
 // $query = $orm->createQuery('GreeningU');

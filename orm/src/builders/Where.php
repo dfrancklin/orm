@@ -1,4 +1,5 @@
 <?php
+
 namespace ORM\Builders;
 
 use ORM\Core\Shadow;
@@ -188,4 +189,5 @@ trait Where {
 
 		return null;
 	}
+
 }

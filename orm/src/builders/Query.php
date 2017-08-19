@@ -1,4 +1,5 @@
 <?php
+
 namespace ORM\Builders;
 
 use ORM\Orm;
@@ -22,6 +23,8 @@ class Query {
 	private $joins;
 
 	private $relations;
+
+  private $usedTables;
 
 	private $usedTables;
 
