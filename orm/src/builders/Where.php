@@ -115,7 +115,7 @@ trait Where {
 			$this->values[$alias . '_2'] = $values[1];
 			array_push($args, ':' . $alias . '_1', ':' . $alias . '_2');
 		} elseif (count($values)) {
-			$this->values[$alias] = $values;
+			$this->values[$alias] = $values[0];
 			array_push($args, ':' . $alias);
 		}
 

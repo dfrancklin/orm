@@ -79,6 +79,7 @@ class Query {
 		$this->generateQuery();
 
 		pr($this->query);
+		vd($this->values);
 
 		$query = $this->connection->query($this->query);
 
