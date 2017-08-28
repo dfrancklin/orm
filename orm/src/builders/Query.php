@@ -8,7 +8,7 @@ use ORM\Core\Join;
 
 class Query {
 
-	use Where;
+	use Where, Having;
 
 	private $orm;
 
@@ -22,23 +22,25 @@ class Query {
 
 	private $joins;
 
-	private $relations;
+	private $joinsByAlias;
 
-  private $usedTables;
+	private $relations;
 
 	private $usedTables;
 
-	public function __construct(Orm $orm, \PDO $connection) {
+	public function __construct(\PDO $connection) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida', 1);
 		}
 
-		$this->orm = $orm;
+		$this->orm = Orm::getInstance();
 		$this->connection = $connection;
 		$this->joins = [];
+		$this->joinsByAlias = [];
 		$this->relations = [];
 		$this->usedTables = [];
-		$this->conditions = [];
+		$this->whereConditions = [];
+		$this->havingConditions = [];
 		$this->values = [];
 	}
 
@@ -51,15 +53,23 @@ class Query {
 	public function from(String $from, String $alias) {
 		$shadow = $this->orm->getShadow($from);
 		$shadow->setAlias($alias);
+
 		$this->target = $shadow;
+		$this->joinsByAlias[$alias] = $shadow;
 
 		return $this;
 	}
 
 	public function join(String $join, String $alias) {
+		if (array_key_exists($alias, $this->joinsByAlias)) {
+			throw new \Exception('A class with the alias "' . $alias . '" already exist');
+		}
+
 		$shadow = $this->orm->getShadow($join);
 		$shadow->setAlias($alias);
+
 		$this->joins[$join] = $shadow;
+		$this->joinsByAlias[$alias] = $shadow;
 
 		return $this;
 	}
@@ -69,7 +79,7 @@ class Query {
 
 		foreach ($joins as $join) {
 			if (!is_array($join)) {
-				throw new \InvalidArgumentException('');
+				throw new \InvalidArgumentException('The class name and the alias must be informed. Ex: [className, alias]');
 			}
 
 			$this->join($join[0], $join[1]);

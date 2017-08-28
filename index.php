@@ -1,7 +1,7 @@
 <?php
 
 // echo phpinfo(); die();
-header("refresh:2");
+header('refresh:2');
 
 // foreach(timezone_abbreviations_list() as $t): vd($t); endforeach; die();
 // timezone_identifiers_list;
@@ -58,7 +58,7 @@ $orm->setConnection('default');
 $orm->addConnection('RFID');
 $orm->addConnection('GreeningU');
 
-echo 'GreeningU';
+// echo 'GreeningU';
 $query = $orm->createQuery('GreeningU');
 $rs = $query
 		->distinct(true)
@@ -69,27 +69,20 @@ $rs = $query
 			[Comentario::class, 'ct'],
 			[Comunidade::class, 'cm'],
 		])
-		->where("v.data")->between(new DateTime(), new DateTime())
-		->where("v.data")->isNull()->and("v.data")->isNotNull()
-		->where("u.nome")->equals("Aline")->and('u.nome')->notEquals('Diego')
-		->where("u.nome")->like("Aline%")->and('u.nome')->notLike('Diego%')
-
-$query = Orm::query('GreeningU');
-$rs = $query
-		->from(Post::class)
-		->joins([
-			Voto::class,
-			Usuario::class,
-			Comentario::class,
-			Comunidade::class,
-		])
-		->all();
-
-$query = Orm::query('GreeningU');
-$rs = $query
-		->distinct(true)
-		->from(Comunidade::class)
-		->joins([Post::class, Voto::class, Usuario::class])
+		->where('v.data')->between(new DateTime(), new DateTime())
+			->and('v.data')->isNull()
+			->or('v.data')->isNotNull()
+			->and('u.nome')->equals('Aline')
+			->and('u.nome')->notEquals('Diego')
+			->and('u.nome')->like('_line%')
+			->and('u.nome')->endsWith('Diego')
+			->and('u.nome')->beginsWith('Aline')
+			->and('u.nome')->contains('Alexandrino')
+			->and('u.id')->in(1, 2, 3)
+			->and('p.data')->greaterThan(new DateTime())
+			->or('p.data')->lessThan(new DateTime())
+			->and('p.data')->greaterOrEqualsThan(new DateTime())
+			->or('p.data')->lessOrEqualsThan(new DateTime())
 		->all();
 
 // $query = $orm->createQuery('GreeningU');

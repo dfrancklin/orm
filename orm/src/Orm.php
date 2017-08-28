@@ -110,7 +110,7 @@ class Orm {
 	}
 
 	public function createQuery(String $connection = '') : Query {
-		return new Query($this, $this->getConnection($connection));
+		return new Query($this->getConnection($connection));
 	}
 
 }

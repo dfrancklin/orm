@@ -4,13 +4,13 @@ namespace ORM\Core;
 class Shadow {
 
 	private $class;
-	
+
 	private $tableName;
-	
+
 	private $alias;
-	
+
 	private $columns;
-	
+
 	private $joins;
 
 	public function __construct($class) {
@@ -75,6 +75,16 @@ class Shadow {
 		}
 
 		return $ids[0];
+	}
+
+	public function findColumn($property) {
+		foreach ($this->columns as $column) {
+			if ($column->getProperty() === $property) {
+				return $column;
+			}
+		}
+
+		return null;
 	}
 
 	private function findByProperty($list, $property, $value) {

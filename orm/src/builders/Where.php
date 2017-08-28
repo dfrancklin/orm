@@ -8,78 +8,48 @@ use ORM\Core\Driver;
 
 trait Where {
 
-	private $conditions;
+	use Operator;
+
+	private $whereConditions;
 
 	private $values;
 
-	public function ctr(String $property): Criteria {
-		return $this->where($property);
-	}
-
-	public function criteria(String $property): Criteria {
-		return $this->where($property);
-	}
-
 	public function where(String $property): Criteria {
+		$this->chain = 'where';
+
 		$criteria = new Criteria($this);
 
-		array_push($this->conditions, [$property, $criteria]);
+		array_push($this->whereConditions, [$property, $criteria]);
 
 		$this->and();
 
 		return $criteria;
 	}
 
-	public function or(String $property = null) {
-		return $this->logicOperator('or', $property);
-	}
-
-	public function and(String $property = null) {
-		return $this->logicOperator('and', $property);
-	}
-
-	private function logicOperator(String $operator, String $property = null) {
-		if (!count($this->conditions)) {
-			throw new \Exception('The "criteria()" function should be called at least once');
-		}
-
-		$last = count($this->conditions) - 1;
-
-		if ($last >= 0) {
-			$this->conditions[$last][2] = $operator;
-		}
-
-		if (!is_null($property)) {
-			return $this->where($property);
-		} else {
-			return $this;
-		}
-	}
-
 	private function resolveWhere() {
-		if ($this->conditions === null) {
+		if ($this->whereConditions === null) {
 			return;
 		}
 
 		$sql = '';
 
-		if (count($this->conditions)) {
+		if (count($this->whereConditions)) {
 			$sql .= "\n\t" . ' WHERE ';
 		}
 
-		foreach($this->conditions as $key => $condition) {
+		foreach($this->whereConditions as $key => $condition) {
 			if (($condition[2] === 'or' && $key === 0) ||
-					($condition[2] === 'or' && $key > 0 && $this->conditions[$key - 1][2] !== 'or')) {
+					($condition[2] === 'or' && $key > 0 && $this->whereConditions[$key - 1][2] !== 'or')) {
 				$sql .= '(';
 			}
 
 			$sql .= $this->resolveCondition(...$condition);
 
-			if ($condition[2] !== 'or' && $key > 0 && $this->conditions[$key - 1][2] === 'or') {
+			if ($condition[2] !== 'or' && $key > 0 && $this->whereConditions[$key - 1][2] === 'or') {
 				$sql .= ')';
 			}
 
-			if ($key < count($this->conditions) - 1) {
+			if ($key < count($this->whereConditions) - 1) {
 				$sql .= ' ' . $condition[2] . ' ';
 
 				if ($condition[2] !== 'or') {
@@ -139,7 +109,7 @@ trait Where {
 			throw new \Exception('Invalid alias "' . $alias . '"');
 		}
 
-		if (!($column = $this->findColumn($shadow, $property))) {
+		if (!($column = $shadow->findColumn($property))) {
 			throw new \Exception('Invalid property "' . $property . '"');
 		}
 
@@ -166,28 +136,11 @@ trait Where {
 	private function findShadow(String $alias) {
 		$shadow = null;
 
-		if (!$alias || $this->target->getAlias() === $alias) {
-			$shadow = $this->target;
-		} else {
-			foreach ($this->joins as $join) {
-				if ($join->getAlias() === $alias) {
-					$shadow = $join;
-					break;
-				}
-			}
+		if (!array_key_exists($alias, $this->joinsByAlias)) {
+			throw new \Exception('Invalid alias "' . $alias . '"');
 		}
 
-		return $shadow;
-	}
-
-	private function findColumn(Shadow $shadow, String $property) {
-		foreach ($shadow->getColumns() as  $column) {
-			if ($column->getProperty() === $property) {
-				return $column;
-			}
-		}
-
-		return null;
+		return $this->joinsByAlias[$alias];
 	}
 
 }
