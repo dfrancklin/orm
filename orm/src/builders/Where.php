@@ -8,14 +8,12 @@ use ORM\Core\Driver;
 
 trait Where {
 
-	use Operator;
-
 	private $whereConditions;
 
 	private $values;
 
 	public function where(String $property): Criteria {
-		$this->chain = 'where';
+		$this->chain = Operator::$WHERE;
 
 		$criteria = new Criteria($this);
 
@@ -39,13 +37,15 @@ trait Where {
 
 		foreach($this->whereConditions as $key => $condition) {
 			if (($condition[2] === 'or' && $key === 0) ||
-					($condition[2] === 'or' && $key > 0 && $this->whereConditions[$key - 1][2] !== 'or')) {
+					($condition[2] === 'or' && $key > 0 &&
+						$this->whereConditions[$key - 1][2] !== 'or')) {
 				$sql .= '(';
 			}
 
-			$sql .= $this->resolveCondition(...$condition);
+			$sql .= $this->resolveWhereCondition(...$condition);
 
-			if ($condition[2] !== 'or' && $key > 0 && $this->whereConditions[$key - 1][2] === 'or') {
+			if ($condition[2] !== 'or' && $key > 0 &&
+					$this->whereConditions[$key - 1][2] === 'or') {
 				$sql .= ')';
 			}
 
@@ -61,7 +61,7 @@ trait Where {
 		return $sql;
 	}
 
-	private function resolveCondition($property, $criteria) {
+	private function resolveWhereCondition($property, $criteria) {
 		$sql = '';
 
 		list($prop, $shadow, $column) = $this->processProperty($property);
@@ -81,7 +81,8 @@ trait Where {
 			$alias = $alias . $count;
 		}
 
-		if ($criteria->getAction() === Criteria::BETWEEN) {
+		if ($criteria->getAction() === Criteria::BETWEEN ||
+				$criteria->getAction() === Criteria::NOT_BETWEEN) {
 			$this->values[$alias . '_1'] = $values[0];
 			$this->values[$alias . '_2'] = $values[1];
 			array_push($args, ':' . $alias . '_1', ':' . $alias . '_2');

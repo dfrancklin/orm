@@ -44,7 +44,7 @@ class Annotation {
 		$name = $this->resolver->get('name', $table);
 
 		if (!$table || !$name) {
-			$c = explode('\\', $this->class);
+			$c = explode(DIRECTORY_SEPARATOR, $this->class);
 			$name = strtolower(end($c));
 		}
 
@@ -86,7 +86,7 @@ class Annotation {
 
 			$join->setReference($reference);
 		}
-		
+
 		$join->setProperty($property->getName());
 		$join->setType($type);
 
@@ -95,16 +95,16 @@ class Annotation {
 				$join->setMappedBy($mappedBy);
 			} else {
 				$table = new JoinTable();
-				
+
 				if ($joinTable = $this->resolver->get('joinTable', $prop)) {
 					$table->setTableName($this->resolver->get('tableName', $joinTable));
-					
+
 					if ($joinColumn = $this->resolver->get('join', $joinTable)) {
 						$name = $this->resolver->get('name', $joinColumn);
 					} else {
 						$name = $this->shadow->getTableName() . '_' . $this->shadow->getId()->getName();
 					}
-					
+
 					$table->setJoinColumnName($name ? $name : 'id');
 
 					if ($inverseJoinColumn = $this->resolver->get('inverse', $joinTable)) {
@@ -112,7 +112,7 @@ class Annotation {
 					} else {
 						$shadow = $this->orm->getShadow($join->getReference());
 						$name = $shadow->getTableName() . '_' . $shadow->getId()->getName();
-					} 
+					}
 
 					$table->setInverseJoinColumnName($name ? $name : 'id');
 				}
@@ -130,7 +130,7 @@ class Annotation {
 				$join->setName($property->getName() . '_' . $id);
 			}
 		}
-		
+
 		$this->shadow->addJoin($join);
 	}
 

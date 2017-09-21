@@ -8,27 +8,29 @@ header('refresh:2');
 // America/Sao_Paulo
 
 spl_autoload_register(function ($class) {
-	if (substr($class, 0, 3) !== 'App') {
+	$root = 'App';
+
+	if (substr($class, 0, strlen($root)) !== $root) {
 		return;
 	}
 
-	$class = str_replace('App\\', '', $class);
-	$class = __DIR__ . '\\' . $class . '.php';
+	$class = substr_replace($class, '', 0, strlen($root));
+	$class = __DIR__ . DIRECTORY_SEPARATOR . $class . '.php';
 
 	if (file_exists($class)) {
 		include $class;
 	}
 });
 
-function vd($v) {
+function vd(...$vs) {
 	echo '<pre style="white-space: pre-wrap; word-break: break-all;">';
-	var_dump($v);
+	foreach ($vs as $v) var_dump($v);
 	echo '</pre>';
 }
 
-function pr($v) {
+function pr(...$vs) {
 	echo '<pre style="white-space: pre-wrap; word-break: break-all;">';
-	print_r($v);
+	foreach ($vs as $v) print_r($v);
 	echo '</pre>';
 }
 
@@ -69,20 +71,47 @@ $rs = $query
 			[Comentario::class, 'ct'],
 			[Comunidade::class, 'cm'],
 		])
-		->where('v.data')->between(new DateTime(), new DateTime())
-			->and('v.data')->isNull()
+		->where('v.data')->bt(new DateTime(), new DateTime())
+			->or('v.data')->between(new DateTime(), new DateTime())
+			->and('v.data')->nbt(new DateTime(), new DateTime())
+			->or('v.data')->notBetween(new DateTime(), new DateTime())
+			->and('v.data')->isn()
+			->or('v.data')->isNull()
+			->and('v.data')->isnn()
 			->or('v.data')->isNotNull()
-			->and('u.nome')->equals('Aline')
-			->and('u.nome')->notEquals('Diego')
-			->and('u.nome')->like('_line%')
-			->and('u.nome')->endsWith('Diego')
-			->and('u.nome')->beginsWith('Aline')
-			->and('u.nome')->contains('Alexandrino')
+			->and('u.nome')->eq('Aline')
+			->or('u.nome')->equals('Aline')
+			->and('u.nome')->neq('Diego')
+			->or('u.nome')->notEquals('Diego')
 			->and('u.id')->in(1, 2, 3)
-			->and('p.data')->greaterThan(new DateTime())
+			->or('u.id')->notIn(4, 5, 6)
+
+			->and('p.data')->gt(new DateTime())
+			->or('p.data')->greaterThan(new DateTime())
+			->and('p.data')->lt(new DateTime())
 			->or('p.data')->lessThan(new DateTime())
-			->and('p.data')->greaterOrEqualsThan(new DateTime())
+			->and('p.data')->goet(new DateTime())
+			->or('p.data')->greaterOrEqualsThan(new DateTime())
+			->and('p.data')->loet(new DateTime())
 			->or('p.data')->lessOrEqualsThan(new DateTime())
+
+			->and('u.nome')->lk('_line%')
+			->or('u.nome')->like('_line%')
+			->and('u.nome')->ctn('Alexandrino')
+			->or('u.nome')->contains('Alexandrino')
+			->and('u.nome')->nctn('Alexandrino')
+			->or('u.nome')->notContains('Alexandrino')
+			->and('u.nome')->bwt('Aline')
+			->or('u.nome')->beginsWith('Aline')
+			->and('u.nome')->nbwt('Aline')
+			->or('u.nome')->notBeginsWith('Aline')
+			->and('u.nome')->ewt('Diego')
+			->or('u.nome')->endsWith('Diego')
+			->and('u.nome')->newt('Diego')
+			->or('u.nome')->notEndsWith('Diego')
+		->having()->avg('u.pontuacao')->greaterThan(100)
+			->or()->avg('u.pontuacao')->lessThan(200)
+			->or()->avg('u.pontuacao')->between(100, 200)
 		->all();
 
 // $query = $orm->createQuery('GreeningU');

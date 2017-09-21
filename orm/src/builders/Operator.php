@@ -6,6 +6,8 @@ trait Operator {
 
 	private $chain;
 
+	public static $WHERE = 'where', $HAVING = 'having';
+
 	public function or(String $property = null) {
 		return $this->operators('or', $property);
 	}
@@ -16,10 +18,17 @@ trait Operator {
 
 	private function operators(String $operator, String $property = null) {
 		switch ($this->chain) {
-			case 'where':  return $this->whereOperator($operator, $property);  break;
-			case 'having': return $this->havingOperator($operator, $property); break;
-			default:
-				throw new \Exception('Invalid chain "' + $this->chain + '"');
+			case self::$WHERE :
+				return $this->whereOperator($operator, $property);
+				break;
+			case self::$HAVING :
+				if (!is_null($property)) {
+					throw new \Exception('The method "' . $operator . '" expects no arguments and 1 was provided.');
+				}
+
+				return $this->havingOperator($operator);
+				break;
+			default: throw new \Exception('Invalid chain "' + $this->chain + '"');
 		}
 	}
 
@@ -41,7 +50,7 @@ trait Operator {
 		}
 	}
 
-	private function havingOperator(String $operator, String $property = null) {
+	private function havingOperator(String $operator) {
 		if (!count($this->havingConditions)) {
 			throw new \Exception('The "criteria()" method should be called at least once');
 		}
@@ -49,14 +58,14 @@ trait Operator {
 		$last = count($this->havingConditions) - 1;
 
 		if ($last >= 0) {
-			$this->havingConditions[$last][2] = $operator;
+			$this->havingConditions[$last][1] = $operator;
 		}
 
-		if (!is_null($property)) {
-			return $this->having($property);
-		} else {
-			return $this;
-		}
+		return $this->having();
+	}
+
+	public function getChain() {
+		return $this->chain;
 	}
 
 }

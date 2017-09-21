@@ -8,7 +8,7 @@ use ORM\Core\Join;
 
 class Query {
 
-	use Where, Having;
+	use Where, Having, Operator;
 
 	private $orm;
 
@@ -108,6 +108,7 @@ class Query {
 			$this->query .= 'DISTINCT ';
 		}
 
+		// resolve aggregations
 		$this->query .= $this->target->getAlias() . '.* FROM ' . $this->target->getTableName();
 		$this->query .= ' ' . $this->target->getAlias();
 
@@ -119,6 +120,11 @@ class Query {
 		}
 
 		$this->query .= $this->resolveWhere();
+		// group by
+		$this->query .= $this->resolveHaving();
+		// paginate if have a clause to do so
+		// order by
+		// paginate if doesn't have such clause (Oracle)
 	}
 
 	private function preProcessJoins($shadow, $shadows) {
