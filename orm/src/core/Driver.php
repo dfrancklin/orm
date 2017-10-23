@@ -5,6 +5,8 @@ class Driver {
 
 	public static
 		$SCAPE_CHAR,
+		$PAGE_TEMPLATE,
+		$TOP_TEMPLATE,
 		$TYPES = [],
 		$FORMATS = [
 			'date' => 'Y-m-d',

@@ -33,16 +33,28 @@ class Orm {
 		$config = $this->getConfiguration($name);
 		$this->connections[$name] = $this->createConnection($config);
 		$this->defaultConnection = $name;
+		$this->loadDriver($config['db'], $config['version']);
 	}
 
-	public function addConnection(String $name) {
-		$config = $this->getConfiguration($name);
-		$this->connections[$name] = $this->createConnection($config);
+	// public function addConnection(String $name) {
+	// 	$config = $this->getConfiguration($name);
+	// 	$this->connections[$name] = $this->createConnection($config);
+	// }
+
+	// public function setDefaultConnection(String $name) {
+	// 	$this->defaultConnection = $name;
+	// }
+
+	private function loadDriver($db, $version) {
+		$driver = __DIR__ . '/drivers/' . $db . '-' . $version . '.php';
+
+		if (!file_exists($driver)) {
+			throw new \Exception('The driver file for "' . $db . '" on version "' . $version . '" was not found!');
+		}
+
+		require_once $driver;
 	}
 
-	public function setDefaultConnection(String $name) {
-		$this->defaultConnection = $name;
-	}
 
 	private function createConnection(Array $config) : \PDO {
 		foreach(['db', 'host', 'schema', 'user', 'pass'] as $field) {

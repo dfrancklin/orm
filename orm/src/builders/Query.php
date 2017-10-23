@@ -3,6 +3,7 @@
 namespace ORM\Builders;
 
 use ORM\Orm;
+use ORM\Core\Driver;
 use ORM\Core\Shadow;
 use ORM\Core\Join;
 
@@ -36,6 +37,12 @@ class Query {
 	private $relations;
 
 	private $usedTables;
+
+	private $page;
+
+	private $quantity;
+
+	private $top;
 
 	public function __construct(\PDO $connection) {
 		if (!$connection) {
@@ -101,6 +108,19 @@ class Query {
 		return $this;
 	}
 
+	public function page($page, $quantity) {
+		$this->page = $page;
+		$this->quantity = $quantity;
+
+		return $this;
+	}
+
+	public function top($top) {
+		$this->top = $top;
+
+		return $this;
+	}
+
 	public function all() {
 		$this->generateQuery();
 
@@ -110,8 +130,10 @@ class Query {
 			$resultSet = $query->fetchAll(\PDO::FETCH_ASSOC);
 
 			if (!empty($this->columns)) {
-				return $query->fetchAll(\PDO::FETCH_ASSOC);
+				return $resultSet;
 			} else {
+				vd($resultSet);
+				die();
 				// map the result
 			}
 		}
@@ -128,7 +150,6 @@ class Query {
 		$aggregations = $this->resolveAggregations();
 
 		if (empty($this->columns)) {
-			vd($this->columns);
 			$this->query .= $this->target->getAlias() . '.*';
 		} else {
 			$this->query .= join(', ', $this->columns);
@@ -147,7 +168,14 @@ class Query {
 		$this->query .= $this->resolveGroupBy();
 		$this->query .= $this->resolveHaving();
 		$this->query .= $this->resolveOrderBy();
-		// paginate
+
+		if ($this->page && $this->quantity) {
+			$this->query = sprintf(Driver::$PAGE_TEMPLATE, $this->query, $this->page, $this->quantity);
+		}
+
+		if ($this->top) {
+			$this->query = sprintf(Driver::$TOP_TEMPLATE, $this->query, $this->page);
+		}
 	}
 
 	private function preProcessJoins($shadow, $shadows) {

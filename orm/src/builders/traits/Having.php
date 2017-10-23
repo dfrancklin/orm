@@ -22,17 +22,17 @@ trait Having {
 	}
 
 	private function resolveHaving() {
-		if ($this->havingConditions === null) {
+		if (empty($this->havingConditions)) {
 			return;
 		}
 
 		$sql = '';
 
-		$this->havingConditions[count($this->havingConditions) - 1][1] = 'and';
-
 		if (count($this->havingConditions)) {
 			$sql = "\n\t HAVING ";
 		}
+
+		$this->havingConditions[count($this->havingConditions) - 1][1] = 'and';
 
 		foreach($this->havingConditions as $key => $condition) {
 			if (($condition[1] === 'or' && $key === 0) ||
@@ -63,7 +63,6 @@ trait Having {
 
 	private function resolveHavingCondition($condition) {
 		$sql = '';
-		// $sql .= $this->resolveHavingCriteria($condition->getTemplate(), ...$condition->getCriteria());
 
 		list($property, $criteria) = $condition->getCriteria();
 		list($prop, $shadow, $column) = $this->processProperty($property);
