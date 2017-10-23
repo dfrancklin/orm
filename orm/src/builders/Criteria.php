@@ -4,6 +4,8 @@ namespace ORM\Builders;
 use ORM\Core\Shadow;
 use ORM\Core\Column;
 
+use ORM\Builders\Traits\Operator;
+
 class Criteria {
 
 	const

@@ -1,6 +1,6 @@
 <?php
 
-namespace ORM\Builders;
+namespace ORM\Builders\Traits;
 
 trait Operator {
 

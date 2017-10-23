@@ -1,11 +1,6 @@
 <?php
 
-// echo phpinfo(); die();
 header('refresh:2');
-
-// foreach(timezone_abbreviations_list() as $t): vd($t); endforeach; die();
-// timezone_identifiers_list;
-// America/Sao_Paulo
 
 spl_autoload_register(function ($class) {
 	$root = 'App';
@@ -15,7 +10,7 @@ spl_autoload_register(function ($class) {
 	}
 
 	$class = substr_replace($class, '', 0, strlen($root));
-	$class = __DIR__ . DIRECTORY_SEPARATOR . $class . '.php';
+	$class = __DIR__ . '/' . $class . '.php';
 
 	if (file_exists($class)) {
 		include $class;
@@ -43,16 +38,6 @@ use App\Models\GreeningU\Usuario;
 use App\Models\GreeningU\Comunidade;
 use App\Models\GreeningU\Comentario;
 
-use App\Models\RFID\Aluno;
-use App\Models\RFID\Ambiente;
-use App\Models\RFID\Log;
-use App\Models\RFID\Responsavel;
-
-use App\Models\Store\Client;
-use App\Models\Store\Order;
-use App\Models\Store\Product;
-use App\Models\Store\ItemOrder;
-
 include_once 'orm/load.php';
 
 $orm = Orm::getInstance();
@@ -60,21 +45,25 @@ $orm->setConnection('default');
 $orm->addConnection('RFID');
 $orm->addConnection('GreeningU');
 
-// echo 'GreeningU';
 $query = $orm->createQuery('GreeningU');
 $rs = $query
 		->distinct(true)
+			->count('v.id', 'quantity')
+			->avg('u.pontuacao')
+			->min('u.pontuacao')
+			->max('u.pontuacao')
 		->from(Usuario::class, 'u')
-		->joins([
-			[Voto::class, 'v'],
-			[Post::class, 'p'],
-			[Comentario::class, 'ct'],
-			[Comunidade::class, 'cm'],
-		])
+			->joins([
+				[Voto::class, 'v'],
+				[Post::class, 'p'],
+				[Comentario::class, 'ct'],
+				[Comunidade::class, 'cm'],
+			])
 		->where('v.data')->bt(new DateTime(), new DateTime())
 			->or('v.data')->between(new DateTime(), new DateTime())
 			->and('v.data')->nbt(new DateTime(), new DateTime())
 			->or('v.data')->notBetween(new DateTime(), new DateTime())
+
 			->and('v.data')->isn()
 			->or('v.data')->isNull()
 			->and('v.data')->isnn()
@@ -109,90 +98,17 @@ $rs = $query
 			->or('u.nome')->endsWith('Diego')
 			->and('u.nome')->newt('Diego')
 			->or('u.nome')->notEndsWith('Diego')
-		->having()->avg('u.pontuacao')->greaterThan(100)
-			->or()->avg('u.pontuacao')->lessThan(200)
-			->and()->avg('u.pontuacao')->between(100, 200)
+
+		->groupBy('p.data', 'u.id')
+
+		->having()->avg('u.pontuacao')->gt(100)
+			->or()->avg('u.pontuacao')->lt(200)
+			->and()->avg('u.pontuacao')->bt(100, 200)
 			->and()->count('u.pontuacao')->gt(100)
 			->and()->min('u.pontuacao')->gt(100)
 			->and()->max('u.pontuacao')->lt(200)
 			->and()->sum('u.pontuacao')->lt(300)
+
+		->orderBy('p.data', Query::$ASC)
+
 		->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query
-// 		->from(Usuario::class, 'u')
-// 		->join(Voto::class, 'v')
-// 		->join(Post::class, 'p')
-// 		->join(Comentario::class, 'ct')
-// 		->join(Comunidade::class, 'cm')
-// 		->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query
-// 		->from(Post::class, 'p')
-// 		->joins([
-// 			Voto::class,
-// 			Usuario::class,
-// 			Comentario::class,
-// 			Comunidade::class,
-// 		])
-// 		->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query
-// 		->distinct(true)
-// 		->from(Comunidade::class)
-// 		->joins([Post::class, Voto::class, Usuario::class])
-// 		->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Comunidade::class)->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Comunidade::class)->joins([Post::class, Voto::class])->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Comunidade::class)->joins([Post::class])->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Comunidade::class)->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Post::class)->joins([Voto::class, Usuario::class])->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Post::class)->joins([Voto::class])->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Post::class)->joins([Usuario::class])->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Usuario::class)->joins([Voto::class])->all();
-
-// $query = $orm->createQuery('GreeningU');
-// $rs = $query->from(Usuario::class)->all();
-// echo '<br><br>';
-
-// echo 'RFID';
-// $query = $orm->createQuery('RFID');
-// $rs = $query->from(Responsavel::class)->all();
-
-// $query = $orm->createQuery('RFID');
-// $rs = $query->from(Aluno::class)->all();
-
-// $query = $orm->createQuery('RFID');
-// $rs = $query->from(Log::class)->joins([Responsavel::class, Ambiente::class, Aluno::class])->all();
-
-// $query = $orm->createQuery('RFID');
-// $rs = $query->from(Aluno::class)->joins([Responsavel::class])->all();
-// echo '<br><br>';
-
-// echo 'Store';
-// $query = $orm->createQuery();
-// $query->from(Client::class)->all();
-
-// $query = $orm->createQuery();
-// $query->from(Client::class)->joins([Order::class, ItemOrder::class, Product::class])->all();
-
-// $query = $orm->createQuery();
-// $query->from(Order::class)->joins([Client::class])->all();

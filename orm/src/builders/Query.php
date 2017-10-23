@@ -6,15 +6,24 @@ use ORM\Orm;
 use ORM\Core\Shadow;
 use ORM\Core\Join;
 
+use ORM\Builders\Traits\Aggregate;
+use ORM\Builders\Traits\GroupBy;
+use ORM\Builders\Traits\Having;
+use ORM\Builders\Traits\Operator;
+use ORM\Builders\Traits\OrderBy;
+use ORM\Builders\Traits\Where;
+
 class Query {
 
-	use Where, Having, Operator;
+	use Aggregate, GroupBy, Having, Operator, OrderBy, Where;
 
 	private $orm;
 
 	private $connection;
 
 	private $query;
+
+	private $columns;
 
 	private $distinct;
 
@@ -35,13 +44,17 @@ class Query {
 
 		$this->orm = Orm::getInstance();
 		$this->connection = $connection;
+		$this->columns = [];
 		$this->joins = [];
 		$this->joinsByAlias = [];
 		$this->relations = [];
 		$this->usedTables = [];
+		$this->aggregations = [];
 		$this->whereConditions = [];
+		$this->groups = [];
 		$this->havingConditions = [];
 		$this->values = [];
+		$this->orders = [];
 	}
 
 	public function distinct(bool $distinct) {
@@ -91,13 +104,16 @@ class Query {
 	public function all() {
 		$this->generateQuery();
 
-		pr($this->query);
-		vd($this->values);
-
 		$query = $this->connection->query($this->query);
 
 		if ($query) {
-			return $query->fetchAll(\PDO::FETCH_ASSOC);
+			$resultSet = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+			if (!empty($this->columns)) {
+				return $query->fetchAll(\PDO::FETCH_ASSOC);
+			} else {
+				// map the result
+			}
 		}
 	}
 
@@ -108,9 +124,17 @@ class Query {
 			$this->query .= 'DISTINCT ';
 		}
 
-		// resolve aggregations
-		$this->query .= $this->target->getAlias() . '.* FROM ' . $this->target->getTableName();
-		$this->query .= ' ' . $this->target->getAlias();
+		$groupBy = $this->resolveGroupBy();
+		$aggregations = $this->resolveAggregations();
+
+		if (empty($this->columns)) {
+			vd($this->columns);
+			$this->query .= $this->target->getAlias() . '.*';
+		} else {
+			$this->query .= join(', ', $this->columns);
+		}
+
+		$this->query .= ' FROM ' . $this->target->getTableName() . ' ' . $this->target->getAlias();
 
 		$this->usedTables[$this->target->getClass()] = $this->target;
 
@@ -120,11 +144,10 @@ class Query {
 		}
 
 		$this->query .= $this->resolveWhere();
-		// group by
+		$this->query .= $this->resolveGroupBy();
 		$this->query .= $this->resolveHaving();
-		// paginate if have a clause to do so
-		// order by
-		// paginate if doesn't have such clause (Oracle)
+		$this->query .= $this->resolveOrderBy();
+		// paginate
 	}
 
 	private function preProcessJoins($shadow, $shadows) {

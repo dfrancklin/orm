@@ -1,6 +1,9 @@
 <?php
 
-namespace ORM\Builders;
+namespace ORM\Builders\Traits;
+
+use ORM\Builders\Aggregate;
+use ORM\Builders\Criteria;
 
 trait Having {
 

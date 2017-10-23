@@ -1,10 +1,13 @@
 <?php
 
-namespace ORM\Builders;
+namespace ORM\Builders\Traits;
 
 use ORM\Core\Shadow;
 use ORM\Core\Column;
 use ORM\Core\Driver;
+
+use ORM\Builders\Criteria;
+use ORM\Builders\Traits\Operator;
 
 trait Where {
 
@@ -98,7 +101,7 @@ trait Where {
 		return $sql;
 	}
 
-	public function processProperty(String $property) : Array {
+	private function processProperty(String $property) : Array {
 		$alias = null;
 
 		if ($index = strpos($property, '.')) {
@@ -119,7 +122,7 @@ trait Where {
 		return [$property, $shadow, $column];
 	}
 
-	public function processValues(Array $values, Column $column) : Array {
+	private function processValues(Array $values, Column $column) : Array {
 		$processedValues = [];
 
 		foreach ($values as $value) {
