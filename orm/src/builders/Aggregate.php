@@ -13,6 +13,8 @@ class Aggregate {
 	private static $templates = [
 		self::AVG => self::AVG . '(%s)',
 		self::SUM => self::SUM . '(%s)',
+		self::MIN => self::MIN . '(%s)',
+		self::MAX => self::MAX . '(%s)',
 		self::COUNT => self::COUNT . '(%s)',
 	];
 
@@ -27,20 +29,19 @@ class Aggregate {
 		$this->criteria = [];
 	}
 
-	public function avg($property) {
+	public function __call($method, $parameters) {
+		if (!array_key_exists($method, self::$templates)) {
+			throw new \Exception('Invalid method "' . $method . '" of the "' . __CLASS__ . '" class');
+		}
+
+		if (!count($parameters)) {
+			throw new \Exception('The method "' . $method . '" expects 1 argument and ' . count($parameters) . ' was provided.');
+		}
+
 		$criteria = new Criteria($this->builder);
 
-		$this->action = self::AVG;
-		$this->criteria = [$property, $criteria];
-
-		return $criteria;
-	}
-
-	public function sum($property) {
-		$criteria = new Criteria($this->builder);
-
-		$this->action = self::SUM;
-		$this->criteria = [$property, $criteria];
+		$this->action = $method;
+		$this->criteria = [$parameters[0], $criteria];
 
 		return $criteria;
 	}

@@ -111,7 +111,11 @@ $rs = $query
 			->or('u.nome')->notEndsWith('Diego')
 		->having()->avg('u.pontuacao')->greaterThan(100)
 			->or()->avg('u.pontuacao')->lessThan(200)
-			->or()->avg('u.pontuacao')->between(100, 200)
+			->and()->avg('u.pontuacao')->between(100, 200)
+			->and()->count('u.pontuacao')->gt(100)
+			->and()->min('u.pontuacao')->gt(100)
+			->and()->max('u.pontuacao')->lt(200)
+			->and()->sum('u.pontuacao')->lt(300)
 		->all();
 
 // $query = $orm->createQuery('GreeningU');
