@@ -79,7 +79,11 @@ class Orm {
 		return $connections[$name];
 	}
 
-	protected function getConnection(String $name = '') : \PDO {
+	protected function getConnection(String $name = null) : \PDO {
+	    if (empty($name)) {
+	        $name = $this->defaultConnection;
+	    }
+	    
 		if (!count($this->connections)) {
 			$this->setConnection($name);
 			return $this->getConnection($name);

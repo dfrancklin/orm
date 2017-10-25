@@ -2,15 +2,19 @@
 
 spl_autoload_register(function ($class) {
 	$root = 'ORM';
+	$srcFolder = 'src';
 
 	if (substr($class, 0, strlen($root)) !== $root) {
 		return;
 	}
 
-	$class = substr_replace($class, 'src', 0, strlen($root));
-	$class = __DIR__ . DIRECTORY_SEPARATOR . $class . '.php';
-
-	if (file_exists($class)) {
-		include $class;
+    $classInfo = explode('\\', $class);
+    $className = array_pop($classInfo);
+    $namespace = strtolower(implode(DIRECTORY_SEPARATOR, $classInfo));
+	$folder = substr_replace($namespace, $srcFolder, 0, strlen($root));
+	$file = __DIR__ . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . $className . '.php';
+    
+	if (file_exists($file)) {
+		include $file;
 	}
 });

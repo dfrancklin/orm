@@ -2,18 +2,25 @@
 
 header('refresh:2');
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 spl_autoload_register(function ($class) {
 	$root = 'App';
+	$srcFolder = '';
 
 	if (substr($class, 0, strlen($root)) !== $root) {
 		return;
 	}
 
-	$class = substr_replace($class, '', 0, strlen($root));
-	$class = __DIR__ . '/' . $class . '.php';
-
-	if (file_exists($class)) {
-		include $class;
+    $classInfo = explode('\\', $class);
+    $className = array_pop($classInfo);
+    $namespace = strtolower(implode(DIRECTORY_SEPARATOR, $classInfo));
+	$folder = substr_replace($namespace, $srcFolder, 0, strlen($root));
+	$file = __DIR__ . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . $className . '.php';
+    
+	if (file_exists($file)) {
+		include $file;
 	}
 });
 
@@ -41,7 +48,7 @@ use App\Models\GreeningU\Comentario;
 include_once 'orm/load.php';
 
 $orm = Orm::getInstance();
-$orm->setConnection('GreeningU');
+// $orm->setConnection('GreeningU');
 $query = $orm->createQuery();
 $usuarios = $query->from(Usuario::class, 'u')->all();
 

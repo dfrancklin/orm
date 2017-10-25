@@ -44,7 +44,7 @@ class Annotation {
 		$name = $this->resolver->get('name', $table);
 
 		if (!$table || !$name) {
-			$c = explode(DIRECTORY_SEPARATOR, $this->class);
+			$c = explode('\\', $this->class);
 			$name = strtolower(end($c));
 		}
 
