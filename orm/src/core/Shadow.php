@@ -78,13 +78,20 @@ class Shadow {
 	}
 
 	public function findColumn($property) {
-		foreach ($this->columns as $column) {
-			if ($column->getProperty() === $property) {
-				return $column;
+		$column = null;
+		$result = $this->findByProperty('columns', 'property', $property);
+
+		if (!empty($result)) {
+			$column = $result[0];
+		} else {
+			$result = $this->findByProperty('joins', 'property', $property);
+
+			if (!empty($result)) {
+				$column = $result[0];
 			}
 		}
 
-		return null;
+		return $column;
 	}
 
 	private function findByProperty($list, $property, $value) {
@@ -98,6 +105,10 @@ class Shadow {
 		}
 
 		return $columns;
+	}
+
+	public function __toString() {
+		return $this->class;
 	}
 
 }

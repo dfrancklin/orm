@@ -113,6 +113,10 @@ trait Where {
 			throw new \Exception('Invalid alias "' . $alias . '"');
 		}
 
+		if (is_array($shadow)) {
+			$shadow = $shadow[0];
+		}
+
 		if (!($column = $shadow->findColumn($property))) {
 			throw new \Exception('Invalid property "' . $property . '"');
 		}
@@ -122,12 +126,22 @@ trait Where {
 		return [$property, $shadow, $column];
 	}
 
-	private function processValues(Array $values, Column $column) : Array {
+	private function processValues(Array $values, $column) : Array {
+		$type = '';
+
+		if ($column instanceof Column) {
+			$type = $column->getType();
+		} else {
+			$class = $column->getReference();
+			$reference = $this->orm->getShadow($class);
+			$type = $reference->getId()->getType();
+		}
+
 		$processedValues = [];
 
 		foreach ($values as $value) {
 			if ($value instanceof \DateTime) {
-				$format = Driver::$FORMATS[$column->getType()] ?? 'Y-m-d';
+				$format = Driver::$FORMATS[$type] ?? 'Y-m-d';
 				array_push($processedValues, $value->format($format));
 			} else {
 				array_push($processedValues, $value);

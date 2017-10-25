@@ -1,4 +1,5 @@
 <?php
+
 namespace ORM\Core;
 
 class Join {
@@ -40,15 +41,15 @@ class Join {
 	public function setReference($reference) {
 		$this->reference = $reference;
 	}
-	
+
 	public function getName() {
 		return $this->name;
 	}
-	
+
 	public function setName($name) {
 		$this->name = $name;
 	}
-	
+
 	public function getProperty() {
 		return $this->property;
 	}
@@ -60,11 +61,11 @@ class Join {
 	public function getMappedBy() {
 		return $this->mappedBy;
 	}
-	
+
 	public function setMappedBy($mappedBy) {
 		$this->mappedBy = $mappedBy;
 	}
-	
+
 
 	public function getJoinTable() {
 		return $this->joinTable;

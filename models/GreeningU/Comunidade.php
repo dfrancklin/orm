@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\GreeningU;
 
 /**
@@ -6,84 +7,36 @@ namespace App\Models\GreeningU;
  */
 class Comunidade {
 
-    /**
-     * @ORM/Id
-     * @ORM/Generated
-     * @ORM/Column(type=int)
-     */
-    private $id;
+	/**
+	 * @ORM/Id
+	 * @ORM/Generated
+	 * @ORM/Column(type=int)
+	 */
+	public $id;
 
-    /**
-     * @ORM/Column(type=string, length=45)
-     */
-    private $nome;
+	/**
+	 * @ORM/Column(name=name, type=string, length=45)
+	 */
+	public $nome;
 
-    /**
-     * @ORM/Column(type=datetime)
-     */
-    private $data;
+	/**
+	 * @ORM/Column(type=datetime)
+	 */
+	public $data;
 
-    /**
-     * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
-     */
-    private $lider;
+	/**
+	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
+	 */
+	public $lider;
 
-    /**
-     * @ORM/ManyToMany(class=App\Models\GreeningU\Usuario, mappedBy=assinaturas)
-     */
-    private $usuarios;
+	/**
+	 * @ORM/ManyToMany(class=App\Models\GreeningU\Usuario, mappedBy=assinaturas)
+	 */
+	public $usuarios;
 
-    /**
-     * @ORM/HasMany(class=App\Models\GreeningU\Post)
-     */
-    private $posts;
-
-    public function getId() {
-        return $this->id;
-    }
-    
-    public function setId($id) {
-        $this->id = $id;
-    }
-    
-    public function getNome() {
-        return $this->nome;
-    }
-    
-    public function setNome($nome) {
-        $this->nome = $nome;
-    }
-
-    public function getData() {
-        return $this->data;
-    }
-    
-    public function setData($data) {
-        $this->data = $data;
-    }
-    
-    public function getLider() {
-        return $this->lider;
-    }
-    
-    public function setLider($lider) {
-        $this->lider = $lider;
-    }
-    
-    public function getUsuarios() {
-        return $this->usuarios;
-    }
-    
-    public function setUsuarios($usuarios) {
-        $this->usuarios = $usuarios;
-    }
-    
-    public function getPosts() {
-        return $this->posts;
-    }
-    
-    public function setPosts($posts) {
-        $this->posts = $posts;
-    }
+	/**
+	 * @ORM/HasMany(class=App\Models\GreeningU\Post)
+	 */
+	public $posts;
 
 }

@@ -6,6 +6,7 @@ use ORM\Orm;
 use ORM\Core\Driver;
 use ORM\Core\Shadow;
 use ORM\Core\Join;
+use ORM\Core\Proxy;
 
 use ORM\Builders\Traits\Aggregate;
 use ORM\Builders\Traits\GroupBy;
@@ -15,6 +16,8 @@ use ORM\Builders\Traits\OrderBy;
 use ORM\Builders\Traits\Where;
 
 class Query {
+
+	const INNER = 'INNER', LEFT = 'LEFT', RIGHT = 'RIGHT', JOIN_TYPES = [self::INNER, self::LEFT, self::RIGHT];
 
 	use Aggregate, GroupBy, Having, Operator, OrderBy, Where;
 
@@ -39,6 +42,8 @@ class Query {
 	private $usedTables;
 
 	private $page;
+
+	private $offset;
 
 	private $quantity;
 
@@ -80,16 +85,24 @@ class Query {
 		return $this;
 	}
 
-	public function join(String $join, String $alias) {
+	public function join(String $join, String $alias, String $type=null) {
 		if (array_key_exists($alias, $this->joinsByAlias)) {
 			throw new \Exception('A class with the alias "' . $alias . '" already exist');
+		}
+
+		if (empty($type)) {
+			$type = self::INNER;
+		}
+
+		if (!in_array($type, self::JOIN_TYPES)) {
+			throw new \Exception('The join type informed "' . $type . '" does not exists or is not suppoerted');
 		}
 
 		$shadow = $this->orm->getShadow($join);
 		$shadow->setAlias($alias);
 
-		$this->joins[$join] = $shadow;
-		$this->joinsByAlias[$alias] = $shadow;
+		$this->joins[$join] = [$shadow, $type];
+		$this->joinsByAlias[$alias] = [$shadow, $type];
 
 		return $this;
 	}
@@ -99,17 +112,26 @@ class Query {
 
 		foreach ($joins as $join) {
 			if (!is_array($join)) {
-				throw new \InvalidArgumentException('The class name and the alias must be informed. Ex: [className, alias]');
+				throw new \InvalidArgumentException('The class name, the alias and the type (optional) must be informed. Ex: [className, alias[, type]]');
 			}
 
-			$this->join($join[0], $join[1]);
+			$this->join(...$join);
 		}
 
 		return $this;
 	}
 
 	public function page($page, $quantity) {
+		if ($page <= 0) {
+			throw new \Exception('The "page" argument must be an integer, positive and bigger than zero number');
+		}
+
+		if ($quantity <= 0) {
+			throw new \Exception('The "quantity" argument must be an integer, positive and bigger than zero number');
+		}
+
 		$this->page = $page;
+		$this->offset = ($page - 1) * $quantity;
 		$this->quantity = $quantity;
 
 		return $this;
@@ -124,19 +146,37 @@ class Query {
 	public function all() {
 		$this->generateQuery();
 
-		$query = $this->connection->query($this->query);
+		$statement = $this->connection->prepare($this->query);
+		$hasResults = $statement->execute($this->values);
+		$resultSet = [];
 
-		if ($query) {
-			$resultSet = $query->fetchAll(\PDO::FETCH_ASSOC);
+		if ($hasResults) {
+			$resultSet = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
-			if (!empty($this->columns)) {
-				return $resultSet;
-			} else {
-				vd($resultSet);
-				die();
-				// map the result
+			if (empty($this->columns)) {
+				$resultSet = $this->mapResultSet($resultSet);
 			}
 		}
+
+		return $resultSet;
+	}
+
+	public function one() {
+		$this->generateQuery();
+
+		$statement = $this->connection->prepare($this->query);
+		$hasResults = $statement->execute($this->values);
+		$resultSet = null;
+
+		if ($hasResults) {
+			$resultSet = $statement->fetch(\PDO::FETCH_ASSOC);
+
+			if (empty($this->columns)) {
+				$resultSet = $this->mapOne($resultSet);
+			}
+		}
+
+		return $resultSet;
 	}
 
 	private function generateQuery() {
@@ -160,7 +200,7 @@ class Query {
 		$this->usedTables[$this->target->getClass()] = $this->target;
 
 		if (count($this->joins)) {
-			$this->preProcessJoins($this->target, $this->joins);
+			$this->preProcessJoins([$this->target], $this->joins);
 			$this->query .= $this->generateJoins(null, $this->relations);
 		}
 
@@ -169,21 +209,22 @@ class Query {
 		$this->query .= $this->resolveHaving();
 		$this->query .= $this->resolveOrderBy();
 
-		if ($this->page && $this->quantity) {
-			$this->query = sprintf(Driver::$PAGE_TEMPLATE, $this->query, $this->page, $this->quantity);
+		if (is_numeric($this->offset) && is_numeric($this->quantity)) {
+			$this->query = sprintf(Driver::$PAGE_TEMPLATE, $this->query, $this->offset, $this->quantity);
 		}
 
 		if ($this->top) {
-			$this->query = sprintf(Driver::$TOP_TEMPLATE, $this->query, $this->page);
+			$this->query = sprintf(Driver::$TOP_TEMPLATE, $this->query, $this->top);
 		}
 	}
 
-	private function preProcessJoins($shadow, $shadows) {
-		if (is_null($shadow)) {
+	private function preProcessJoins($joinInfo, $shadows) {
+		if (is_null($joinInfo)) {
 			return;
 		}
 
 		$next = array_shift($shadows);
+		list($shadow) = $joinInfo;
 
 		foreach ($shadow->getJoins() as $join) {
 			$name = $shadow->getTableName() . '.' . $join->getProperty();
@@ -241,7 +282,9 @@ class Query {
 		return $this->generateJoins(array_shift($relations), $relations);
 	}
 
-	private function resolveJoin(Shadow $shadow, Join $join) {
+	private function resolveJoin(Array $joinInfo, Join $join) {
+		list($shadow, $joinType) = $joinInfo;
+
 		if (array_key_exists($join->getShadow()->getClass(), $this->usedTables) &&
 				array_key_exists($shadow->getClass(), $this->usedTables) &&
 				$join->getType() !== 'manyToMany') {
@@ -249,14 +292,14 @@ class Query {
 		}
 
 		$method = 'resolveJoin' . ucfirst($join->getType());
-		$sql = $this->$method($shadow, $join);
+		$sql = $this->$method($shadow, $join, $joinType);
 		$this->usedTables[$shadow->getClass()] = $shadow;
 
 		return $sql;
 	}
 
-	private function resolveJoinHasOne(Shadow $shadow, Join $join) {
-		$sql = "\n\t" . ' INNER JOIN ';
+	private function resolveJoinHasOne(Shadow $shadow, Join $join, String $joinType) {
+		$sql = "\n\t " . $joinType . ' JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
 			$sql .= $join->getShadow()->getTableName() . ' ' . $join->getShadow()->getAlias();
@@ -282,8 +325,8 @@ class Query {
 		return $sql;
 	}
 
-	private function resolveJoinHasMany(Shadow $shadow, Join $join) {
-		$sql = "\n\t" . ' INNER JOIN ';
+	private function resolveJoinHasMany(Shadow $shadow, Join $join, String $joinType) {
+		$sql = "\n\t " . $joinType . ' JOIN ';
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
 			$sql .= $shadow->getTableName() . ' ' . $shadow->getAlias();
@@ -308,14 +351,14 @@ class Query {
 		return $sql;
 	}
 
-	private function resolveJoinManyToMany(Shadow $shadow, Join $join) {
+	private function resolveJoinManyToMany(Shadow $shadow, Join $join, String $joinType) {
 		if ($join->getMappedBy()) {
 			$tempJoin = $shadow->getJoins('property', $join->getMappedBy());
 			$shadow = $join->getShadow();
 			$join = $tempJoin[0];
 		}
 
-		$sql = "\n\t" . ' INNER JOIN ';
+		$sql = "\n\t " . $joinType . ' JOIN ';
 
 		if (!array_key_exists($join->getShadow()->getClass(), $this->usedTables)) {
 			$sql .= $join->getShadow()->getTableName();
@@ -330,7 +373,7 @@ class Query {
 		$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getJoinColumnName();
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= "\n\t" . ' INNER JOIN ' . $shadow->getTableName() . "\n\t\t" . ' ON ';
+			$sql .= "\n\t " . $joinType . ' JOIN ' . $shadow->getTableName() . "\n\t\t" . ' ON ';
 			$sql .= $shadow->getTableName() . '.' . $shadow->getId()->getName() . ' = ';
 			$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getInverseJoinColumnName();
 		}
@@ -338,8 +381,8 @@ class Query {
 		return $sql;
 	}
 
-	private function resolveJoinBelongsTo(Shadow $shadow, Join $join) {
-		$sql = "\n\t" . ' INNER JOIN ';
+	private function resolveJoinBelongsTo(Shadow $shadow, Join $join, String $joinType) {
+		$sql = "\n\t " . $joinType . ' JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
 			$sql .= $join->getShadow()->getTableName();
@@ -354,6 +397,39 @@ class Query {
 		$sql .= $join->getName();
 
 		return $sql;
+	}
+
+	private function mapResultSet($resultSet) {
+		$mapped = [];
+
+		foreach ($resultSet as $result) {
+			$proxy = $this->mapOne($result);
+			array_push($mapped, $proxy);
+		}
+
+		return $mapped;
+	}
+
+	private function mapOne($resultSet) {
+		$class = $this->target->getClass();
+		$object = new $class;
+
+		foreach ($this->target->getColumns() as $column) {
+			$object->{$column->getProperty()} = $this->convertType($resultSet[$column->getName()], $column->getType());
+		}
+
+		$proxy = new Proxy($object, $this->target);
+
+		return $proxy;
+	}
+
+	public function convertType($value, $type) {
+		switch ($type) {
+			case 'int': return (int) $value;
+			case 'float': return (float) $value;
+			case 'datetime': return new \DateTime($value);
+			default: return $value;
+		}
 	}
 
 }

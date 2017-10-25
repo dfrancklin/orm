@@ -1,4 +1,5 @@
 <?php
+
 namespace ORM;
 
 use ORM\Core\Shadow;
@@ -36,15 +37,6 @@ class Orm {
 		$this->loadDriver($config['db'], $config['version']);
 	}
 
-	// public function addConnection(String $name) {
-	// 	$config = $this->getConfiguration($name);
-	// 	$this->connections[$name] = $this->createConnection($config);
-	// }
-
-	// public function setDefaultConnection(String $name) {
-	// 	$this->defaultConnection = $name;
-	// }
-
 	private function loadDriver($db, $version) {
 		$driver = __DIR__ . '/drivers/' . $db . '-' . $version . '.php';
 
@@ -55,11 +47,10 @@ class Orm {
 		require_once $driver;
 	}
 
-
 	private function createConnection(Array $config) : \PDO {
 		foreach(['db', 'host', 'schema', 'user', 'pass'] as $field) {
 			if (!isset($config[$field])) {
-				throw new \Exception("O campo $config[$field] não foi definido na definição de conexão", 1);
+				throw new \Exception("O campo $config[$field] não foi definido na definição de conexão");
 			}
 		}
 
@@ -72,7 +63,7 @@ class Orm {
 		$configFile = __DIR__ . '/../connection.config.php';
 
 		if (!file_exists($configFile)) {
-			throw new \Exception('Arquivo de configuração de conexão não encontrado', 1);
+			throw new \Exception('Arquivo de configuração de conexão não encontrado');
 		}
 
 		require $configFile;
@@ -82,7 +73,7 @@ class Orm {
 		}
 
 		if (!isset($connections[$name])) {
-			throw new \Exception("Configuração de conexão \"$name\" não definida", 1);
+			throw new \Exception("Configuração de conexão \"$name\" não definida");
 		}
 
 		return $connections[$name];
@@ -97,19 +88,19 @@ class Orm {
 		if ($name && isset($this->connections[$name])) {
 			return $this->connections[$name];
 		} elseif ($name) {
-			throw new \Exception("Não foram encontradas conexões definidas para \"$name\"", 1);
+			throw new \Exception("Não foram encontradas conexões definidas para \"$name\"");
 		}
 
 		if ($this->defaultConnection && isset($this->connections[$this->defaultConnection])) {
 			return $this->connections[$this->defaultConnection];
 		}
 
-		throw new \Exception('Não foram encontradas conexões definidas', 1);
+		throw new \Exception('Não foram encontradas conexões definidas');
 	}
 
 	public function getShadow(String $class) : Shadow {
 		if (!$class) {
-			throw new \Exception('Necessário informar o nome da classe', 1);
+			throw new \Exception('Necessário informar o nome da classe');
 		}
 
 		if (!array_key_exists($class, $this->shadows)) {
@@ -121,8 +112,8 @@ class Orm {
 		return $this->shadows[$class];
 	}
 
-	public function createQuery(String $connection = '') : Query {
-		return new Query($this->getConnection($connection));
+	public function createQuery() : Query {
+		return new Query($this->getConnection());
 	}
 
 }
