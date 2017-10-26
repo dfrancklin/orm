@@ -56,7 +56,7 @@ class EntityManager implements IEntityManager {
 			$method = 'persist';
 		}
 
-		return $this->$method($object, $shadow);
+		return $this->$method($object);
 	}
 
 	public function beginTransaction() {
@@ -98,26 +98,28 @@ class EntityManager implements IEntityManager {
 		throw new \Exception('Something went wrong while rolling back a transaction');
 	}
 
-	private function persist($object, $shadow) {
-		if ($this->exists($object, $shadow)) {
-			return $this->update($object, $shadow);
+	private function persist($object) {
+		if ($this->exists($object)) {
+			return $this->update($object);
 		}
 
 		vd('create persist builder instance');
 	}
 
-	private function update($object, $shadow) {
-		if (!$this->exists($object, $shadow)) {
-			return $this->persist($object, $shadow);
+	private function update($object) {
+		if (!$this->exists($object)) {
+			return $this->persist($object);
 		}
 
 		vd('create update builder instance');
 	}
 
-	private function exists($object, $shadow) {
+	private function exists($object) {
+		$class = get_class($object);
+		$shadow = $this->orm->getShadow($class);
 		$id = $shadow->getId();
 		$prop = $id->getProperty();
-		$rs = $this->find(get_class($object), $object->$prop);
+		$rs = $this->find($class, $object->$prop);
 
 		return !!$rs;
 	}
