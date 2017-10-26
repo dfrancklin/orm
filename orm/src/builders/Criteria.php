@@ -4,7 +4,7 @@ namespace ORM\Builders;
 use ORM\Core\Shadow;
 use ORM\Core\Column;
 
-use ORM\Builders\Traits\Operator;
+use ORM\Builders\Handlers\OperatorHandler;
 
 class Criteria {
 
@@ -123,7 +123,7 @@ class Criteria {
 	private function methodExists($method) {
 		if ((!array_key_exists($method, self::$templates) && !array_key_exists($method, self::$alias) &&
 				!array_key_exists($method, self::$shortcuts) && !array_key_exists($method, self::$shortcutsAlias)) ||
-			($this->builder->getChain() === Operator::$HAVING && in_array($method, self::$excluded))
+			($this->builder->getChain() === OperatorHandler::$HAVING && in_array($method, self::$excluded))
 		) {
 			throw new \Exception('Invalid method "' . $method . '" of the "' . __CLASS__ . '" class');
 		}

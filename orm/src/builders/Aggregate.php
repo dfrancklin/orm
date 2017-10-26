@@ -2,8 +2,10 @@
 
 namespace ORM\Builders;
 
+use ORM\Builders\Handlers\AggregateHandler;
+
 class Aggregate {
 
-	use \ORM\Builders\Traits\Aggregate;
+	use AggregateHandler;
 
 }

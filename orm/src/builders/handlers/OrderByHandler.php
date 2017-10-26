@@ -1,8 +1,8 @@
 <?php
 
-namespace ORM\Builders\Traits;
+namespace ORM\Builders\Handlers;
 
-trait OrderBy {
+trait OrderByHandler {
 
 	public static $ASC = 'ASC', $DESC = 'DESC';
 

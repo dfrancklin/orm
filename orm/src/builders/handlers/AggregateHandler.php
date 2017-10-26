@@ -1,10 +1,10 @@
 <?php
 
-namespace ORM\Builders\Traits;
+namespace ORM\Builders\Handlers;
 
 use ORM\Builders\Criteria;
 
-trait Aggregate {
+trait AggregateHandler {
 
 	public static
 		$QUERY = 'query',
@@ -19,7 +19,7 @@ trait Aggregate {
 
 	private static $templates = [];
 
-	private static $inited;
+	private static $initialized;
 
 	private $builder;
 
@@ -52,7 +52,7 @@ trait Aggregate {
 	}
 
 	public function __call($method, $parameters) {
-		if (!self::$inited) {
+		if (!self::$initialized) {
 			self::init();
 		}
 

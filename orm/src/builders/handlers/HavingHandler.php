@@ -1,11 +1,11 @@
 <?php
 
-namespace ORM\Builders\Traits;
+namespace ORM\Builders\Handlers;
 
 use ORM\Builders\Aggregate;
 use ORM\Builders\Criteria;
 
-trait Having {
+trait HavingHandler {
 
 	private $havingConditions;
 

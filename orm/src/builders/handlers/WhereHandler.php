@@ -1,22 +1,22 @@
 <?php
 
-namespace ORM\Builders\Traits;
+namespace ORM\Builders\Handlers;
 
 use ORM\Core\Shadow;
 use ORM\Core\Column;
 use ORM\Core\Driver;
 
 use ORM\Builders\Criteria;
-use ORM\Builders\Traits\Operator;
+use ORM\Builders\Handlers\OperatorHandler;
 
-trait Where {
+trait WhereHandler {
 
 	private $whereConditions;
 
 	private $values;
 
 	public function where(String $property): Criteria {
-		$this->chain = Operator::$WHERE;
+		$this->chain = OperatorHandler::$WHERE;
 
 		$criteria = new Criteria($this);
 

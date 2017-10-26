@@ -12,9 +12,9 @@ interface IEntityManager {
 
 	function createQuery() : Query;
 
-	function remove();
+	function remove($id);
 
-	function save();
+	function save($object);
 
 	function beginTransaction();
 

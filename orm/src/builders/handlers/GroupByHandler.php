@@ -1,8 +1,8 @@
 <?php
 
-namespace ORM\Builders\Traits;
+namespace ORM\Builders\Handlers;
 
-trait GroupBy {
+trait GroupByHandler {
 
 	private $groups;
 
