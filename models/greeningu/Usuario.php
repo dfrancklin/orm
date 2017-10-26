@@ -50,15 +50,15 @@ class Usuario {
 	public $pontuacao;
 
 	/**
-	 * @ORM/HasMany(class=App\Models\GreeningU\Comunidade)
-	 */
-	public $comunidades;
-
-	/**
 	 * @ORM/ManyToMany(class=App\Models\GreeningU\Comunidade)
 	 * @ORM/JoinTable(tableName=usuario_comunidade, join={name=usuarios_id}, inverse={name=assinaturas_id})
 	 */
 	public $assinaturas;
+
+	/**
+	 * @ORM/HasMany(class=App\Models\GreeningU\Comunidade)
+	 */
+	public $comunidades;
 
 	/**
 	 * @ORM/HasMany(class=App\Models\GreeningU\Post)

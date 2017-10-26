@@ -118,17 +118,28 @@ class Proxy {
 	}
 
 	private function lazyManyToMany(Join $join) {
-		$class = $join->getReference();
-		$j = $join->getShadow()->getClass();
+		$inverse = false;
 
-		$prop = '_y.' . $join->getShadow()->getId()->getProperty();
-		$id = $this->shadow->getId();
-		$value = $this->object->{$id->getProperty()};
+		if ($join->getMappedBy()) {
+			$inverse = true;
+		}
+
+		$class = $join->getReference();
+		$alias = '_x';
+		$j = $join->getShadow()->getClass();
+		$jAlias = '_y';
+		$value = $this->object->{$this->shadow->getId()->getProperty()};
 
 		$query = $this->orm->createQuery();
 
-		$rs = $query->from($class, '_x')
-				->join($j, '_y')
+		if ($inverse) {
+			$prop = $jAlias . '.' . $join->getShadow()->getId()->getProperty();
+		} else {
+			$prop = $alias . '.' . $this->shadow->getId()->getProperty();
+		}
+
+		$rs = $query->from($class, $alias)
+				->join($j, $jAlias)
 				->where($prop)->equals($value)
 				->all();
 

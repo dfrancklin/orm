@@ -69,7 +69,7 @@ foreach($usuarios as $usuario) {
 		}
 	}
 
-	pr('-------------------------------');
+	pr('-----------------------------------------');
 
 	if (!count($usuario->comunidades)) {
 		echo '<h3>Usuário não possiu comunidades ainda</h3>';
@@ -88,10 +88,22 @@ foreach($usuarios as $usuario) {
 					pr('<strong>' . $post->titulo . '</strong> do usuário <strong>' . $post->usuario->nome . ' ' . $post->usuario->sobrenome . '</strong>');
 				}
 			}
+
+			pr('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+
+			if (!count($comunidade->usuarios)) {
+				echo '<h5>Comunidade não possiu usuários assinantes ainda</h5>';
+			} else {
+				echo '<h5>Usuários assinantes da comunidade "' . $comunidade->nome . '" (' . count($comunidade->usuarios) . ')</h5>';
+
+				foreach($comunidade->usuarios  as $assinante) {
+					pr('<strong>' . $assinante->nome . ' ' . $assinante->sobrenome . '</strong>');
+				}
+			}
 		}
 	}
 
-	pr('-------------------------------');
+	pr('-----------------------------------------');
 
 	if (!count($usuario->posts)) {
 		echo '<h3>Usuário não possiu posts ainda</h3>';

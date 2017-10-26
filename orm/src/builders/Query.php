@@ -236,7 +236,9 @@ class Query {
 
 				if (count($inverseJoins)) {
 					foreach ($inverseJoins as $inverseJoin) {
-						if ($this->validTypes($join, $inverseJoin)) {
+						$isValid = $this->validTypes($join, $inverseJoin);
+
+						if ($isValid) {
 							$inverseName = $inverseShadow->getTableName() . '.' . $inverseJoin->getProperty();
 
 							if (!array_key_exists($inverseName, $this->relations)) {
@@ -277,7 +279,7 @@ class Query {
 			}
 		}
 
-		$this->query .= $this->resolveJoin($relation[0], $relation[1]);
+		$this->query .= $this->resolveJoin(...$relation);
 
 		return $this->generateJoins(array_shift($relations), $relations);
 	}
@@ -380,8 +382,8 @@ class Query {
 		$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getJoinColumnName();
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= "\n\t " . $joinType . ' JOIN ' . $shadow->getTableName() . "\n\t\t" . ' ON ';
-			$sql .= $shadow->getTableName() . '.' . $shadow->getId()->getName() . ' = ';
+			$sql .= "\n\t " . $joinType . ' JOIN ' . $shadow->getTableName() . ' ' . $shadow->getAlias() . "\n\t\t" . ' ON ';
+			$sql .= $shadow->getAlias() . '.' . $shadow->getId()->getName() . ' = ';
 			$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getInverseJoinColumnName();
 		}
 
