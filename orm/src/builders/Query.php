@@ -150,8 +150,6 @@ class Query {
 		$hasResults = $statement->execute($this->values);
 		$resultSet = [];
 
-		// vd($this->query, $this->values);
-
 		if ($hasResults) {
 			$resultSet = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -169,8 +167,6 @@ class Query {
 		$statement = $this->connection->prepare($this->query);
 		$hasResults = $statement->execute($this->values);
 		$resultSet = null;
-
-		// vd($this->query, $this->values);
 
 		if ($hasResults) {
 			$resultSet = $statement->fetch(\PDO::FETCH_ASSOC);
