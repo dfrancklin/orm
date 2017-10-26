@@ -13,26 +13,21 @@ include_once 'orm/load.php';
 $orm = Orm::getInstance();
 $em = $orm->createEntityManager('GreeningU');
 
-$object = new Usuario();
+$usuario = new Usuario();
 
-$object->id = 10;
-$object->nome;
-$object->sobrenome;
-$object->email;
-$object->login;
-$object->senha;
-$object->sexo;
-$object->pontuacao;
-$object->assinaturas;
-$object->comunidades;
-$object->posts;
-$object->comentarios;
-$object->votos;
+$usuario->id = 10;
+$usuario->nome = 'Bridges';
+$usuario->sobrenome = 'Ferrell';
+$usuario->email = 'bridgesferrell@stucco.com';
+$usuario->login = 'magna';
+$usuario->senha = 'voluptate';
+$usuario->sexo = 'male';
+$usuario->pontuacao = 2233;
 
-$rs = $em->beginTransaction($object);
+$rs = $em->beginTransaction($usuario);
 
 try {
-	$rs = $em->save($object);
+	$rs = $em->save($usuario);
 	$em->commit();
 } catch (Exception $e) {
 	$em->rollback();
