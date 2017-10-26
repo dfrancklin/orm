@@ -44,12 +44,13 @@ class Query {
 
 	public function __construct(\PDO $connection, IEntityManager $em) {
 		if (!$connection) {
-			throw new \Exception('Conexão não definida', 1);
+			throw new \Exception('Conexão não definida');
 		}
 
 		$this->orm = Orm::getInstance();
 		$this->em = $em;
 		$this->connection = $connection;
+
 		$this->columns = [];
 		$this->joins = [];
 		$this->joinsByAlias = [];

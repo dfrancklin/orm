@@ -35,10 +35,10 @@ class Annotation {
 
 	private function resolveClass() {
 		if (!($class = $this->resolver->get('orm', $this->reflect->getDocComment(), true)))
-			throw new \Exception("A classe \"$this->class\" não está devidamente anotada", 1);
+			throw new \Exception("A classe \"$this->class\" não está devidamente anotada");
 
 		if (!$this->resolver->get('entity', $class))
-			throw new \Exception("Está faltando a anotação \"Entity\" na classe \"$this->class\"", 1);
+			throw new \Exception("Está faltando a anotação \"Entity\" na classe \"$this->class\"");
 
 		$table = $this->resolver->get('table', $class);
 		$name = $this->resolver->get('name', $table);
@@ -77,11 +77,11 @@ class Annotation {
 			$reference = $this->resolver->get('className', $has);
 
 			if (!$reference) {
-				throw new \Exception('É obrigatório informar a classe de referência', 1);
+				throw new \Exception('É obrigatório informar a classe de referência');
 			}
 
 			if (!class_exists($reference)) {
-				throw new \Exception("A classe \"$reference\" não existe", 1);
+				throw new \Exception("A classe \"$reference\" não existe");
 			}
 
 			$join->setReference($reference);
@@ -89,6 +89,25 @@ class Annotation {
 
 		$join->setProperty($property->getName());
 		$join->setType($type);
+
+		if ($cascade = $this->resolver->get('cascade', $has)) {
+			$all = ['INSERT', 'UPDATE', 'DELETE'];
+			$cascade = preg_split("/,\s?/i", $cascade);
+
+			if(in_array('ALL', $cascade)) {
+				$cascade = $all;
+			}
+
+			foreach ($cascade as $c) {
+				if (!in_array($c, $all)) {
+					throw new \Exception('Cascade type "' . $c . '" does not exists');
+				}
+			}
+
+			$join->setCascade($cascade);
+		} else {
+			$join->setCascade([]);
+		}
 
 		if ($type === 'manyToMany') {
 			if ($mappedBy = $this->resolver->get('mappedBy', $has)) {

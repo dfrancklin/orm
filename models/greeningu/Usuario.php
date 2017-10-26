@@ -56,7 +56,7 @@ class Usuario {
 	public $assinaturas;
 
 	/**
-	 * @ORM/HasMany(class=App\Models\GreeningU\Comunidade)
+	 * @ORM/HasMany(class=App\Models\GreeningU\Comunidade, cascade={ALL})
 	 */
 	public $comunidades;
 

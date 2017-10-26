@@ -16,10 +16,10 @@ class OrmExpressions {
 		column = '/Column\([' . self::any . ']+\)/i',
 		transient = '/Transient/i',
 			// Joins
-			hasOne = '/HasOne\([' . self::any . ']+\)/i',
-			hasMany = '/HasMany\([' . self::any . ']+\)/i',
-			manyToMany = '/ManyToMany\([' . self::any . ']+\)/i',
-			belongsTo = '/BelongsTo\([' . self::any . ']+\)/i',
+			hasOne = '/HasOne\([^\)]+\)/i',
+			hasMany = '/HasMany\([^\)]+\)/i',
+			manyToMany = '/ManyToMany\([^\)]+\)/i',
+			belongsTo = '/BelongsTo\([^\)]+\)/i',
 			joinColumn = '/JoinColumn\([' . self::any . ']+\)/i',
 			joinTable = '/JoinTable\(.+\)/i',
 
@@ -35,6 +35,7 @@ class OrmExpressions {
 			inverse = '/inverse[\s]?=[\s]?\{([' . self::any . ']*)\}/i',
 			// reference = '/reference[\s]?=[\s]?(\w+)/i',
 			mappedBy = '/mappedBy[\s]?=[\s]?(\w+)/i',
-			className = '/class[\s]?=[\s]?([\\\\\w]+)/i';
+			className = '/class[\s]?=[\s]?([\\\\\w]+)/i',
+			cascade = '/cascade[\s]?=[\s]?\{([A-Za-z,\s]+)\}/i';
 
 }

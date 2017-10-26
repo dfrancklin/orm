@@ -4,6 +4,7 @@ namespace ORM\Core;
 
 use ORM\Orm;
 use ORM\Builders\Query;
+use ORM\Builders\Persist;
 
 use ORM\Interfaces\IEntityManager;
 
@@ -103,7 +104,9 @@ class EntityManager implements IEntityManager {
 			return $this->update($object);
 		}
 
-		vd('create persist builder instance');
+		$persist = new Persist($this->connection, $this);
+
+		return $persist->exec($object);
 	}
 
 	private function update($object) {

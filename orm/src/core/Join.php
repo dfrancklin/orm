@@ -18,6 +18,8 @@ class Join {
 
 	private $type;
 
+	private $cascade;
+
 	public function getShadow() {
 		return $this->shadow;
 	}
@@ -81,6 +83,14 @@ class Join {
 
 	public function setType($type) {
 		$this->type = $type;
+	}
+
+	public function getCascade() {
+		return $this->cascade;
+	}
+
+	public function setCascade($cascade) {
+		$this->cascade = $cascade;
 	}
 
 }

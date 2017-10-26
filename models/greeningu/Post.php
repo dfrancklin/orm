@@ -40,7 +40,7 @@ class Post {
 	public $votos;
 
 	/**
-	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
+	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario, cascade={INSERT})
 	 */
 	public $usuario;
 
