@@ -6,6 +6,8 @@ use ORM\Orm;
 
 class Proxy {
 
+	private $em;
+
 	private $orm;
 
 	private $object;
@@ -14,8 +16,9 @@ class Proxy {
 
 	private $values;
 
-	public function __construct($object, $shadow, $values) {
+	public function __construct($em, $object, $shadow, $values) {
 		$this->orm = Orm::getInstance();
+		$this->em = $em;
 		$this->object = $object;
 		$this->shadow = $shadow;
 		$this->values = $values;
@@ -77,7 +80,7 @@ class Proxy {
 			$prop = $alias . '.' . $join->getProperty();
 			$id = $this->shadow->getId();
 			$value = $this->object->{$id->getProperty()};
-			$query = $this->orm->createQuery();
+			$query = $this->em->createQuery();
 
 			$rs = $query->from($class, $alias)
 					->where($prop)->equals($value)
@@ -105,7 +108,7 @@ class Proxy {
 			$prop = $alias . '.' . $join->getProperty();
 			$id = $this->shadow->getId();
 			$value = $this->object->{$id->getProperty()};
-			$query = $this->orm->createQuery();
+			$query = $this->em->createQuery();
 
 			$rs = $query->from($class, $alias)
 					->where($prop)->equals($value)
@@ -130,7 +133,7 @@ class Proxy {
 		$jAlias = '_y';
 		$value = $this->object->{$this->shadow->getId()->getProperty()};
 
-		$query = $this->orm->createQuery();
+		$query = $this->em->createQuery();
 
 		if ($inverse) {
 			$prop = $jAlias . '.' . $join->getShadow()->getId()->getProperty();
@@ -160,7 +163,7 @@ class Proxy {
 		$prop = $alias . '.' . $id->getProperty();
 		$value = $this->values[$join->getProperty()];
 
-		$query = $this->orm->createQuery();
+		$query = $this->em->createQuery();
 
 		$rs = $query->from($class, $alias)
 				->where($prop)->equals($value)

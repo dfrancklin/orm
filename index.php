@@ -13,9 +13,9 @@ spl_autoload_register(function ($class) {
 		return;
 	}
 
-    $classInfo = explode('\\', $class);
-    $className = array_pop($classInfo);
-    $namespace = strtolower(implode(DIRECTORY_SEPARATOR, $classInfo));
+	$classInfo = explode('\\', $class);
+	$className = array_pop($classInfo);
+	$namespace = strtolower(implode(DIRECTORY_SEPARATOR, $classInfo));
 	$folder = substr_replace($namespace, $srcFolder, 0, strlen($root));
 	$file = __DIR__ . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . $className . '.php';
 
@@ -48,8 +48,8 @@ use App\Models\GreeningU\Comentario;
 include_once 'orm/load.php';
 
 $orm = Orm::getInstance();
-// $orm->setConnection('GreeningU');
-$query = $orm->createQuery();
+$em = $orm->createEntityManager('GreeningU');
+$query = $em->createQuery();
 $usuarios = $query->from(Usuario::class, 'u')->all();
 
 echo '<h1>Usuários (' . count($usuarios) . ')</h1><hr>';

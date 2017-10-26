@@ -4,7 +4,9 @@ namespace ORM;
 
 use ORM\Core\Shadow;
 use ORM\Core\Annotation;
-use ORM\Builders\Query;
+use ORM\Core\EntityManager;
+
+use ORM\Interfaces\IEntityManager;
 
 class Orm {
 
@@ -36,6 +38,16 @@ class Orm {
 		$this->defaultConnection = $name;
 		$this->loadDriver($config['db'], $config['version']);
 	}
+
+	public function addConnection(String $name) {
+		$config = $this->getConfiguration($name);
+		$this->connections[$name] = $this->createConnection($config);
+	}
+
+	public function setDefaultConnection(String $name) {
+		$this->defaultConnection = $name;
+	}
+
 
 	private function loadDriver($db, $version) {
 		$driver = __DIR__ . '/drivers/' . $db . '-' . $version . '.php';
@@ -80,12 +92,13 @@ class Orm {
 	}
 
 	protected function getConnection(String $name = null) : \PDO {
-	    if (empty($name)) {
-	        $name = $this->defaultConnection;
-	    }
-	    
+		if (empty($name)) {
+			$name = $this->defaultConnection;
+		}
+
 		if (!count($this->connections)) {
 			$this->setConnection($name);
+
 			return $this->getConnection($name);
 		}
 
@@ -116,8 +129,8 @@ class Orm {
 		return $this->shadows[$class];
 	}
 
-	public function createQuery() : Query {
-		return new Query($this->getConnection());
+	public function createEntityManager(String $connectionName=null) : IEntityManager {
+		return new EntityManager($this->getConnection($connectionName));
 	}
 
 }

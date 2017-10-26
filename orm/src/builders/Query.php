@@ -15,6 +15,8 @@ use ORM\Builders\Traits\Operator;
 use ORM\Builders\Traits\OrderBy;
 use ORM\Builders\Traits\Where;
 
+use ORM\Interfaces\IEntityManager;
+
 class Query {
 
 	const INNER = 'INNER', LEFT = 'LEFT', RIGHT = 'RIGHT', JOIN_TYPES = [self::INNER, self::LEFT, self::RIGHT];
@@ -22,6 +24,8 @@ class Query {
 	use Aggregate, GroupBy, Having, Operator, OrderBy, Where;
 
 	private $orm;
+
+	private $em;
 
 	private $connection;
 
@@ -49,12 +53,13 @@ class Query {
 
 	private $top;
 
-	public function __construct(\PDO $connection) {
+	public function __construct(\PDO $connection, IEntityManager $em) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida', 1);
 		}
 
 		$this->orm = Orm::getInstance();
+		$this->em = $em;
 		$this->connection = $connection;
 		$this->columns = [];
 		$this->joins = [];
@@ -435,7 +440,7 @@ class Query {
 			}
 		}
 
-		$proxy = new Proxy($object, $this->target, $values);
+		$proxy = new Proxy($this->em, $object, $this->target, $values);
 
 		return $proxy;
 	}
