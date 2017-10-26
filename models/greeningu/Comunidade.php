@@ -25,14 +25,14 @@ class Comunidade {
 	public $data;
 
 	/**
-	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
-	 */
-	public $lider;
-
-	/**
 	 * @ORM/ManyToMany(class=App\Models\GreeningU\Usuario, mappedBy=assinaturas)
 	 */
 	public $usuarios;
+
+	/**
+	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
+	 */
+	public $lider;
 
 	/**
 	 * @ORM/HasMany(class=App\Models\GreeningU\Post)

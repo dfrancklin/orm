@@ -56,7 +56,7 @@ class Usuario {
 
 	/**
 	 * @ORM/ManyToMany(class=App\Models\GreeningU\Comunidade)
-	 * @ORM/JoinTable(tableName=usuario_comunidade)
+	 * @ORM/JoinTable(tableName=usuario_comunidade, join={name=usuarios_id}, inverse={name=assinaturas_id})
 	 */
 	public $assinaturas;
 

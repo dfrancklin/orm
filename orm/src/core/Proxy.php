@@ -12,10 +12,13 @@ class Proxy {
 
 	private $shadow;
 
-	public function __construct($object, $shadow) {
+	private $values;
+
+	public function __construct($object, $shadow, $values) {
 		$this->orm = Orm::getInstance();
 		$this->object = $object;
 		$this->shadow = $shadow;
+		$this->values = $values;
 	}
 
 	public function __get($property) {
@@ -58,7 +61,7 @@ class Proxy {
 		return $this->$method($join, $property);
 	}
 
-	private function lazyHasMany(Join $join, String $property) {
+	private function lazyHasOne(Join $join) {
 		$class = $join->getReference();
 		$reference = $this->orm->getShadow($class);
 		$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
@@ -66,6 +69,7 @@ class Proxy {
 		$foundedJoins = array_filter($referenceJoins, function($join) {
 			return $join->getType() === 'belongsTo';
 		});
+		$foundedJoins = array_values($foundedJoins);
 
 		if (!empty($foundedJoins) && count($foundedJoins) === 1) {
 			$join = $foundedJoins[0];
@@ -76,18 +80,45 @@ class Proxy {
 			$query = $this->orm->createQuery();
 
 			$rs = $query->from($class, $alias)
-					->where($prop)->eq($value)
-					->all();
+					->where($prop)->equals($value)
+					->one();
 
-			$this->object->{$property} = $rs;
+			$this->object->{$join->getProperty()} = $rs;
 
-			return $this->object->{$property};
+			return $this->object->{$join->getProperty()};
 		}
 	}
 
-	private function lazyBelongsTo(Join $join, String $property) {
+	private function lazyHasMany(Join $join) {
 		$class = $join->getReference();
-		$alias = '_x';
+		$reference = $this->orm->getShadow($class);
+		$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+
+		$foundedJoins = array_filter($referenceJoins, function($join) {
+			return $join->getType() === 'belongsTo';
+		});
+		$foundedJoins = array_values($foundedJoins);
+
+		if (!empty($foundedJoins) && count($foundedJoins) === 1) {
+			$join = $foundedJoins[0];
+			$alias = strtolower($reference->getTableName()[0]);
+			$prop = $alias . '.' . $join->getProperty();
+			$id = $this->shadow->getId();
+			$value = $this->object->{$id->getProperty()};
+			$query = $this->orm->createQuery();
+
+			$rs = $query->from($class, $alias)
+					->where($prop)->equals($value)
+					->all();
+
+			$this->object->{$join->getProperty()} = $rs;
+
+			return $this->object->{$join->getProperty()};
+		}
+	}
+
+	private function lazyManyToMany(Join $join) {
+		$class = $join->getReference();
 		$j = $join->getShadow()->getClass();
 
 		$prop = '_y.' . $join->getShadow()->getId()->getProperty();
@@ -98,12 +129,35 @@ class Proxy {
 
 		$rs = $query->from($class, '_x')
 				->join($j, '_y')
-				->where($prop)->eq($value)
+				->where($prop)->equals($value)
+				->all();
+
+		$this->object->{$join->getProperty()} = $rs;
+
+		return $this->object->{$join->getProperty()};
+	}
+
+	private function lazyBelongsTo(Join $join) {
+		if (!array_key_exists($join->getProperty(), $this->values)) {
+			return;
+		}
+
+		$class = $join->getReference();
+		$reference = $this->orm->getShadow($class);
+		$alias = strtolower($reference->getTableName()[0]);
+		$id = $this->shadow->getId();
+		$prop = $alias . '.' . $id->getProperty();
+		$value = $this->values[$join->getProperty()];
+
+		$query = $this->orm->createQuery();
+
+		$rs = $query->from($class, $alias)
+				->where($prop)->equals($value)
 				->one();
 
-		$this->object->{$property} = $rs;
+		$this->object->{$join->getProperty()} = $rs;
 
-		return $this->object->{$property};
+		return $this->object->{$join->getProperty()};
 	}
 
 }

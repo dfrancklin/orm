@@ -18,7 +18,7 @@ spl_autoload_register(function ($class) {
     $namespace = strtolower(implode(DIRECTORY_SEPARATOR, $classInfo));
 	$folder = substr_replace($namespace, $srcFolder, 0, strlen($root));
 	$file = __DIR__ . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . $className . '.php';
-    
+
 	if (file_exists($file)) {
 		include $file;
 	}
@@ -52,29 +52,40 @@ $orm = Orm::getInstance();
 $query = $orm->createQuery();
 $usuarios = $query->from(Usuario::class, 'u')->all();
 
-pr('Usuários (' . count($usuarios) . ')');
-pr('================');
+echo '<h1>Usuários (' . count($usuarios) . ')</h1><hr>';
 
 foreach($usuarios as $usuario) {
-	pr($usuario->nome . ' ' . $usuario->sobrenome);
+	echo '<h2>' . $usuario->nome . ' ' . $usuario->sobrenome . '</h2>';
+
+	pr('++++++++++++++++++++++++++++');
+
+	if (!count($usuario->assinaturas)) {
+		echo '<h3>Usuário não possiu assinaturas ainda</h3>';
+	} else {
+		echo '<h3>Assinaturas do usuário (' . count($usuario->assinaturas) . ')</h3>';
+
+		foreach($usuario->assinaturas  as $comunidade) {
+			pr('<strong>' . $comunidade->nome . '</strong> do líder <strong>' . $comunidade->lider->nome . ' ' . $comunidade->lider->sobrenome . '</strong>');
+		}
+	}
+
+	pr('-------------------------------');
 
 	if (!count($usuario->comunidades)) {
-		pr('Usuário não possiu comunidades ainda');
+		echo '<h3>Usuário não possiu comunidades ainda</h3>';
 	} else {
-		pr('Comunidades do usuário (' . count($usuario->comunidades) . ')');
+		echo '<h3>Comunidades do usuário (' . count($usuario->comunidades) . ')</h3>';
 
 		foreach($usuario->comunidades  as $comunidade) {
-			pr($comunidade->nome);
-
-			pr('-------------------------------');
+			echo '<h4>' . $comunidade->nome . '</h4>';
 
 			if (!count($comunidade->posts)) {
-				pr('Comunidade não possiu posts ainda');
+				echo '<h5>Comunidade não possiu posts ainda</h5>';
 			} else {
-				pr('Posts da comunidade (' . count($comunidade->posts) . ')');
+				echo '<h5>Posts da comunidade "' . $comunidade->nome . '" (' . count($comunidade->posts) . ')</h5>';
 
 				foreach($comunidade->posts  as $post) {
-					pr($post->titulo . ' do usuário ' . $post->usuario->nome . ' ' . $post->usuario->sobrenome);
+					pr('<strong>' . $post->titulo . '</strong> do usuário <strong>' . $post->usuario->nome . ' ' . $post->usuario->sobrenome . '</strong>');
 				}
 			}
 		}
@@ -83,14 +94,14 @@ foreach($usuarios as $usuario) {
 	pr('-------------------------------');
 
 	if (!count($usuario->posts)) {
-		pr('Usuário não possiu posts ainda');
+		echo '<h3>Usuário não possiu posts ainda</h3>';
 	} else {
-		pr('Posts do usuário (' . count($usuario->posts) . ')');
+		echo '<h3>Posts do usuário (' . count($usuario->posts) . ')</h3>';
 
 		foreach($usuario->posts  as $post) {
-			pr($post->titulo . ' na comunidade ' . $post->comunidade->nome);
+			pr('<strong>' . $post->titulo . '</strong> na comunidade <strong>' . $post->comunidade->nome . '</strong>');
 		}
 	}
 
-	pr('##################################################');
+	pr('##########################################################################');
 }

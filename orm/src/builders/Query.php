@@ -150,6 +150,8 @@ class Query {
 		$hasResults = $statement->execute($this->values);
 		$resultSet = [];
 
+		// vd($this->query, $this->values);
+
 		if ($hasResults) {
 			$resultSet = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -167,6 +169,8 @@ class Query {
 		$statement = $this->connection->prepare($this->query);
 		$hasResults = $statement->execute($this->values);
 		$resultSet = null;
+
+		// vd($this->query, $this->values);
 
 		if ($hasResults) {
 			$resultSet = $statement->fetch(\PDO::FETCH_ASSOC);
@@ -361,6 +365,13 @@ class Query {
 		$sql = "\n\t " . $joinType . ' JOIN ';
 
 		if (!array_key_exists($join->getShadow()->getClass(), $this->usedTables)) {
+			$sql .= $join->getJoinTable()->getTableName();
+			$sql .= "\n\t\t" . ' ON ';
+			$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getInverseJoinColumnName() . ' = ';
+			$sql .= $shadow->getAlias() . '.';
+			$sql .= $shadow->getId()->getName();
+
+			$sql .= "\n\t " . $joinType . ' JOIN ';
 			$sql .= $join->getShadow()->getTableName();
 			$sql .= ' ' . $join->getShadow()->getAlias();
 		} else {
@@ -388,12 +399,13 @@ class Query {
 			$sql .= $join->getShadow()->getTableName();
 		} else {
 			$sql .= $shadow->getTableName();
+			$sql .= ' ' . $shadow->getAlias();
 		}
 
 		$sql .= "\n\t\t" . ' ON ';
-		$sql .= $shadow->getTableName() . '.';
+		$sql .= $shadow->getAlias() . '.';
 		$sql .= $shadow->getId()->getName() . ' = ';
-		$sql .= $join->getShadow()->getTableName() . '.';
+		$sql .= $join->getShadow()->getAlias() . '.';
 		$sql .= $join->getName();
 
 		return $sql;
@@ -413,12 +425,19 @@ class Query {
 	private function mapOne($resultSet) {
 		$class = $this->target->getClass();
 		$object = new $class;
+		$values = [];
 
 		foreach ($this->target->getColumns() as $column) {
 			$object->{$column->getProperty()} = $this->convertType($resultSet[$column->getName()], $column->getType());
 		}
 
-		$proxy = new Proxy($object, $this->target);
+		foreach ($this->target->getJoins() as $column) {
+			if (isset($resultSet[$column->getName()])) {
+				$values[$column->getProperty()] = $this->convertType($resultSet[$column->getName()], $column->getType());
+			}
+		}
+
+		$proxy = new Proxy($object, $this->target, $values);
 
 		return $proxy;
 	}
