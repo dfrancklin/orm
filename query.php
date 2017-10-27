@@ -45,7 +45,7 @@ foreach($usuarios as $usuario) {
 	} else {
 		pr('<h3>' . "\t\t" . 'Comunidades do usuário (' . count($usuario->comunidades) . ')</h3>');
 
-		foreach($usuario->comunidades  as $comunidade) {
+		foreach($usuario->comunidades as $key => $comunidade) {
 			pr('<h4>' . "\t\t\t" . $comunidade->nome . '</h4>');
 
 			if (!count($comunidade->posts)) {
@@ -68,6 +68,10 @@ foreach($usuarios as $usuario) {
 				foreach($comunidade->usuarios  as $assinante) {
 					pr('<strong>' . "\t\t\t\t\t" . $assinante->nome . ' ' . $assinante->sobrenome . '</strong>');
 				}
+			}
+
+			if ($key < count($usuario->comunidades) - 1){
+				pr("\t\t\t" . '############################################');
 			}
 		}
 	}
