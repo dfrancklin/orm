@@ -154,7 +154,7 @@ trait JoinHandler {
 	}
 
 	private function resolveJoinHasOne(Shadow $shadow, Join $join, String $joinType) {
-		$sql = "\n\t " . $joinType . ' JOIN ';
+		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
 			$sql .= $join->getShadow()->getTableName() . ' ' . $join->getShadow()->getAlias();
@@ -162,7 +162,7 @@ trait JoinHandler {
 			$sql .= $shadow->getTableName() . ' ' . $shadow->getAlias();
 		}
 
-		$sql .= "\n\t\t" . ' ON ';
+		$sql .= "\n\t\t" . 'ON ';
 		$sql .= $join->getShadow()->getTableName() . '.';
 
 		$belongsTo = $shadow->getJoins('reference', $join->getShadow()->getClass());
@@ -181,7 +181,7 @@ trait JoinHandler {
 	}
 
 	private function resolveJoinHasMany(Shadow $shadow, Join $join, String $joinType) {
-		$sql = "\n\t " . $joinType . ' JOIN ';
+		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
 			$sql .= $shadow->getTableName() . ' ' . $shadow->getAlias();
@@ -189,7 +189,7 @@ trait JoinHandler {
 			$sql .= $join->getShadow()->getTableName();
 		}
 
-		$sql .= "\n\t\t" . ' ON ';
+		$sql .= "\n\t\t" . 'ON ';
 		$sql .= $join->getShadow()->getAlias() . '.';
 		$sql .= $join->getShadow()->getId()->getName() . ' = ';
 		$sql .= $shadow->getAlias() . '.';
@@ -213,29 +213,29 @@ trait JoinHandler {
 			$join = $tempJoin[0];
 		}
 
-		$sql = "\n\t " . $joinType . ' JOIN ';
+		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (!array_key_exists($join->getShadow()->getClass(), $this->usedTables)) {
 			$sql .= $join->getJoinTable()->getTableName();
-			$sql .= "\n\t\t" . ' ON ';
+			$sql .= "\n\t\t" . 'ON ';
 			$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getInverseJoinColumnName() . ' = ';
 			$sql .= $shadow->getAlias() . '.';
 			$sql .= $shadow->getId()->getName();
 
-			$sql .= "\n\t " . $joinType . ' JOIN ';
+			$sql .= "\n\t" . $joinType . ' JOIN ';
 			$sql .= $join->getShadow()->getTableName();
 			$sql .= ' ' . $join->getShadow()->getAlias();
 		} else {
 			$sql .= $join->getJoinTable()->getTableName();
 		}
 
-		$sql .= "\n\t\t" . ' ON ';
+		$sql .= "\n\t\t" . 'ON ';
 		$sql .= $join->getShadow()->getAlias() . '.';
 		$sql .= $join->getShadow()->getId()->getName() . ' = ';
 		$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getJoinColumnName();
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= "\n\t " . $joinType . ' JOIN ' . $shadow->getTableName() . ' ' . $shadow->getAlias() . "\n\t\t" . ' ON ';
+			$sql .= "\n\t" . $joinType . ' JOIN ' . $shadow->getTableName() . ' ' . $shadow->getAlias() . "\n\t\t" . 'ON ';
 			$sql .= $shadow->getAlias() . '.' . $shadow->getId()->getName() . ' = ';
 			$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getInverseJoinColumnName();
 		}
@@ -244,7 +244,7 @@ trait JoinHandler {
 	}
 
 	private function resolveJoinBelongsTo(Shadow $shadow, Join $join, String $joinType) {
-		$sql = "\n\t " . $joinType . ' JOIN ';
+		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
 			$sql .= $join->getShadow()->getTableName();
@@ -253,7 +253,7 @@ trait JoinHandler {
 			$sql .= ' ' . $shadow->getAlias();
 		}
 
-		$sql .= "\n\t\t" . ' ON ';
+		$sql .= "\n\t\t" . 'ON ';
 		$sql .= $shadow->getAlias() . '.';
 		$sql .= $shadow->getId()->getName() . ' = ';
 		$sql .= $join->getShadow()->getAlias() . '.';

@@ -35,7 +35,7 @@ trait WhereHandler {
 		$sql = '';
 
 		if (count($this->whereConditions)) {
-			$sql .= "\n\t" . ' WHERE ';
+			$sql .= "\n" . 'WHERE ';
 		}
 
 		foreach($this->whereConditions as $key => $condition) {

@@ -34,6 +34,10 @@ class Persist {
 	}
 
 	public function exec($object) {
+		// if (is_null($object)) {
+		// 	return;
+		// }
+
 		$this->shadow = $this->orm->getShadow(get_class($object));
 
 		$this->persistBefore($object);
@@ -43,10 +47,8 @@ class Persist {
 		}
 
 		$statement = $this->connection->prepare($this->query);
-		/*
-		$executed = $statement->execute($this->values);
-		$lastId = $this->connection->lastInsertId();
-		*/
+		// $executed = $statement->execute($this->values);
+		// $lastId = $this->connection->lastInsertId();
 		vd($statement, $this->values);
 
 		$this->persistAfter($object);
@@ -68,7 +70,21 @@ class Persist {
 	}
 
 	private function persistAfter($object) {
-
+		foreach ($this->shadow->getJoins() as $join) {
+			if (in_array($join->getType(), ['hasOne', 'hasMany']) &&
+					in_array('INSERT', $join->getCascade())) {
+				if ($join->getType() === 'hasOne') {
+					$value = $object->{$join->getProperty()};
+					$persist = new self($this->connection, $this->em);
+					$object->{$join->getProperty()} = $persist->exec($value);
+				} elseif ($join->getType() === 'hasMany' && is_array($object->{$join->getProperty()})) {
+					foreach($object->{$join->getProperty()} as $key => $value) {
+						$persist = new self($this->connection, $this->em);
+						$object->{$join->getProperty()}[$key] = $persist->exec($value);
+					}
+				}
+			}
+		}
 	}
 
 	private function generateQuery($object) {

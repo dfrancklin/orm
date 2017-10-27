@@ -20,68 +20,69 @@ $em = $orm->createEntityManager('GreeningU');
 $query = $em->createQuery();
 $usuarios = $query->from(Usuario::class, 'u')->all();
 
-echo '<h1>Usuários (' . count($usuarios) . ')</h1><hr>';
+pr('<h1>Usuários (' . count($usuarios) . ')</h1>');
 
 foreach($usuarios as $usuario) {
-	echo '<h2>' . $usuario->nome . ' ' . $usuario->sobrenome . '</h2>';
+	pr('<hr>');
+	pr('<h2>' . "\t" . $usuario->nome . ' ' . $usuario->sobrenome . '</h2>');
 
-	pr('++++++++++++++++++++++++++++');
+	pr("\t" . '    ++++++++++++++++++++++++++++');
 
 	if (!count($usuario->assinaturas)) {
-		echo '<h3>Usuário não possiu assinaturas ainda</h3>';
+		pr('<h3>' . "\t\t" . 'Usuário não possiu assinaturas ainda</h3>');
 	} else {
-		echo '<h3>Assinaturas do usuário (' . count($usuario->assinaturas) . ')</h3>';
+		pr('<h3>' . "\t\t" . 'Assinaturas do usuário (' . count($usuario->assinaturas) . ')</h3>');
 
 		foreach($usuario->assinaturas  as $comunidade) {
-			pr('<strong>' . $comunidade->nome . '</strong> do líder <strong>' . $comunidade->lider->nome . ' ' . $comunidade->lider->sobrenome . '</strong>');
+			pr('<strong>' . "\t\t\t" . $comunidade->nome . '</strong> do líder <strong>' . $comunidade->lider->nome . ' ' . $comunidade->lider->sobrenome . '</strong>');
 		}
 	}
 
-	pr('-----------------------------------------');
+	pr("\t\t" . '   -----------------------------------------');
 
 	if (!count($usuario->comunidades)) {
-		echo '<h3>Usuário não possiu comunidades ainda</h3>';
+		pr('<h3>' . "\t\t" . 'Usuário não possiu comunidades ainda</h3>');
 	} else {
-		echo '<h3>Comunidades do usuário (' . count($usuario->comunidades) . ')</h3>';
+		pr('<h3>' . "\t\t" . 'Comunidades do usuário (' . count($usuario->comunidades) . ')</h3>');
 
 		foreach($usuario->comunidades  as $comunidade) {
-			echo '<h4>' . $comunidade->nome . '</h4>';
+			pr('<h4>' . "\t\t\t" . $comunidade->nome . '</h4>');
 
 			if (!count($comunidade->posts)) {
-				echo '<h5>Comunidade não possiu posts ainda</h5>';
+				pr('<h5>' . "\t\t\t\t" . 'Comunidade não possiu posts ainda</h5>');
 			} else {
-				echo '<h5>Posts da comunidade "' . $comunidade->nome . '" (' . count($comunidade->posts) . ')</h5>';
+				pr('<h5>' . "\t\t\t\t" . 'Posts da comunidade "' . $comunidade->nome . '" (' . count($comunidade->posts) . ')</h5>');
 
 				foreach($comunidade->posts  as $post) {
-					pr('<strong>' . $post->titulo . '</strong> do usuário <strong>' . $post->usuario->nome . ' ' . $post->usuario->sobrenome . '</strong>');
+					pr('<strong>' . "\t\t\t\t\t" . $post->titulo . '</strong> do usuário <strong>' . $post->usuario->nome . ' ' . $post->usuario->sobrenome . '</strong>');
 				}
 			}
 
-			pr('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+			pr("\t\t\t" . '   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
 
 			if (!count($comunidade->usuarios)) {
-				echo '<h5>Comunidade não possiu usuários assinantes ainda</h5>';
+				pr('<h5>' . "\t\t\t\t" . 'Comunidade não possiu usuários assinantes ainda</h5>');
 			} else {
-				echo '<h5>Usuários assinantes da comunidade "' . $comunidade->nome . '" (' . count($comunidade->usuarios) . ')</h5>';
+				pr('<h5>' . "\t\t\t\t" . 'Usuários assinantes da comunidade "' . $comunidade->nome . '" (' . count($comunidade->usuarios) . ')</h5>');
 
 				foreach($comunidade->usuarios  as $assinante) {
-					pr('<strong>' . $assinante->nome . ' ' . $assinante->sobrenome . '</strong>');
+					pr('<strong>' . "\t\t\t\t\t" . $assinante->nome . ' ' . $assinante->sobrenome . '</strong>');
 				}
 			}
 		}
 	}
 
-	pr('-----------------------------------------');
+	pr("\t\t" . '   -----------------------------------------');
 
 	if (!count($usuario->posts)) {
-		echo '<h3>Usuário não possiu posts ainda</h3>';
+		pr('<h3>' . "\t\t" . 'Usuário não possiu posts ainda</h3>');
 	} else {
-		echo '<h3>Posts do usuário (' . count($usuario->posts) . ')</h3>';
+		pr('<h3>' . "\t\t" . 'Posts do usuário (' . count($usuario->posts) . ')</h3>');
 
 		foreach($usuario->posts  as $post) {
-			pr('<strong>' . $post->titulo . '</strong> na comunidade <strong>' . $post->comunidade->nome . '</strong>');
+			pr('<strong>' . "\t\t\t" . $post->titulo . '</strong> na comunidade <strong>' . $post->comunidade->nome . '</strong>');
 		}
 	}
 
-	pr('##########################################################################');
+	pr('<hr>');
 }

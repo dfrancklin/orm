@@ -64,8 +64,8 @@ class Query {
 		$this->orders = [];
 	}
 
-	public function distinct(bool $distinct) {
-		$this->distinct = $distinct;
+	public function distinct() {
+		$this->distinct = true;
 
 		return $this;
 	}
@@ -158,7 +158,7 @@ class Query {
 			$this->query .= join(', ', $this->columns);
 		}
 
-		$this->query .= ' FROM ' . $this->target->getTableName() . ' ' . $this->target->getAlias();
+		$this->query .= "\n" . 'FROM ' . $this->target->getTableName() . ' ' . $this->target->getAlias();
 
 		if (property_exists(__CLASS__, 'usedTables')) {
 			$this->usedTables[$this->target->getClass()] = $this->target;
