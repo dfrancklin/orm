@@ -77,7 +77,7 @@ class Orm {
 			throw new \Exception('Arquivo de configuração de conexão não encontrado');
 		}
 
-		require_once $configFile;
+		require $configFile;
 
 		if (empty(trim($name))) {
 			$name = 'default';
