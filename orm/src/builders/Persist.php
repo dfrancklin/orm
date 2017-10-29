@@ -3,7 +3,10 @@
 namespace ORM\Builders;
 
 use ORM\Orm;
+use ORM\Core\Column;
+use ORM\Core\Driver;
 use ORM\Core\Join;
+use ORM\Core\Proxy;
 
 use ORM\Interfaces\IEntityManager;
 
@@ -15,13 +18,13 @@ class Persist {
 
 	private $shadow;
 
+	private $object;
+
+	private $original;
+
 	private $connection;
 
 	private $query;
-
-	// private $columns;
-
-	// private $values;
 
 	public function __construct(\PDO $connection, IEntityManager $em) {
 		if (!$connection) {
@@ -33,61 +36,237 @@ class Persist {
 		$this->connection = $connection;
 	}
 
-	public function exec($object) {
-		// if (is_null($object)) {
-		// 	return;
-		// }
+	public function exec($object, $original=null) {
+		if (!is_object($object)) {
+			return;
+		}
 
-		$this->shadow = $this->orm->getShadow(get_class($object));
+		$proxy = null;
 
-		$this->persistBefore($object);
+		if ($object instanceof Proxy) {
+			$proxy = $object;
+			$object = $object->__getObject();
+		}
 
-		if (!$this->generateQuery($object)) {
+		if (!is_null($original) && $object === $original) {
+			if ($proxy) {
+				$proxy->__setObject($object);
+				$object = $proxy;
+			}
+
+			return $object;
+		}
+
+		$class = get_class($object);
+		$this->object = $object;
+		$this->original = $object;
+		$this->shadow = $this->orm->getShadow($class);
+		$column = $this->shadow->getId();
+		$id = $column->getProperty();
+
+		$this->persistBefore();
+
+		if (!($query = $this->generateQuery())) {
 			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
 		}
 
-		$statement = $this->connection->prepare($this->query);
-		// $executed = $statement->execute($this->values);
-		// $lastId = $this->connection->lastInsertId();
-		vd($statement, $this->values);
+		$this->object->{$id} = $this->fetchNextId();
 
-		$this->persistAfter($object);
-		// die();
+		$statement = $this->connection->prepare($query);
+		$executed = $statement->execute($this->values);
 
-		return $object;
+		if (!$statement->rowCount()) {
+			throw new \Exception('Something went wrong while persistting a transaction');
+		}
+
+		$lastId = $this->connection->lastInsertId();
+
+		if ($column->getType() === 'int') {
+			$this->object->{$id} = (int) $lastId;
+		} else {
+			$this->object->{$id} = $lastId;
+		}
+
+		$this->updateManyToMany();
+
+		$this->persistAfter();
+
+		if ($proxy) {
+			$proxy->__setObject($object);
+			$object = $proxy;
+		}
+
+		return $this->object;
 	}
 
-	private function persistBefore($object) {
-		foreach ($this->shadow->getJoins() as $join) {
-			if ($join->getType() === 'belongsTo' &&
-					in_array('INSERT', $join->getCascade()) &&
-					!empty($object->{$join->getProperty()})) {
-				$value = $object->{$join->getProperty()};
-				$persist = new self($this->connection, $this->em);
-				$object->{$join->getProperty()} = $persist->exec($value);
+	private function fetchNextId() {
+		if (in_array(Driver::$GENERATE_ID_TYPE, ['QUERY', 'SEQUENCE'])) {
+			$statement = $this->connection->prepare(Driver::$GENERATE_ID_QUERY);
+			$executed = $statement->execute();
+
+			if ($executed) {
+				$next = $statement->fetch(\PDO::FETCH_NUM);
+
+				if (!empty($next)) {
+					return $next[0];
+				}
 			}
 		}
+
+		return null;
 	}
 
-	private function persistAfter($object) {
+	private function updateManyToMany() {
 		foreach ($this->shadow->getJoins() as $join) {
-			if (in_array($join->getType(), ['hasOne', 'hasMany']) &&
-					in_array('INSERT', $join->getCascade())) {
-				if ($join->getType() === 'hasOne') {
-					$value = $object->{$join->getProperty()};
-					$persist = new self($this->connection, $this->em);
-					$object->{$join->getProperty()} = $persist->exec($value);
-				} elseif ($join->getType() === 'hasMany' && is_array($object->{$join->getProperty()})) {
-					foreach($object->{$join->getProperty()} as $key => $value) {
-						$persist = new self($this->connection, $this->em);
-						$object->{$join->getProperty()}[$key] = $persist->exec($value);
-					}
+			if ($join->getType() === 'manyToMany') {
+				$property = $join->getProperty();
+
+				if (empty($join->getMappedBy()) &&
+						in_array('INSERT', $join->getCascade()) &&
+						!empty($this->object->{$property})) {
+					$this->persistManyCascade($join);
+					$this->insertManyToMany($join);
 				}
 			}
 		}
 	}
 
-	private function generateQuery($object) {
+	public function insertManyToMany($join) {
+		$reference = $this->orm->getShadow($join->getReference());
+		$property = $join->getProperty();
+		$joinTable = null;
+
+		if ($join->getMappedBy()) {
+			$referenceJoin = null;
+			$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+
+			foreach ($referenceJoins as $j) {
+				if ($j->getType() === 'manyToMany') {
+					$referenceJoin = $j;
+				}
+			}
+
+			if (empty($referenceJoin)) {
+				return;
+			}
+
+			$joinTable = $referenceJoin->getJoinTable();
+		} else {
+			$joinTable = $join->getJoinTable();
+		}
+
+		$template = 'INSERT INTO %s (%s) VALUES (%s)';
+		$table = $joinTable->getTableName();
+		$columns = [$joinTable->getJoinColumnName(), $joinTable->getInverseJoinColumnName()];
+		$binds = [':' . $joinTable->getJoinColumnName(), ':' . $joinTable->getInverseJoinColumnName()];
+		$values = [];
+		$sql = sprintf($template, $table, implode(', ', $columns), implode(', ', $binds));
+
+		$id = $this->shadow->getId()->getProperty();
+		$referenceId = $reference->getId()->getProperty();
+
+		foreach($this->object->{$property} as $p) {
+			$values[':' . $joinTable->getJoinColumnName()] = $this->object->{$id};
+			$values[':' . $joinTable->getInverseJoinColumnName()] = $p->{$referenceId};
+
+			$statement = $this->connection->prepare($sql);
+			$statement->execute($values);
+		}
+	}
+
+	private function persistBefore() {
+		foreach ($this->shadow->getJoins() as $join) {
+			if ($join->getType() === 'belongsTo' &&
+					in_array('INSERT', $join->getCascade())) {
+				$this->persistCascade($join);
+			}
+		}
+	}
+
+	private function persistAfter() {
+		foreach ($this->shadow->getJoins() as $join) {
+			if (in_array($join->getType(), ['hasOne', 'hasMany']) &&
+					in_array('INSERT', $join->getCascade())) {
+				if ($join->getType() === 'hasOne') {
+					$this->persistCascade($join);
+				} elseif ($join->getType() === 'hasMany') {
+					$this->persistManyCascade($join);
+				}
+			}
+		}
+	}
+
+	private function persistCascade($join) {
+		$property = $join->getProperty();
+		$reference = $join->getReference();
+		$value = $this->object->{$property};
+
+		if (!is_object($value)) {
+			return;
+		}
+
+		if ($value instanceof Proxy) {
+			$value = $value->__getObject();
+		}
+
+		$class = get_class($value);
+
+		if ($class !== $reference) {
+			throw new \Exception('The type of the property "' . $this->shadow->getClass() .'::' . $property . '"
+									should be "' . $reference . '", but "' . $class . '" was given');
+		}
+
+		$shadow = $this->orm->getShadow($class);
+		$id = $shadow->getId()->getProperty();
+
+		if ($this->em->find($class, $value->{$id})) {
+			return;
+		}
+
+		$persist = new Persist($this->connection, $this->em);
+		$newValue = $persist->exec($value, $this->object);
+
+		if ($newValue) {
+			$this->object->{$property} = $newValue;
+		}
+	}
+
+	private function persistManyCascade($join) {
+		$property = $join->getProperty();
+		$reference = $join->getReference();
+		$values = $this->object->{$property};
+
+		if (!is_array($values)) {
+			return;
+		}
+
+		foreach($values as $key => $value) {
+			if (!is_object($value)) {
+				continue;
+			}
+
+			if ($value instanceof Proxy) {
+				$value = $value->__getObject();
+			}
+
+			$class = get_class($value);
+			$shadow = $this->orm->getShadow($class);
+			$id = $shadow->getId()->getProperty();
+
+			if ($this->em->find($class, $value->{$id})) {
+				return;
+			}
+
+			$persist = new Persist($this->connection, $this->em);
+			$newValue = $persist->exec($value, $this->object);
+
+			if ($newValue) {
+				$this->object->{$property}[$key] = $newValue;
+			}
+		}
+	}
+
+	private function generateQuery() {
 		$sql = 'INSERT INTO %s (%s) VALUES (%s)';
 
 		$columns = [];
@@ -99,29 +278,29 @@ class Persist {
 				continue;
 			}
 
-			if ($column instanceof Join && !empty($object->{$column->getProperty()})) {
+			if ($column instanceof Join && !empty($this->object->{$column->getProperty()})) {
 				$class = $column->getReference();
 				$reference = $this->orm->getShadow($class);
 				$id = $reference->getId();
 				$prop = $id->getProperty();
-				$join = $object->{$column->getProperty()};
+				$join = $this->object->{$column->getProperty()};
 
 				if (!empty($join->$prop)) {
 					$columns[] = $column->getName();
 					$binds[] = ':' . $column->getName();
 					$values[':' . $column->getName()] = $join->$prop;
 				}
-			} elseif (!empty($object->{$column->getProperty()})) {
+			} elseif (!empty($this->object->{$column->getProperty()}) || ($column instanceof Column && $column->isId())) {
 				$columns[] = $column->getName();
 				$binds[] = ':' . $column->getName();
-				$values[':' . $column->getName()] = $object->{$column->getProperty()};
+				$values[':' . $column->getName()] = $this->object->{$column->getProperty()};
 			}
 		}
 
-		$this->query = sprintf($sql, $this->shadow->getTableName(), implode(', ', $columns), implode(', ', $binds));
+		$query = sprintf($sql, $this->shadow->getTableName(), implode(', ', $columns), implode(', ', $binds));
 		$this->values = $values;
 
-		return !empty($columns);
+		return !empty($columns) ? $query : false;
 	}
 
 }

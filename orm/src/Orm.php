@@ -33,15 +33,14 @@ class Orm {
 	}
 
 	public function setConnection(String $name = 'default') {
-		$config = $this->getConfiguration($name);
-		$this->connections[$name] = $this->createConnection($config);
+		$this->addConnection($name);
 		$this->defaultConnection = $name;
-		$this->loadDriver($config['db'], $config['version']);
 	}
 
 	public function addConnection(String $name) {
 		$config = $this->getConfiguration($name);
 		$this->connections[$name] = $this->createConnection($config);
+		$this->loadDriver($config['db'], $config['version']);
 	}
 
 	public function setDefaultConnection(String $name) {
@@ -71,16 +70,16 @@ class Orm {
 		return new \PDO($dsn, $config['user'], $config['pass']);
 	}
 
-	private function getConfiguration(String $name) : Array {
+	private function getConfiguration(String $name = 'default') : Array {
 		$configFile = __DIR__ . '/../connection.config.php';
 
 		if (!file_exists($configFile)) {
 			throw new \Exception('Arquivo de configuração de conexão não encontrado');
 		}
 
-		require $configFile;
+		require_once $configFile;
 
-		if (is_null($name) || empty(trim($name))) {
+		if (empty(trim($name))) {
 			$name = 'default';
 		}
 
@@ -96,23 +95,19 @@ class Orm {
 			$name = $this->defaultConnection;
 		}
 
-		if (!count($this->connections)) {
+		if (empty($this->connections)) {
 			$this->setConnection($name);
-
-			return $this->getConnection($name);
 		}
 
-		if ($name && isset($this->connections[$name])) {
+		if (!array_key_exists($name, $this->connections)) {
+			$this->addConnection($name);
+		}
+
+		if (isset($this->connections[$name])) {
 			return $this->connections[$name];
-		} elseif ($name) {
-			throw new \Exception("Não foram encontradas conexões definidas para \"$name\"");
 		}
 
-		if ($this->defaultConnection && isset($this->connections[$this->defaultConnection])) {
-			return $this->connections[$this->defaultConnection];
-		}
-
-		throw new \Exception('Não foram encontradas conexões definidas');
+		throw new \Exception("Não foram encontradas conexões definidas para \"$name\"");
 	}
 
 	public function getShadow(String $class) : Shadow {

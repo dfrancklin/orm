@@ -4,10 +4,12 @@ namespace ORM\Core;
 class Driver {
 
 	public static
+		$GENERATE_ID_TYPE,
+		$GENERATE_ID_QUERY,
 		$SCAPE_CHAR,
 		$PAGE_TEMPLATE,
 		$TOP_TEMPLATE,
-		$TYPES = [],
+		$DATA_TYPES = [],
 		$FORMATS = [
 			'date' => 'Y-m-d',
 			'time' => 'H:i:s',

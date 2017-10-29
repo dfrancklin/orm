@@ -3,8 +3,10 @@
 namespace ORM\Core;
 
 use ORM\Orm;
-use ORM\Builders\Query;
+
+use ORM\Builders\Merge;
 use ORM\Builders\Persist;
+use ORM\Builders\Query;
 
 use ORM\Interfaces\IEntityManager;
 
@@ -46,18 +48,32 @@ class EntityManager implements IEntityManager {
 			throw new \Exception('A valid object must be passed as parameter');
 		}
 
+		$proxy = null;
+
+		if ($object instanceof Proxy) {
+			$proxy = $object;
+			$object = $object->__getObject();
+		}
+
 		$class = get_class($object);
 		$shadow = $this->orm->getShadow($class);
 		$id = $shadow->getId();
 		$prop = $id->getProperty();
 
 		if (!empty($object->$prop)) {
-			$method = 'update';
+			$method = 'merge';
 		} else {
 			$method = 'persist';
 		}
 
-		return $this->$method($object);
+		$saved = $this->$method($object);
+
+		if ($proxy) {
+			$proxy->__setObject($saved);
+			$saved = $proxy;
+		}
+
+		return $saved;
 	}
 
 	public function beginTransaction() {
@@ -101,7 +117,7 @@ class EntityManager implements IEntityManager {
 
 	private function persist($object) {
 		if ($this->exists($object)) {
-			return $this->update($object);
+			return $this->merge($object);
 		}
 
 		$persist = new Persist($this->connection, $this);
@@ -109,12 +125,14 @@ class EntityManager implements IEntityManager {
 		return $persist->exec($object);
 	}
 
-	private function update($object) {
+	private function merge($object) {
 		if (!$this->exists($object)) {
 			return $this->persist($object);
 		}
 
-		vd('create update builder instance');
+		$merge = new Merge($this->connection, $this);
+
+		return $merge->exec($object);
 	}
 
 	private function exists($object) {

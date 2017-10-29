@@ -26,8 +26,6 @@ class Query {
 
 	private $connection;
 
-	private $query;
-
 	private $columns;
 
 	private $distinct;
@@ -103,9 +101,9 @@ class Query {
 	}
 
 	public function all() {
-		$this->generateQuery();
+		$query = $this->generateQuery();
 
-		$statement = $this->connection->prepare($this->query);
+		$statement = $this->connection->prepare($query);
 		$hasResults = $statement->execute($this->values);
 		$resultSet = [];
 
@@ -121,9 +119,10 @@ class Query {
 	}
 
 	public function one() {
-		$this->generateQuery();
+		$this->top(1);
+		$query = $this->generateQuery();
 
-		$statement = $this->connection->prepare($this->query);
+		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);
 		$resultSet = null;
 
@@ -143,22 +142,22 @@ class Query {
 	}
 
 	private function generateQuery() {
-		$this->query = 'SELECT ';
+		$query = 'SELECT ';
 
 		if ($this->distinct) {
-			$this->query .= 'DISTINCT ';
+			$query .= 'DISTINCT ';
 		}
 
 		$groupBy = $this->resolveGroupBy();
 		$aggregations = $this->resolveAggregations();
 
 		if (empty($this->columns)) {
-			$this->query .= $this->target->getAlias() . '.*';
+			$query .= $this->target->getAlias() . '.*';
 		} else {
-			$this->query .= join(', ', $this->columns);
+			$query .= join(', ', $this->columns);
 		}
 
-		$this->query .= "\n" . 'FROM ' . $this->target->getTableName() . ' ' . $this->target->getAlias();
+		$query .= "\n" . 'FROM ' . $this->target->getTableName() . ' ' . $this->target->getAlias();
 
 		if (property_exists(__CLASS__, 'usedTables')) {
 			$this->usedTables[$this->target->getClass()] = $this->target;
@@ -166,21 +165,23 @@ class Query {
 
 		if (count($this->joins)) {
 			$this->preProcessJoins([$this->target], $this->joins);
-			$this->query .= $this->generateJoins(null, $this->relations);
+			$query .= $this->generateJoins(null, $this->relations);
 		}
 
-		$this->query .= $this->resolveWhere();
-		$this->query .= $this->resolveGroupBy();
-		$this->query .= $this->resolveHaving();
-		$this->query .= $this->resolveOrderBy();
+		$query .= $this->resolveWhere();
+		$query .= $this->resolveGroupBy();
+		$query .= $this->resolveHaving();
+		$query .= $this->resolveOrderBy();
 
 		if (is_numeric($this->offset) && is_numeric($this->quantity)) {
-			$this->query = sprintf(Driver::$PAGE_TEMPLATE, $this->query, $this->offset, $this->quantity);
+			$query = sprintf(Driver::$PAGE_TEMPLATE, $query, $this->offset, $this->quantity);
 		}
 
 		if ($this->top) {
-			$this->query = sprintf(Driver::$TOP_TEMPLATE, $this->query, $this->top);
+			$query = sprintf(Driver::$TOP_TEMPLATE, $query, $this->top);
 		}
+
+		return $query;
 	}
 
 	private function mapResultSet($resultSet) {
@@ -209,7 +210,7 @@ class Query {
 			}
 		}
 
-		$proxy = new Proxy($this->em, $object, $this->target, $values);
+		$proxy = new Proxy($this->em, $object, $values);
 
 		return $proxy;
 	}

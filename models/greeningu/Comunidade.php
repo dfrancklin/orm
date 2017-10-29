@@ -30,7 +30,7 @@ class Comunidade {
 	public $usuarios;
 
 	/**
-	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
+	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario, cascade={INSERT})
 	 */
 	public $lider;
 
@@ -38,5 +38,29 @@ class Comunidade {
 	 * @ORM/HasMany(class=App\Models\GreeningU\Post)
 	 */
 	public $posts;
+
+	public function addUsuario(...$usuarios) {
+		if (!is_array($this->usuarios)) {
+			$this->usuarios = [];
+		}
+
+		foreach ($usuarios as $usuario) {
+			if (!in_array($usuario, $this->usuarios, true)) {
+				$this->usuarios[] = $usuario;
+				$usuario->addAssinaturas($this);
+			}
+		}
+	}
+
+	public function addPosts(...$posts) {
+		if (!is_array($this->posts)) {
+			$this->posts = [];
+		}
+
+		foreach ($posts as $post) {
+			$this->posts[] = $post;
+			$post->comunidade = $this;
+		}
+	}
 
 }

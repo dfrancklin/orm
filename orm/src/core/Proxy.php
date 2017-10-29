@@ -16,11 +16,11 @@ class Proxy {
 
 	private $values;
 
-	public function __construct($em, $object, $shadow, $values) {
+	public function __construct($em, $object, $values) {
 		$this->orm = Orm::getInstance();
 		$this->em = $em;
 		$this->object = $object;
-		$this->shadow = $shadow;
+		$this->shadow = $this->orm->getShadow(get_class($object));
 		$this->values = $values;
 	}
 
@@ -51,7 +51,7 @@ class Proxy {
 			throw new \Exception('The method "' . $method . '" does not exists on class "' . $this->shadow->getClass() . '"');
 		}
 
-		return $this->object->{$method}($arguments);
+		return $this->object->{$method}(...$arguments);
 	}
 
 	private function lazy(Join $join, String $property) {
@@ -78,8 +78,8 @@ class Proxy {
 			$join = $foundedJoins[0];
 			$alias = strtolower($reference->getTableName()[0]);
 			$prop = $alias . '.' . $join->getProperty();
-			$id = $this->shadow->getId();
-			$value = $this->object->{$id->getProperty()};
+			$id = $this->shadow->getId()->getProperty();
+			$value = $this->object->{$id};
 			$query = $this->em->createQuery();
 
 			$rs = $query->from($class, $alias)
@@ -106,8 +106,8 @@ class Proxy {
 			$join = $foundedJoins[0];
 			$alias = strtolower($reference->getTableName()[0]);
 			$prop = $alias . '.' . $join->getProperty();
-			$id = $this->shadow->getId();
-			$value = $this->object->{$id->getProperty()};
+			$id = $this->shadow->getId()->getProperty();
+			$value = $this->object->{$id};
 			$query = $this->em->createQuery();
 
 			$rs = $query->distinct()
@@ -151,8 +151,8 @@ class Proxy {
 		$class = $join->getReference();
 		$reference = $this->orm->getShadow($class);
 		$alias = strtolower($reference->getTableName()[0]);
-		$id = $this->shadow->getId();
-		$prop = $alias . '.' . $id->getProperty();
+		$id = $this->shadow->getId()->getProperty();
+		$prop = $alias . '.' . $id;
 		$value = $this->values[$join->getProperty()];
 
 		$query = $this->em->createQuery();
@@ -164,6 +164,14 @@ class Proxy {
 		$this->object->{$join->getProperty()} = $rs;
 
 		return $this->object->{$join->getProperty()};
+	}
+
+	public function __getObject() {
+		return $this->object;
+	}
+
+	public function __setObject($object) {
+		$this->object = $object;
 	}
 
 }

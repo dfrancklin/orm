@@ -50,7 +50,7 @@ class Usuario {
 	public $pontuacao;
 
 	/**
-	 * @ORM/ManyToMany(class=App\Models\GreeningU\Comunidade)
+	 * @ORM/ManyToMany(class=App\Models\GreeningU\Comunidade, cascade={ALL})
 	 * @ORM/JoinTable(tableName=usuario_comunidade, join={name=usuarios_id}, inverse={name=assinaturas_id})
 	 */
 	public $assinaturas;
@@ -61,18 +61,42 @@ class Usuario {
 	public $comunidades;
 
 	/**
-	 * @ORM/HasMany(class=App\Models\GreeningU\Post)
+	 * @ORM/HasMany(class=App\Models\GreeningU\Post, cascade={ALL})
 	 */
 	public $posts;
 
 	/**
-	 * @ORM/HasMany(class=App\Models\GreeningU\Comentario)
+	 * @ORM/HasMany(class=App\Models\GreeningU\Comentario, cascade={ALL})
 	 */
 	public $comentarios;
 
 	/**
-	 * @ORM/HasMany(class=App\Models\GreeningU\Voto)
+	 * @ORM/HasMany(class=App\Models\GreeningU\Voto, cascade={ALL})
 	 */
 	public $votos;
+
+	public function addAssinaturas(...$comunidades) {
+		if (!is_array($this->assinaturas)) {
+			$this->assinaturas = [];
+		}
+
+		foreach ($comunidades as $comunidade) {
+			if (!in_array($comunidade, $this->assinaturas, true)) {
+				$this->assinaturas[] = $comunidade;
+				$comunidade->addUsuario($this);
+			}
+		}
+	}
+
+	public function addPosts(...$posts) {
+		if (!is_array($this->posts)) {
+			$this->posts = [];
+		}
+
+		foreach ($posts as $post) {
+			$this->posts[] = $post;
+			$post->usuario = $this;
+		}
+	}
 
 }
