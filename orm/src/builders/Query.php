@@ -163,11 +163,7 @@ class Query {
 			$this->usedTables[$this->target->getClass()] = $this->target;
 		}
 
-		if (count($this->joins)) {
-			$this->preProcessJoins([$this->target], $this->joins);
-			$query .= $this->generateJoins(null, $this->relations);
-		}
-
+		$query .= $this->resolveJoin();
 		$query .= $this->resolveWhere();
 		$query .= $this->resolveGroupBy();
 		$query .= $this->resolveHaving();

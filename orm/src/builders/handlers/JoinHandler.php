@@ -123,21 +123,23 @@ trait JoinHandler {
 		return $valid;
 	}
 
-	private function generateJoins($relation, Array $relations) {
-		if (!$relation) {
-			if (count($relations)) {
-				return $this->generateJoins(array_shift($relations), $relations);
-			} else {
-				return;
-			}
+	private function resolveJoin() {
+		if (empty($this->joins)) {
+			return;
 		}
 
-		$this->query .= $this->resolveJoin(...$relation);
+		$this->preProcessJoins([$this->target], $this->joins);
 
-		return $this->generateJoins(array_shift($relations), $relations);
+		$sql = '';
+
+		foreach ($this->relations as $relation) {
+			$sql .= $this->generateJoins(...$relation);
+		}
+
+		return $sql;
 	}
 
-	private function resolveJoin(Array $joinInfo, Join $join) {
+	private function generateJoins(Array $joinInfo, Join $join) {
 		list($shadow, $joinType) = $joinInfo;
 
 		if (array_key_exists($join->getShadow()->getClass(), $this->usedTables) &&

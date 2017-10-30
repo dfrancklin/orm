@@ -24,8 +24,6 @@ class Persist {
 
 	private $connection;
 
-	private $query;
-
 	public function __construct(\PDO $connection, IEntityManager $em) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
@@ -76,7 +74,7 @@ class Persist {
 		$executed = $statement->execute($this->values);
 
 		if (!$statement->rowCount()) {
-			throw new \Exception('Something went wrong while persistting a transaction');
+			throw new \Exception('Something went wrong while persistting a register');
 		}
 
 		$lastId = $this->connection->lastInsertId();
@@ -87,8 +85,7 @@ class Persist {
 			$this->object->{$id} = $lastId;
 		}
 
-		$this->updateManyToMany();
-
+		$this->persistManyToMany();
 		$this->persistAfter();
 
 		if ($proxy) {
@@ -116,7 +113,7 @@ class Persist {
 		return null;
 	}
 
-	private function updateManyToMany() {
+	private function persistManyToMany() {
 		foreach ($this->shadow->getJoins() as $join) {
 			if ($join->getType() === 'manyToMany') {
 				$property = $join->getProperty();
@@ -198,14 +195,35 @@ class Persist {
 
 	private function persistCascade($join) {
 		$property = $join->getProperty();
-		$reference = $join->getReference();
 		$value = $this->object->{$property};
+		$this->object->{$property} = $this->_persist($join, $value);
+	}
 
-		if (!is_object($value)) {
+	private function persistManyCascade($join) {
+		$property = $join->getProperty();
+		$values = $this->object->{$property};
+
+		if (!is_array($values)) {
 			return;
 		}
 
+		foreach($values as $key => $value) {
+			$this->object->{$property}[$key] = $this->_persist($join, $value);
+		}
+	}
+
+	private function _persist($join, $value) {
+		if (!is_object($value)) {
+			return $value;
+		}
+
+		$property = $join->getProperty();
+		$reference = $join->getReference();
+
+		$proxy = null;
+
 		if ($value instanceof Proxy) {
+			$proxy = $value;
 			$value = $value->__getObject();
 		}
 
@@ -218,51 +236,31 @@ class Persist {
 
 		$shadow = $this->orm->getShadow($class);
 		$id = $shadow->getId()->getProperty();
+		$builder = Persist::class;
 
 		if ($this->em->find($class, $value->{$id})) {
-			return;
+			if (in_array('UPDATE', $join->getCascade())) {
+				$builder = Merge::class;
+			} else {
+				if ($proxy) {
+					$proxy->__setObject($value);
+					$value = $proxy;
+				}
+
+				return $value;
+			}
 		}
 
-		$persist = new Persist($this->connection, $this->em);
-		$newValue = $persist->exec($value, $this->object);
+		$builder = new $builder($this->connection, $this->em);
+		$newValue = $builder->exec($value, $this->object);
 
 		if ($newValue) {
-			$this->object->{$property} = $newValue;
-		}
-	}
-
-	private function persistManyCascade($join) {
-		$property = $join->getProperty();
-		$reference = $join->getReference();
-		$values = $this->object->{$property};
-
-		if (!is_array($values)) {
-			return;
-		}
-
-		foreach($values as $key => $value) {
-			if (!is_object($value)) {
-				continue;
+			if ($proxy) {
+				$proxy->__setObject($newValue);
+				$newValue = $proxy;
 			}
 
-			if ($value instanceof Proxy) {
-				$value = $value->__getObject();
-			}
-
-			$class = get_class($value);
-			$shadow = $this->orm->getShadow($class);
-			$id = $shadow->getId()->getProperty();
-
-			if ($this->em->find($class, $value->{$id})) {
-				return;
-			}
-
-			$persist = new Persist($this->connection, $this->em);
-			$newValue = $persist->exec($value, $this->object);
-
-			if ($newValue) {
-				$this->object->{$property}[$key] = $newValue;
-			}
+			return $newValue;
 		}
 	}
 
@@ -293,7 +291,8 @@ class Persist {
 			} elseif (!empty($this->object->{$column->getProperty()}) || ($column instanceof Column && $column->isId())) {
 				$columns[] = $column->getName();
 				$binds[] = ':' . $column->getName();
-				$values[':' . $column->getName()] = $this->object->{$column->getProperty()};
+				$value = $this->object->{$column->getProperty()};
+				$values[':' . $column->getName()] = $this->convertValue($value, $column->getType());
 			}
 		}
 
@@ -301,6 +300,15 @@ class Persist {
 		$this->values = $values;
 
 		return !empty($columns) ? $query : false;
+	}
+
+	private function convertValue($value, $type) {
+		if ($value instanceof \DateTime) {
+			$format = Driver::$FORMATS[$type] ?? 'Y-m-d';
+			return $value->format($format);
+		} else {
+			return $value;
+		}
 	}
 
 }

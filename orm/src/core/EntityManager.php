@@ -7,6 +7,7 @@ use ORM\Orm;
 use ORM\Builders\Merge;
 use ORM\Builders\Persist;
 use ORM\Builders\Query;
+use ORM\Builders\Remove;
 
 use ORM\Interfaces\IEntityManager;
 
@@ -35,8 +36,14 @@ class EntityManager implements IEntityManager {
 		return new Query($this->connection, $this);
 	}
 
-	public function remove($id) {
+	public function remove($object) {
+		if ($this->exists($object)) {
+			$remove = new Remove($this->connection, $this);
 
+			return $remove->exec($object);
+		}
+
+		return;
 	}
 
 	public function save($object) {

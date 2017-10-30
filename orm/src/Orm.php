@@ -67,7 +67,12 @@ class Orm {
 
 		$dsn = "$config[db]:host=$config[host];dbname=$config[schema]";
 
-		return new \PDO($dsn, $config['user'], $config['pass']);
+		$pdo = new \PDO($dsn, $config['user'], $config['pass']);
+		$pdo->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, false);
+		$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+		$pdo->setAttribute(\PDO::ATTR_ORACLE_NULLS, \PDO::NULL_EMPTY_STRING);
+
+		return $pdo;
 	}
 
 	private function getConfiguration(String $name = 'default') : Array {
