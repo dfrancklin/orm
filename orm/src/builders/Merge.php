@@ -57,7 +57,7 @@ class Merge {
 
 		$class = get_class($object);
 		$this->object = $object;
-		$this->original = $object;
+		$this->original = $original ?? $object;
 		$this->shadow = $this->orm->getShadow($class);
 		$id = $this->shadow->getId()->getProperty();
 
@@ -82,17 +82,18 @@ class Merge {
 	}
 
 	private function updateManyToMany() {
-		foreach ($this->shadow->getJoins() as $join) {
-			if ($join->getType() === 'manyToMany') {
-				$property = $join->getProperty();
+		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
+			$property = $join->getProperty();
 
-				if (empty($join->getMappedBy())
-						&& in_array('UPDATE', $join->getCascade())
-						&& !empty($this->object->{$property})) {
-					$this->updateManyCascade($join);
-					$this->deleteManyToMany($join);
-					$this->insertManyToMany($join);
-				}
+			if (in_array('UPDATE', $join->getCascade())
+					&& !empty($this->object->{$property})) {
+				$this->updateManyCascade($join);
+			}
+
+			if (empty($join->getMappedBy())
+					&& !empty($this->object->{$property})) {
+				$this->deleteManyToMany($join);
+				$this->insertManyToMany($join);
 			}
 		}
 	}
@@ -182,23 +183,23 @@ class Merge {
 	}
 
 	private function updateBefore() {
-		foreach ($this->shadow->getJoins() as $join) {
-			if ($join->getType() === 'belongsTo' &&
-					in_array('UPDATE', $join->getCascade())) {
+		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
+			if (in_array('UPDATE', $join->getCascade())) {
 				$this->updateCascade($join);
 			}
 		}
 	}
 
 	private function updateAfter() {
-		foreach ($this->shadow->getJoins() as $join) {
-			if (in_array($join->getType(), ['hasOne', 'hasMany']) &&
-					in_array('UPDATE', $join->getCascade())) {
-				if ($join->getType() === 'hasOne') {
-					$this->updateCascade($join);
-				} elseif ($join->getType() === 'hasMany') {
-					$this->updateManyCascade($join);
-				}
+		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
+			if (in_array('UPDATE', $join->getCascade())) {
+				$this->updateCascade($join);
+			}
+		}
+
+		foreach ($this->shadow->getJoins('typr', 'hasMany') as $join) {
+			if (in_array('UPDATE', $join->getCascade())) {
+				$this->updateManyCascade($join);
 			}
 		}
 	}
@@ -262,7 +263,7 @@ class Merge {
 		}
 
 		$builder = new $builder($this->connection, $this->em);
-		$newValue = $builder->exec($value, $this->object);
+		$newValue = $builder->exec($value, $this->original);
 
 		if ($newValue) {
 			if ($proxy) {

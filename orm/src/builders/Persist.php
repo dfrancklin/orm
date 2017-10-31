@@ -57,7 +57,7 @@ class Persist {
 
 		$class = get_class($object);
 		$this->object = $object;
-		$this->original = $object;
+		$this->original = $original ?? $object;
 		$this->shadow = $this->orm->getShadow($class);
 		$column = $this->shadow->getId();
 		$id = $column->getProperty();
@@ -114,16 +114,17 @@ class Persist {
 	}
 
 	private function persistManyToMany() {
-		foreach ($this->shadow->getJoins() as $join) {
-			if ($join->getType() === 'manyToMany') {
-				$property = $join->getProperty();
+		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
+			$property = $join->getProperty();
 
-				if (empty($join->getMappedBy()) &&
-						in_array('INSERT', $join->getCascade()) &&
-						!empty($this->object->{$property})) {
-					$this->persistManyCascade($join);
-					$this->insertManyToMany($join);
-				}
+			if (in_array('INSERT', $join->getCascade()) &&
+					!empty($this->object->{$property})) {
+				$this->persistManyCascade($join);
+			}
+
+			if (empty($join->getMappedBy()) &&
+					!empty($this->object->{$property})) {
+				$this->insertManyToMany($join);
 			}
 		}
 	}
@@ -172,23 +173,23 @@ class Persist {
 	}
 
 	private function persistBefore() {
-		foreach ($this->shadow->getJoins() as $join) {
-			if ($join->getType() === 'belongsTo' &&
-					in_array('INSERT', $join->getCascade())) {
+		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
+			if (in_array('INSERT', $join->getCascade())) {
 				$this->persistCascade($join);
 			}
 		}
 	}
 
 	private function persistAfter() {
-		foreach ($this->shadow->getJoins() as $join) {
-			if (in_array($join->getType(), ['hasOne', 'hasMany']) &&
-					in_array('INSERT', $join->getCascade())) {
-				if ($join->getType() === 'hasOne') {
-					$this->persistCascade($join);
-				} elseif ($join->getType() === 'hasMany') {
-					$this->persistManyCascade($join);
-				}
+		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
+			if (in_array('INSERT', $join->getCascade())) {
+				$this->persistCascade($join);
+			}
+		}
+
+		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
+			if (in_array('INSERT', $join->getCascade())) {
+				$this->persistManyCascade($join);
 			}
 		}
 	}
@@ -252,7 +253,7 @@ class Persist {
 		}
 
 		$builder = new $builder($this->connection, $this->em);
-		$newValue = $builder->exec($value, $this->object);
+		$newValue = $builder->exec($value, $this->original);
 
 		if ($newValue) {
 			if ($proxy) {

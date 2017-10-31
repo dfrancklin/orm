@@ -32,9 +32,17 @@ class Orm {
 		return self::$instance;
 	}
 
-	public function setConnection(String $name = 'default') {
+	public function setConnection(String $name = 'default', $createTables = false, $dropTables = false) {
 		$this->addConnection($name);
 		$this->defaultConnection = $name;
+
+		if ($dropTables) {
+			// drop
+		}
+
+		if ($createTables) {
+			// create
+		}
 	}
 
 	public function addConnection(String $name) {
@@ -46,7 +54,6 @@ class Orm {
 	public function setDefaultConnection(String $name) {
 		$this->defaultConnection = $name;
 	}
-
 
 	private function loadDriver($db, $version) {
 		$driver = __DIR__ . '/drivers/' . $db . '-' . $version . '.php';

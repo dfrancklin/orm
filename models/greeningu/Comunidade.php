@@ -35,7 +35,7 @@ class Comunidade {
 	public $lider;
 
 	/**
-	 * @ORM/HasMany(class=App\Models\GreeningU\Post)
+	 * @ORM/HasMany(class=App\Models\GreeningU\Post, cascade={DELETE})
 	 */
 	public $posts;
 

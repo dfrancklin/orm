@@ -20,8 +20,8 @@ class Proxy {
 		$this->orm = Orm::getInstance();
 		$this->em = $em;
 		$this->object = $object;
-		$this->shadow = $this->orm->getShadow(get_class($object));
 		$this->values = $values;
+		$this->shadow = $this->orm->getShadow(get_class($object));
 	}
 
 	public function __get($property) {
@@ -32,7 +32,11 @@ class Proxy {
 		$joins = $this->shadow->getJoins('property', $property);
 
 		if (!empty($joins) && count($joins) === 1) {
-			return $this->lazy($joins[0], $property);
+			$newValue = $this->lazy($joins[0], $property);
+
+			if ($newValue) {
+				$this->object->{$property} = $newValue;
+			}
 		}
 
 		return $this->object->{$property};
@@ -52,6 +56,14 @@ class Proxy {
 		}
 
 		return $this->object->{$method}(...$arguments);
+	}
+
+	public function __isset($name) {
+		return isset($this->object->{$name});
+	}
+
+	public function __unset($name) {
+		unset($this->object->{$name});
 	}
 
 	private function lazy(Join $join, String $property) {
@@ -86,10 +98,10 @@ class Proxy {
 					->where($prop)->equals($value)
 					->one();
 
-			$this->object->{$join->getProperty()} = $rs;
-
-			return $this->object->{$join->getProperty()};
+			return $rs;
 		}
+
+		return false;
 	}
 
 	private function lazyHasMany(Join $join) {
@@ -115,10 +127,10 @@ class Proxy {
 					->where($prop)->equals($value)
 					->all();
 
-			$this->object->{$join->getProperty()} = $rs;
-
-			return $this->object->{$join->getProperty()};
+			return $rs;
 		}
+
+		return false;
 	}
 
 	private function lazyManyToMany(Join $join) {
@@ -131,21 +143,18 @@ class Proxy {
 
 		$query = $this->em->createQuery();
 
-
 		$rs = $query->distinct()
 				->from($class, $alias)
 				->join($joinClass, $joinAlias)
 				->where($prop)->equals($value)
 				->all();
 
-		$this->object->{$join->getProperty()} = $rs;
-
-		return $this->object->{$join->getProperty()};
+		return $rs;
 	}
 
 	private function lazyBelongsTo(Join $join) {
 		if (!array_key_exists($join->getProperty(), $this->values)) {
-			return;
+			return false;
 		}
 
 		$class = $join->getReference();
@@ -161,9 +170,7 @@ class Proxy {
 				->where($prop)->equals($value)
 				->one();
 
-		$this->object->{$join->getProperty()} = $rs;
-
-		return $this->object->{$join->getProperty()};
+		return $rs;
 	}
 
 	public function __getObject() {

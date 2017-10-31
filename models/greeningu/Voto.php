@@ -16,13 +16,13 @@ class Voto {
 
 	/**
 	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
-	 * @ORM/JoinColumn(name=id_usuario_votador)
+	 * @ORM/JoinColumn(name=usuario_id)
 	 */
 	public $usuario;
 
 	/**
 	 * @ORM/BelongsTo(class=App\Models\GreeningU\Post)
-	 * @ORM/JoinColumn(name=id_postagem)
+	 * @ORM/JoinColumn(name=post_id)
 	 */
 	public $post;
 

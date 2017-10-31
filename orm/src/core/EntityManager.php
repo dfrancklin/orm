@@ -37,10 +37,17 @@ class EntityManager implements IEntityManager {
 	}
 
 	public function remove($object) {
+		$proxy = null;
+
+		if ($object instanceof Proxy) {
+			$proxy = $object;
+			$object = $object->__getObject();
+		}
+
 		if ($this->exists($object)) {
 			$remove = new Remove($this->connection, $this);
 
-			return $remove->exec($object);
+			return $remove->exec($proxy ?? $object);
 		}
 
 		return;

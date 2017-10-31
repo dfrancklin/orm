@@ -194,13 +194,20 @@ class Query {
 	private function mapOne($resultSet) {
 		$class = $this->target->getClass();
 		$object = new $class;
-		$values = [];
 
 		foreach ($this->target->getColumns() as $column) {
 			$object->{$column->getProperty()} = $this->convertType($resultSet[$column->getName()], $column->getType());
 		}
 
-		foreach ($this->target->getJoins() as $column) {
+		$joins = $this->target->getJoins();
+
+		if (empty($joins)) {
+			return $object;
+		}
+
+		$values = [];
+
+		foreach ($joins as $column) {
 			if (isset($resultSet[$column->getName()])) {
 				$values[$column->getProperty()] = $this->convertType($resultSet[$column->getName()], $column->getType());
 			}
