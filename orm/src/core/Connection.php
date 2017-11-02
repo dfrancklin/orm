@@ -12,9 +12,12 @@ class Connection implements IConnection {
 
 	private $driver;
 
-	public function __construct(\PDO $pdo, Driver $driver) {
+	private $defaultSchema;
+
+	public function __construct(\PDO $pdo, Driver $driver, String $defaultSchema) {
 		$this->pdo = $pdo;
 		$this->driver = $driver;
+		$this->defaultSchema = $defaultSchema;
 	}
 
 	public function prepare(String $sql) : \PDOStatement {
@@ -40,5 +43,10 @@ class Connection implements IConnection {
 	public function getDriver() {
 		return $this->driver;
 	}
+
+	public function getDefaultSchema() {
+		return $this->defaultSchema;
+	}
+
 
 }

@@ -3,19 +3,8 @@
 include 'config.php';
 include 'autoloader.php';
 include 'functions.php';
+include 'load.php';
 
-use ORM\Orm;
-use ORM\Builders\Query;
-
-use App\Models\GreeningU\Post;
-use App\Models\GreeningU\Voto;
-use App\Models\GreeningU\Usuario;
-use App\Models\GreeningU\Comunidade;
-use App\Models\GreeningU\Comentario;
-
-include_once 'orm/load.php';
-
-$orm = Orm::getInstance();
 $em = $orm->createEntityManager('GreeningU');
 $query = $em->createQuery();
 $usuarios = $query->from(Usuario::class, 'u')->all();

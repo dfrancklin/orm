@@ -3,16 +3,8 @@
 include 'config.php';
 include 'autoloader.php';
 include 'functions.php';
+include 'load.php';
 
-use ORM\Orm;
-
-use App\Models\GreeningU\Usuario;
-use App\Models\GreeningU\Comunidade;
-use App\Models\GreeningU\Post;
-
-include_once 'orm/load.php';
-
-$orm = Orm::getInstance();
 $em = $orm->createEntityManager('GreeningU');
 
 $lider = $em->find(Usuario::class, 1);
