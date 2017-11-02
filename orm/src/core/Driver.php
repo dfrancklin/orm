@@ -1,19 +1,31 @@
 <?php
+
 namespace ORM\Core;
 
-class Driver {
+abstract class Driver {
 
-	public static
-		$GENERATE_ID_TYPE,
-		$GENERATE_ID_QUERY,
-		$SCAPE_CHAR,
-		$PAGE_TEMPLATE,
-		$TOP_TEMPLATE,
-		$DATA_TYPES = [],
-		$FORMATS = [
-			'date' => 'Y-m-d',
-			'time' => 'H:i:s',
-			'datetime' => 'Y-m-d H:i:s'
-		];
+	public $GENERATE_ID_TYPE;
+
+	public $GENERATE_ID_ATTR;
+
+	public $GENERATE_ID_QUERY;
+
+	public $SEQUENCE_NAME = 'orm_sequence';
+
+	public $IGNORE_ID_DATA_TYPE = false;
+
+	public $SUPPORTS_IF_EXISTS = false;
+
+	public $PAGE_TEMPLATE;
+
+	public $TOP_TEMPLATE;
+
+	public $DATA_TYPES = [];
+
+	public $FORMATS = [
+		'date' => 'Y-m-d',
+		'time' => 'H:i:s',
+		'datetime' => 'Y-m-d H:i:s'
+	];
 
 }

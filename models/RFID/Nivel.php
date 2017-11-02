@@ -1,9 +1,19 @@
 <?php
-	class Nivel {
-		
-		const 
-			RESPONSAVEL		= 'Responsavel', 
-			USUARIO			= 'Usuário', 
-			ADMINISTRADOR	= 'Administrador';
-	
-	}
+
+namespace App\Models\RFID;
+
+/**
+ * @ORM/Entity
+ */
+class Nivel {
+
+	/**
+	 * @ORM/Id
+	 * @ORM/Generated
+	 * @ORM/Column(type=int)
+	 */
+	private $id;
+
+	private $nome;
+
+}

@@ -2,9 +2,8 @@
 
 namespace ORM\Builders\Handlers;
 
-use ORM\Core\Shadow;
 use ORM\Core\Column;
-use ORM\Core\Driver;
+use ORM\Core\Shadow;
 
 use ORM\Builders\Criteria;
 use ORM\Builders\Handlers\OperatorHandler;
@@ -141,7 +140,7 @@ trait WhereHandler {
 
 		foreach ($values as $value) {
 			if ($value instanceof \DateTime) {
-				$format = Driver::$FORMATS[$type] ?? 'Y-m-d';
+				$format = $this->connection->getDriver()->FORMATS[$type] ?? 'Y-m-d';
 				array_push($processedValues, $value->format($format));
 			} else {
 				array_push($processedValues, $value);

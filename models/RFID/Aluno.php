@@ -28,6 +28,11 @@ class Aluno {
 	 */
 	private $responsaveis;
 
+	/**
+	 * @ORM/hasMany(class=App\Models\RFID\Log)
+	 */
+	private $logs;
+
 	public function getMatricula() {
 		return $this->matricula;
 	}

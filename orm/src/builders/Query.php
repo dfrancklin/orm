@@ -3,7 +3,8 @@
 namespace ORM\Builders;
 
 use ORM\Orm;
-use ORM\Core\Driver;
+
+use ORM\Core\Connection;
 use ORM\Core\Proxy;
 
 use ORM\Builders\Handlers\AggregateHandler;
@@ -40,7 +41,7 @@ class Query {
 
 	private $top;
 
-	public function __construct(\PDO $connection, IEntityManager $em) {
+	public function __construct(Connection $connection, IEntityManager $em) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -170,11 +171,11 @@ class Query {
 		$query .= $this->resolveOrderBy();
 
 		if (is_numeric($this->offset) && is_numeric($this->quantity)) {
-			$query = sprintf(Driver::$PAGE_TEMPLATE, $query, $this->offset, $this->quantity);
+			$query = sprintf($this->connection->getDriver()->PAGE_TEMPLATE, $query, $this->offset, $this->quantity);
 		}
 
 		if ($this->top) {
-			$query = sprintf(Driver::$TOP_TEMPLATE, $query, $this->top);
+			$query = sprintf($this->connection->getDriver()->TOP_TEMPLATE, $query, $this->top);
 		}
 
 		return $query;

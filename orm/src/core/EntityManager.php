@@ -4,6 +4,8 @@ namespace ORM\Core;
 
 use ORM\Orm;
 
+use ORM\Core\Connection;
+
 use ORM\Builders\Merge;
 use ORM\Builders\Persist;
 use ORM\Builders\Query;
@@ -17,7 +19,7 @@ class EntityManager implements IEntityManager {
 
 	private $transactionActive;
 
-	public function __construct(\PDO $connection) {
+	public function __construct(Connection $connection) {
 		$this->connection = $connection;
 		$this->orm = Orm::getInstance();
 	}

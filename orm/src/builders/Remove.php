@@ -3,6 +3,8 @@
 namespace ORM\Builders;
 
 use ORM\Orm;
+
+use ORM\Core\Connection;
 use ORM\Core\Proxy;
 
 use ORM\Interfaces\IEntityManager;
@@ -23,7 +25,7 @@ class Remove {
 
 	private $connection;
 
-	public function __construct(\PDO $connection, IEntityManager $em) {
+	public function __construct(Connection $connection, IEntityManager $em) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -77,8 +79,6 @@ class Remove {
 		if (!($query = $this->generateQuery())) {
 			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
 		}
-
-		vd($query, $this->values);
 
 		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);

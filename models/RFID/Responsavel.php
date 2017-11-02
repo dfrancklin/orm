@@ -10,7 +10,7 @@ class Responsavel {
 	/**
 	 * @ORM/Id
 	 * @ORM/Generated
-	 * @ORM/Column(type=integer, name=id_resp)
+	 * @ORM/Column(type=int, name=id_resp)
 	 */
 	private $id;
 

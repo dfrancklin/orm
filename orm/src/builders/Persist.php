@@ -4,7 +4,7 @@ namespace ORM\Builders;
 
 use ORM\Orm;
 use ORM\Core\Column;
-use ORM\Core\Driver;
+use ORM\Core\Connection;
 use ORM\Core\Join;
 use ORM\Core\Proxy;
 
@@ -24,7 +24,7 @@ class Persist {
 
 	private $connection;
 
-	public function __construct(\PDO $connection, IEntityManager $em) {
+	public function __construct(Connection $connection, IEntityManager $em) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -97,8 +97,8 @@ class Persist {
 	}
 
 	private function fetchNextId() {
-		if (in_array(Driver::$GENERATE_ID_TYPE, ['QUERY', 'SEQUENCE'])) {
-			$statement = $this->connection->prepare(Driver::$GENERATE_ID_QUERY);
+		if (in_array($this->connection->getDriver()->GENERATE_ID_TYPE, ['QUERY', 'SEQUENCE'])) {
+			$statement = $this->connection->prepare($this->connection->getDriver()->GENERATE_ID_QUERY);
 			$executed = $statement->execute();
 
 			if ($executed) {
@@ -305,7 +305,7 @@ class Persist {
 
 	private function convertValue($value, $type) {
 		if ($value instanceof \DateTime) {
-			$format = Driver::$FORMATS[$type] ?? 'Y-m-d';
+			$format = $this->connection->getDriver()->FORMATS[$type] ?? 'Y-m-d';
 			return $value->format($format);
 		} else {
 			return $value;

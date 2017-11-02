@@ -15,4 +15,9 @@ include_once 'orm/load.php';
 $ds = DIRECTORY_SEPARATOR;
 
 $orm = Orm::getInstance();
-$orm->setConnection('Sakila');
+$orm->setConnection('RFID', [
+	'namespace' => 'App\\Models\\RFID',
+	'modelsFolder' => __DIR__ . $ds . 'models' . $ds . 'RFID',
+	'create' => true,
+	'drop' => true
+]);

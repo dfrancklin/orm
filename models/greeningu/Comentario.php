@@ -25,13 +25,12 @@ class Comentario {
 	public $data;
 
 	/**
-	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario)
+	 * @ORM/BelongsTo(class=App\Models\GreeningU\Usuario, nullable=true)
 	 */
 	public $usuario;
 
 	/**
 	 * @ORM/BelongsTo(class=App\Models\GreeningU\Post)
-	 * @ORM/JoinColumn(name=id_postagem)
 	 */
 	public $post;
 

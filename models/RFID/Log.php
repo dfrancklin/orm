@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models\RFID;
 
 /**
@@ -9,7 +10,7 @@ class Log {
 	/**
 	 * @ORM/Id
 	 * @ORM/Generated
-	 * @ORM/Column(type=integer)
+	 * @ORM/Column(type=int)
 	 */
 	private $id;
 
@@ -24,13 +25,13 @@ class Log {
 	private $hora;
 
 	/**
-	 * @ORM/HasOne(class=App\Models\RFID\Ambiente)
+	 * @ORM/BelongsTo(class=App\Models\RFID\Ambiente)
 	 * @ORM/JoinColumn(name=ambiente)
 	 */
 	private $ambiente;
 
 	/**
-	 * @ORM/HasOne(class=App\Models\RFID\Aluno)
+	 * @ORM/BelongsTo(class=App\Models\RFID\Aluno)
 	 * @ORM/JoinColumn(name=aluno)
 	 */
 	private $aluno;

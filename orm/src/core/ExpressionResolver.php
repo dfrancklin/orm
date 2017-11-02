@@ -1,4 +1,5 @@
 <?php
+
 namespace ORM\Core;
 
 class ExpressionResolver {
@@ -6,7 +7,7 @@ class ExpressionResolver {
 	public static function get($expression, $comment, $all = false) {
 		$expression = constant(OrmExpressions::class . '::' . $expression);
 		$comment = self::stripChars($comment);
-		
+
 		if ($all) {
 			return self::all($expression, $comment);
 		} else {

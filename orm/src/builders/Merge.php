@@ -3,8 +3,9 @@
 namespace ORM\Builders;
 
 use ORM\Orm;
+
 use ORM\Core\Column;
-use ORM\Core\Driver;
+use ORM\Core\Connection;
 use ORM\Core\Join;
 use ORM\Core\Proxy;
 
@@ -24,7 +25,7 @@ class Merge {
 
 	private $connection;
 
-	public function __construct(\PDO $connection, IEntityManager $em) {
+	public function __construct(Connection $connection, IEntityManager $em) {
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -197,7 +198,7 @@ class Merge {
 			}
 		}
 
-		foreach ($this->shadow->getJoins('typr', 'hasMany') as $join) {
+		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
 			if (in_array('UPDATE', $join->getCascade())) {
 				$this->updateManyCascade($join);
 			}
@@ -335,7 +336,7 @@ class Merge {
 
 	private function convertValue($value, $type) {
 		if ($value instanceof \DateTime) {
-			$format = Driver::$FORMATS[$type] ?? 'Y-m-d';
+			$format = $this->connection->getDriver()->FORMATS[$type] ?? 'Y-m-d';
 			return $value->format($format);
 		} else {
 			return $value;

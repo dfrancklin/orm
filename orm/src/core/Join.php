@@ -20,6 +20,8 @@ class Join {
 
 	private $cascade;
 
+	private $optional;
+
 	public function getShadow() {
 		return $this->shadow;
 	}
@@ -91,6 +93,14 @@ class Join {
 
 	public function setCascade($cascade) {
 		$this->cascade = $cascade;
+	}
+
+	public function isOptional() {
+		return $this->optional;
+	}
+
+	public function setOptional($optional) {
+		$this->optional = $optional;
 	}
 
 }

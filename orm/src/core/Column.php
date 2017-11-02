@@ -17,6 +17,10 @@ class Column {
 
 	private $length;
 
+	private $scale;
+
+	private $precision;
+
 	private $nullable;
 
 	private $unique;
@@ -32,7 +36,7 @@ class Column {
 	public function getProperty() {
 		return $this->property;
 	}
-	
+
 	public function setProperty($property) {
 		$this->property = $property;
 	}
@@ -77,7 +81,23 @@ class Column {
 		$this->length = $length;
 	}
 
-	public function getNullable() {
+	public function getScale() {
+		return $this->scale;
+	}
+
+	public function setScale($scale) {
+		$this->scale = $scale;
+	}
+
+	public function getPrecision() {
+		return $this->precision;
+	}
+
+	public function setPrecision($precision) {
+		$this->precision = $precision;
+	}
+
+	public function isNullable() {
 		return $this->nullable;
 	}
 

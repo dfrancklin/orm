@@ -10,7 +10,7 @@ class OrmExpressions {
 		// Annotations
 		orm = '/@ORM\/[' . self::anyWithBraces . ']+/i',
 		entity = '/Entity/i',
-		id = '/Id/i',
+		id = '/@ORM\/(Id)/i',
 		generated = '/Generated/i',
 		table = '/Table\([' . self::any . ']+\)/i',
 		column = '/Column\([' . self::any . ']+\)/i',
@@ -27,15 +27,18 @@ class OrmExpressions {
 		name = '/name[\s]?=[\s]?(\w+)/i',
 		type = '/type[\s]?=[\s]?(\w+)/i',
 		length = '/length[\s]?=[\s]?(\d+)/i',
+		scale = '/scale[\s]?=[\s]?(\d+)/i',
+		precision = '/precision[\s]?=[\s]?(\d+)/i',
 		nullable = '/nullable[\s]?=[\s]?(\w+)/i',
 		unique = '/unique[\s]?=[\s]?(\w+)/i',
-			// Attributes from joins
+		// Attributes from joins
 			tableName = '/tableName[\s]?=[\s]?(\w+)/i',
 			join = '/join[\s]?=[\s]?\{([' . self::any . ']*)\}/i',
 			inverse = '/inverse[\s]?=[\s]?\{([' . self::any . ']*)\}/i',
 			// reference = '/reference[\s]?=[\s]?(\w+)/i',
 			mappedBy = '/mappedBy[\s]?=[\s]?(\w+)/i',
 			className = '/class[\s]?=[\s]?([\\\\\w]+)/i',
-			cascade = '/cascade[\s]?=[\s]?\{([A-Za-z,\s]+)\}/i';
+			cascade = '/cascade[\s]?=[\s]?\{([A-Za-z,\s]+)\}/i',
+			optional = '/optional[\s]?=[\s]?(\w+)/i';
 
 }

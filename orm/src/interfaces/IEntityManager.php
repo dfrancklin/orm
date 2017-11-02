@@ -2,11 +2,13 @@
 
 namespace ORM\Interfaces;
 
+use ORM\Core\Connection;
+
 use ORM\Builders\Query;
 
 interface IEntityManager {
 
-	function __construct(\PDO $connection);
+	function __construct(Connection $connection);
 
 	function find(String $class, $id);
 

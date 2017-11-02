@@ -109,6 +109,11 @@ class Annotation {
 			$join->setCascade([]);
 		}
 
+		if ($optional = $this->resolver->get('optional', $has)) {
+			$optional = $optional === 'true';
+			$join->setOptional();
+		}
+
 		if ($type === 'manyToMany') {
 			if ($mappedBy = $this->resolver->get('mappedBy', $has)) {
 				$join->setMappedBy($mappedBy);
@@ -138,7 +143,7 @@ class Annotation {
 
 				$join->setJoinTable($table);
 			}
-		} else {
+		} elseif ($type === 'belongsTo') {
 			if ($column = $this->resolver->get('joinColumn', $prop)) {
 				$name = $this->resolver->get('name', $column);
 				$join->setName($name);
@@ -163,17 +168,50 @@ class Annotation {
 		$shadowColumn->setGenerated(!!$this->resolver->get('generated', $prop));
 
 		if ($column = $this->resolver->get('column', $prop)) {
-			$name = $this->resolver->get('name', $column);
-			$shadowColumn->setName($name ? $name : $property->getName());
+			if ($name = $this->resolver->get('name', $column)) {
+				$shadowColumn->setName($name);
+			} else {
+				$shadowColumn->setName($property->getName());
+			}
 
-			$shadowColumn->setType($this->resolver->get('type', $column));
-			$shadowColumn->setLength($this->resolver->get('length', $column));
+			if ($type = $this->resolver->get('type', $column)) {
+				$shadowColumn->setType($type);
+			} else {
+				$shadowColumn->setType('string');
+			}
 
-			$nullable = $this->resolver->get('nullable', $column);
-			$shadowColumn->setNullable($nullable === 'true' || is_null($nullable) && !$id);
+			if ($length = $this->resolver->get('length', $column)) {
+				$shadowColumn->setLength((int) $length);
+			} else {
+				$shadowColumn->setLength(255);
+			}
+
+			if ($scale = $this->resolver->get('scale', $column)) {
+				$shadowColumn->setScale((int) $scale);
+			} else {
+				$shadowColumn->setScale(0);
+			}
+
+			if ($precision = $this->resolver->get('precision', $column)) {
+				$shadowColumn->setPrecision((int) $precision);
+			} else {
+				$shadowColumn->setPrecision(0);
+			}
 
 			$unique = $this->resolver->get('unique', $column);
-			$shadowColumn->setUnique($unique === 'true' || is_null($unique) && !$id);
+			$unique = !is_null($unique) && $unique === 'true' && !$id;
+			$shadowColumn->setUnique($unique);
+
+			$nullable = $this->resolver->get('nullable', $column);
+			$shadowColumn->setNullable(($nullable === 'true' || is_null($nullable)) && !$id && !$unique);
+		} else {
+			$shadowColumn->setName($property->getName());
+			$shadowColumn->setType('string');
+			$shadowColumn->setLength(255);
+			$shadowColumn->setScale(0);
+			$shadowColumn->setPrecision(0);
+			$shadowColumn->setUnique(false);
+			$shadowColumn->setNullable(true);
 		}
 
 		$shadowColumn->setProperty($property->getName());
