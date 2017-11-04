@@ -4,14 +4,18 @@ namespace ORM\Builders;
 
 use ORM\Orm;
 
-use ORM\Core\Column;
-use ORM\Core\Connection;
-use ORM\Core\Join;
+use ORM\Constants\CascadeTypes;
+
 use ORM\Core\Proxy;
 
+use ORM\Mappers\Join;
+use ORM\Mappers\Column;
+
+use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
-class Merge {
+class Merge
+{
 
 	private $em;
 
@@ -25,7 +29,8 @@ class Merge {
 
 	private $connection;
 
-	public function __construct(Connection $connection, IEntityManager $em) {
+	public function __construct(IConnection $connection, IEntityManager $em)
+	{
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -35,7 +40,8 @@ class Merge {
 		$this->connection = $connection;
 	}
 
-	public function exec($object, $original=null) {
+	public function exec($object, $original = null)
+	{
 		if (!is_object($object)) {
 			return;
 		}
@@ -82,11 +88,12 @@ class Merge {
 		return $this->object;
 	}
 
-	private function updateManyToMany() {
+	private function updateManyToMany()
+	{
 		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
 			$property = $join->getProperty();
 
-			if (in_array('UPDATE', $join->getCascade())
+			if (in_array(CascadeTypes::UPDATE, $join->getCascade())
 					&& !empty($this->object->{$property})) {
 				$this->updateManyCascade($join);
 			}
@@ -99,7 +106,8 @@ class Merge {
 		}
 	}
 
-	private function deleteManyToMany($join) {
+	private function deleteManyToMany(Join $join)
+	{
 		$reference = $this->orm->getShadow($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
@@ -140,7 +148,8 @@ class Merge {
 		$statement->execute($values);
 	}
 
-	private function insertManyToMany($join) {
+	private function insertManyToMany(Join $join)
+	{
 		$reference = $this->orm->getShadow($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
@@ -183,35 +192,39 @@ class Merge {
 		}
 	}
 
-	private function updateBefore() {
+	private function updateBefore()
+	{
 		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
-			if (in_array('UPDATE', $join->getCascade())) {
+			if (in_array(CascadeTypes::UPDATE, $join->getCascade())) {
 				$this->updateCascade($join);
 			}
 		}
 	}
 
-	private function updateAfter() {
+	private function updateAfter()
+	{
 		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
-			if (in_array('UPDATE', $join->getCascade())) {
+			if (in_array(CascadeTypes::UPDATE, $join->getCascade())) {
 				$this->updateCascade($join);
 			}
 		}
 
 		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
-			if (in_array('UPDATE', $join->getCascade())) {
+			if (in_array(CascadeTypes::UPDATE, $join->getCascade())) {
 				$this->updateManyCascade($join);
 			}
 		}
 	}
 
-	private function updateCascade($join) {
+	private function updateCascade(Join $join)
+	{
 		$property = $join->getProperty();
 		$value = $this->object->{$property};
 		$this->object->{$property} = $this->_merge($join, $value);
 	}
 
-	private function updateManyCascade($join) {
+	private function updateManyCascade(Join $join)
+	{
 		$property = $join->getProperty();
 		$values = $this->object->{$property};
 
@@ -224,7 +237,8 @@ class Merge {
 		}
 	}
 
-	private function _merge($join, $value) {
+	private function _merge(Join $join, $value)
+	{
 		if (!is_object($value)) {
 			return $value;
 		}
@@ -251,7 +265,7 @@ class Merge {
 		$builder = Merge::class;
 
 		if (!$this->em->find($class, $value->{$id})) {
-			if (in_array('INSERT', $join->getCascade())) {
+			if (in_array(CascadeTypes::INSERT, $join->getCascade())) {
 				$builder = Persist::class;
 			} else {
 				if ($proxy) {
@@ -276,7 +290,8 @@ class Merge {
 		}
 	}
 
-	private function generateQuery() {
+	private function generateQuery() : String
+	{
 		$sql = 'UPDATE %s SET %s WHERE %s = %s';
 
 		$idName = $idBind = null;
@@ -334,9 +349,11 @@ class Merge {
 		return !empty($sets) ? $query : false;
 	}
 
-	private function convertValue($value, $type) {
+	private function convertValue($value, String $type)
+	{
 		if ($value instanceof \DateTime) {
 			$format = $this->connection->getDriver()->FORMATS[$type] ?? 'Y-m-d';
+
 			return $value->format($format);
 		} else {
 			return $value;

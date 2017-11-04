@@ -4,12 +4,14 @@ use ORM\Core\Driver;
 
 if (!class_exists('MySQLDriver_5_7_11')) {
 
-	class MySQLDriver_5_7_11 extends Driver {
+	class MySQLDriver_5_7_11 extends Driver
+	{
 
 		const NAME = 'MySQL';
 		const VERSION = '5.7.11';
 
-		public function __construct() {
+		public function __construct()
+		{
 			$this->GENERATE_ID_TYPE = 'ATTR';
 			$this->GENERATE_ID_ATTR = 'AUTO_INCREMENT';
 			$this->SUPPORTS_IF_EXISTS = true;

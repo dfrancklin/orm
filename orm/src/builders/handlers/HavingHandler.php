@@ -5,23 +5,24 @@ namespace ORM\Builders\Handlers;
 use ORM\Builders\Aggregate;
 use ORM\Builders\Criteria;
 
-trait HavingHandler {
+trait HavingHandler
+{
 
 	private $havingConditions;
 
-	public function having() {
+	public function having()
+	{
 		$this->chain = Operator::$HAVING;
 
 		$aggregate = new Aggregate($this);
 
 		array_push($this->havingConditions, [$aggregate]);
 
-		// $this->and();
-
 		return $aggregate;
 	}
 
-	private function resolveHaving() {
+	private function resolveHaving()
+	{
 		if (empty($this->havingConditions)) {
 			return;
 		}
@@ -61,7 +62,8 @@ trait HavingHandler {
 	}
 
 
-	private function resolveHavingCondition($condition) {
+	private function resolveHavingCondition($condition) : String
+	{
 		$sql = '';
 
 		list($property, $criteria) = $condition->getCriteria();

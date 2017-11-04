@@ -4,17 +4,24 @@ namespace ORM\Builders;
 
 use ORM\Orm;
 
-use ORM\Core\Column;
-use ORM\Core\Connection;
-use ORM\Core\Join;
-use ORM\Core\Shadow;
+use ORM\Mappers\Column;
+use ORM\Mappers\Join;
+use ORM\Mappers\Shadow;
 
-class TableManager {
+use ORM\Interfaces\IConnection;
 
-	const CREATE_TABLE_TEMPLATE = 'CREATE TABLE %s (%s)';
+class TableManager
+{
+
+	const CHECK_IF_TABLE_EXISTS_TEMPLATE = 'SELECT * FROM %s';
+
+	const CREATE_TABLE_TEMPLATE = 'CREATE TABLE %s%s (%s)';
+
 	const DROP_TABLE_TEMPLATE = 'DROP TABLE %s%s';
+
 	const DROP_SEQUENCE_TEMPLATE = 'DROP SEQUENCE %s';
-	const ALTER_TABLE_FOREIGN = 'ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s)';
+
+	const FOREIGN_KEY_CONSTRAINT_TEMPLATE = 'FOREIGN KEY (%s) REFERENCES %s (%s)';
 
 	private $orm;
 
@@ -26,24 +33,28 @@ class TableManager {
 
 	private $droped;
 
-	public function __construct(Connection $connection, String $namespace, String $modelsFolder) {
+	private $created;
+
+	public function __construct(IConnection $connection, String $namespace, String $modelsFolder)
+	{
 		$this->orm = Orm::getInstance();
 		$this->classes = $this->loadClasses($namespace, $modelsFolder);
 		$this->shadows = $this->loadShadows();
 		$this->connection = $connection;
 
 		$this->droped = [];
+		$this->created = [];
 	}
 
-	public function drop() {
+	public function drop()
+	{
 		$drops = [];
+		$driver = $this->connection->getDriver();
 
 		foreach ($this->shadows as $shadow) {
 			$_drops = $this->resolveDropTable($shadow);
 			$drops = array_merge($drops, $_drops);
 		}
-
-		$driver = $this->connection->getDriver();
 
 		if ($driver->GENERATE_ID_TYPE === 'SEQUENCE') {
 			$_drops = $this->resolveDropSequence($driver->SEQUENCE_NAME);
@@ -56,31 +67,50 @@ class TableManager {
 		}
 	}
 
-	public function create() {
+	public function create()
+	{
 		$creates = [];
-		$alters = [];
+		$driver = $this->connection->getDriver();
 
 		foreach ($this->shadows as $shadow) {
-			list($_creates, $_alters) = $this->resolveCreateTable($shadow);
+			$_creates = $this->resolveCreateTable($shadow);
 			$creates = array_merge($creates, $_creates);
-			$alters = array_merge($alters, $_alters);
+		}
+
+		if ($driver->GENERATE_ID_TYPE === 'SEQUENCE') {
+			$_drops = $this->resolveDropSequence($driver->SEQUENCE_NAME);
+			$drops = array_merge($drops, $_drops);
 		}
 
 		foreach($creates as $create) {
 			$statement = $this->connection->prepare($create);
 			$statement->execute();
 		}
-
-		foreach($alters as $alter) {
-			$statement = $this->connection->prepare($alter);
-			$statement->execute();
-		}
 	}
 
-	private function resolveCreateTable(Shadow $shadow) : Array {
+	private function resolveCreateTable(Shadow $shadow) : Array
+	{
+		if (in_array($shadow->getClass(), $this->created)) {
+			return [];
+		}
+
+		$this->created[] = $shadow->getClass();
+
 		$creates = [];
-		$alters = [];
 		$columns = [];
+		$foreigns = [];
+		$driver = $this->connection->getDriver();
+		$ifNotExists = $driver->SUPPORTS_IF_EXISTS ? 'IF NOT EXISTS ' : null;
+		$exists = false;
+		$tableName = '';
+
+		if (!empty($shadow->getSchema())) {
+			$tableName .= $shadow->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$tableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$tableName .= $shadow->getTableName();
 
 		foreach ($shadow->getColumns() as $column) {
 			$columns[] = $this->resolveCreateColumn($column);
@@ -95,25 +125,45 @@ class TableManager {
 
 			$reference = $this->shadows[$reference];
 			$id = $reference->getId();
+			$referenceTableName = '';
+
+			if (!empty($reference->getSchema())) {
+				$referenceTableName .= $reference->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$referenceTableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$referenceTableName .= $reference->getTableName();
+
+			$_creates = $this->resolveCreateTable($reference);
+			$creates = array_merge($creates, $_creates);
 
 			$columns[] = $this->resolveCreateColumn($id, $join);
-			$alters[] = $this->resolveAlterTable($shadow->getTableName(), $reference, $join->getName());
+			$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $join->getName(), $referenceTableName, $id->getName());
 		}
 
-		$creates[] = sprintf(self::CREATE_TABLE_TEMPLATE, $shadow->getTableName(), implode(', ', $columns));
+		$columns = array_merge($columns, $foreigns);
+
+		if (!$driver->SUPPORTS_IF_EXISTS) {
+			$exists = $this->checkIfExists($tableName);
+		}
+
+		if (!$exists) {
+			$creates[] = sprintf(self::CREATE_TABLE_TEMPLATE, $ifNotExists, $tableName, implode(', ', $columns));
+		}
 
 		foreach ($shadow->getJoins('type', 'manyToMany') as $join) {
 			if (empty($join->getMappedBy())) {
-				list($create, $_alters) = $this->resolveJoinTable($shadow, $join);
+				$create = $this->resolveJoinTable($shadow, $join);
 				$creates[] = $create;
-				$alters = array_merge($alters, $_alters);
 			}
 		}
 
-		return [$creates, $alters];
+		return $creates;
 	}
 
-	private function resolveCreateColumn(Column $column, Join $join=null, String $name=null) : String {
+	private function resolveCreateColumn(Column $column, Join $join = null, String $name = null) : String
+	{
 		$driver = $this->connection->getDriver();
 
 		if (empty($join) && empty($name)) {
@@ -169,47 +219,83 @@ class TableManager {
 		return "\n\t" . $definition;
 	}
 
-	private function resolveJoinTable(Shadow $shadow, Join $join) : Array {
+	private function resolveJoinTable(Shadow $shadow, Join $join) : String
+	{
+		$driver = $this->connection->getDriver();
 		$referenceClass = $join->getReference();
+		$ifNotExists = $driver->SUPPORTS_IF_EXISTS ? 'IF NOT EXISTS ' : null;
+		$joinTable = $join->getJoinTable();
 
 		if (!isset($this->shadows[$referenceClass])) {
 			$this->shadows[$referenceClass] = $this->orm->getShadow($referenceClass);
 		}
 
 		$reference = $this->shadows[$referenceClass];
-		$joinTable = $join->getJoinTable();
+
+		$joinTableName = '';
+		$tableName = '';
+		$referenceTableName = '';
+
+		if (!empty($joinTable->getSchema())) {
+			$joinTableName .= $joinTable->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$joinTableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$joinTableName .= $joinTable->getTableName();
+
+		if (!empty($shadow->getSchema())) {
+			$tableName .= $shadow->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$tableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$tableName .= $shadow->getTableName();
+
+		if (!empty($reference->getSchema())) {
+			$referenceTableName .= $reference->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$referenceTableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$referenceTableName .= $reference->getTableName();
 
 		$columns[] = $this->resolveCreateColumn($shadow->getId(), null, $joinTable->getJoinColumnName());
 		$columns[] = $this->resolveCreateColumn($reference->getId(), null, $joinTable->getInverseJoinColumnName());
 
-		$create = sprintf(self::CREATE_TABLE_TEMPLATE, $joinTable->getTableName(), implode(', ', $columns));
+		$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getJoinColumnName(), $tableName, $shadow->getId()->getName());
+		$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getInverseJoinColumnName(), $referenceTableName, $reference->getId()->getName());
 
-		$alters[] = $this->resolveAlterTable($joinTable->getTableName(), $shadow, $joinTable->getJoinColumnName());
-		$alters[] = $this->resolveAlterTable($joinTable->getTableName(), $reference, $joinTable->getInverseJoinColumnName());
+		$columns = array_merge($columns, $foreigns);
 
-		return [$create, $alters];
+		$exists = false;
+
+		if (!$driver->SUPPORTS_IF_EXISTS) {
+			$exists = $this->checkIfExists($joinTableName);
+		}
+
+		if (!$exists) {
+			$create = sprintf(self::CREATE_TABLE_TEMPLATE, $ifNotExists, $joinTableName, implode(', ', $columns));
+		}
+
+		return $create;
 	}
 
-	private function resolveAlterTable(String $tableName, Shadow $reference, String $columnName) : String {
-		$referenceTableName = $reference->getTableName();
-		$v = ['a', 'e', 'i', 'o', 'u'];
-
-		$fk = 'FK__';
-		$fk .= str_replace($v, '', $tableName);
-		$fk .= '__';
-		$fk .= str_replace($v, '', $referenceTableName);
-
-		return sprintf(self::ALTER_TABLE_FOREIGN, $tableName, $fk, $columnName, $referenceTableName, $reference->getId()->getName());
+	private function resolveCreateSequence(String $sequenceName) : Array
+	{
+		return [sprintf(self::CREATE_SEQUENCE_TEMPLATE, $sequenceName)];
 	}
 
-	private function resolveDropTable(Shadow $shadow, Join $join=null) : Array {
+	private function resolveDropTable(Shadow $shadow, Join $join = null) : Array
+	{
 		if (in_array($shadow->getClass(), $this->droped)) {
 			return [];
 		}
 
+		$this->droped[] = $shadow->getClass();
+
 		$driver = $this->connection->getDriver();
 		$ifExists = $driver->SUPPORTS_IF_EXISTS ? 'IF EXISTS ' : null;
-		$this->droped[] = $shadow->getClass();
 		$drops = [];
 
 		foreach ($shadow->getJoins() as $_join) {
@@ -231,9 +317,9 @@ class TableManager {
 			$drops = array_merge($drops, $_drops);
 		}
 
-		$joinTable = null;
-
 		if ($join && $join->getType() === 'manyToMany') {
+			$joinTable = null;
+
 			if (empty($join->getMappedBy())) {
 				$joinTable = $join->getJoinTable();
 			} else {
@@ -251,22 +337,72 @@ class TableManager {
 					$joinTable = $_join->getJoinTable();
 				}
 			}
+
+			if ($joinTable) {
+				$joinTableExists = true;
+				$joinTableName = '';
+
+				if (!empty($joinTable->getSchema())) {
+					$joinTableName .= $joinTable->getSchema() . '.';
+				} elseif (!empty($this->connection->getDefaultSchema())) {
+					$joinTableName .= $this->connection->getDefaultSchema() . '.';
+				}
+
+				$joinTableName .= $joinTable->getTableName();
+
+				if (!$driver->SUPPORTS_IF_EXISTS) {
+					$joinTableExists = $this->checkIfExists($joinTableName);
+				}
+
+				if ($joinTableExists) {
+					$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $ifExists, $joinTableName);
+				}
+			}
 		}
 
-		if ($joinTable) {
-			$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $ifExists, $joinTable->getTableName());
+		$tableExists = true;
+		$tableName = '';
+
+		if (!empty($shadow->getSchema())) {
+			$tableName .= $shadow->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$tableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $ifExists, $shadow->getTableName());
+		$tableName .= $shadow->getTableName();
+
+
+		if (!$driver->SUPPORTS_IF_EXISTS) {
+			$tableExists = $this->checkIfExists($tableName);
+		}
+
+		if ($tableExists) {
+			$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $ifExists, $tableName);
+		}
 
 		return $drops;
 	}
 
-	private function resolveDropSequence($sequenceName) : Array {
+	private function resolveDropSequence(String $sequenceName) : Array
+	{
 		return [sprintf(self::DROP_SEQUENCE_TEMPLATE, $sequenceName)];
 	}
 
-	private function loadClasses($namespace, $folder) : Array {
+	public function checkIfExists(String $tableName) : bool
+	{
+		try {
+			$query = sprintf(self::CHECK_IF_TABLE_EXISTS_TEMPLATE, $tableName);
+			$statement = $this->connection->prepare($query);
+			$executed = $statement->execute();
+
+			return $executed;
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
+	private function loadClasses(String $namespace, String $folder) : Array
+	{
 		$ds = DIRECTORY_SEPARATOR;
 		$classes = [];
 
@@ -289,7 +425,8 @@ class TableManager {
 		return $classes;
 	}
 
-	private function loadShadows() : Array {
+	private function loadShadows() : Array
+	{
 		$shadows = [];
 
 		foreach ($this->classes as $class) {

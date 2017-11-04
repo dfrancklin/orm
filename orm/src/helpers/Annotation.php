@@ -1,9 +1,15 @@
 <?php
+
 namespace ORM\Core;
 
 use ORM\Orm;
 
-class Annotation {
+use ORM\Constants\CascadeTypes;
+
+use ORM\Mappers\Shadow;
+
+class Annotation
+{
 
 	private $orm;
 
@@ -15,15 +21,17 @@ class Annotation {
 
 	private $reflect;
 
-	public function __construct(Orm $orm, String $class) {
-		$this->orm = $orm;
+	public function __construct(String $class)
+	{
 		$this->class = $class;
+		$this->orm = Orm::getInstance();
 		$this->shadow = new Shadow($class);
 		$this->resolver = new ExpressionResolver();
 		$this->reflect = new \ReflectionClass($class);
 	}
 
-	public function mapper() : Shadow {
+	public function mapper() : Shadow
+	{
 		$class = $this->resolveClass();
 
 		foreach($this->reflect->getProperties() as $property) {
@@ -33,12 +41,15 @@ class Annotation {
 		return $this->shadow;
 	}
 
-	private function resolveClass() {
-		if (!($class = $this->resolver->get('orm', $this->reflect->getDocComment(), true)))
+	private function resolveClass()
+	{
+		if (!($class = $this->resolver->get('orm', $this->reflect->getDocComment(), true))) {
 			throw new \Exception("A classe \"$this->class\" não está devidamente anotada");
+		}
 
-		if (!$this->resolver->get('entity', $class))
+		if (!$this->resolver->get('entity', $class)) {
 			throw new \Exception("Está faltando a anotação \"Entity\" na classe \"$this->class\"");
+		}
 
 		$table = $this->resolver->get('table', $class);
 		$name = $this->resolver->get('name', $table);
@@ -49,9 +60,17 @@ class Annotation {
 		}
 
 		$this->shadow->setTableName($name);
+
+		$schema = $this->resolver->get('schema', $table);
+		$this->shadow->setSchema($schema);
+
+		if ($mutable = $this->resolver->get('mutable', $table)) {
+			$this->shadow->setMutable($mutable === 'true');
+		}
 	}
 
-	private function resolveProperty($property) {
+	private function resolveProperty(\ReflectionProperty $property)
+	{
 		$prop = $this->resolver->get('orm', $property->getDocComment(), true);
 
 		if ($this->resolver->get('transient', $prop)) return;
@@ -69,7 +88,8 @@ class Annotation {
 		}
 	}
 
-	private function resolveJoin($property, $type) {
+	private function resolveJoin(\ReflectionProperty $property, String $type)
+	{
 		$join = new Join();
 		$prop = $this->resolver->get('orm', $property->getDocComment(), true);
 
@@ -91,27 +111,23 @@ class Annotation {
 		$join->setType($type);
 
 		if ($cascade = $this->resolver->get('cascade', $has)) {
-			$all = ['INSERT', 'UPDATE', 'DELETE'];
 			$cascade = preg_split("/,\s?/i", $cascade);
 
 			if(in_array('ALL', $cascade)) {
-				$cascade = $all;
+				$cascade = CascadeTypes::TYPES;
 			}
 
 			foreach ($cascade as $c) {
-				if (!in_array($c, $all)) {
+				if (!in_array($c, CascadeTypes::TYPES)) {
 					throw new \Exception('Cascade type "' . $c . '" does not exists');
 				}
 			}
 
 			$join->setCascade($cascade);
-		} else {
-			$join->setCascade([]);
 		}
 
 		if ($optional = $this->resolver->get('optional', $has)) {
-			$optional = $optional === 'true';
-			$join->setOptional();
+			$join->setOptional($optional === 'true');
 		}
 
 		if ($type === 'manyToMany') {
@@ -119,9 +135,18 @@ class Annotation {
 				$join->setMappedBy($mappedBy);
 			} else {
 				$table = new JoinTable();
+				$reference = $this->orm->getShadow($join->getReference());
 
 				if ($joinTable = $this->resolver->get('joinTable', $prop)) {
-					$table->setTableName($this->resolver->get('tableName', $joinTable));
+					if ($tableName = $this->resolver->get('tableName', $joinTable)) {
+						$table->setTableName($tableName);
+					} else {
+						$tableName = $this->shadow->getTableName() . '_' . $reference->getTableName();
+						$table->setTableName($tableName);
+					}
+
+					$schema = $this->resolver->get('schema', $joinTable);
+					$table->setSchema($schema);
 
 					if ($joinColumn = $this->resolver->get('join', $joinTable)) {
 						$name = $this->resolver->get('name', $joinColumn);
@@ -129,16 +154,22 @@ class Annotation {
 						$name = $this->shadow->getTableName() . '_' . $this->shadow->getId()->getName();
 					}
 
-					$table->setJoinColumnName($name ? $name : 'id');
+					$table->setJoinColumnName($name);
 
 					if ($inverseJoinColumn = $this->resolver->get('inverse', $joinTable)) {
 						$name = $this->resolver->get('name', $inverseJoinColumn);
 					} else {
-						$shadow = $this->orm->getShadow($join->getReference());
-						$name = $shadow->getTableName() . '_' . $shadow->getId()->getName();
+						$name = $reference->getTableName() . '_' . $reference->getId()->getName();
 					}
 
-					$table->setInverseJoinColumnName($name ? $name : 'id');
+					$table->setInverseJoinColumnName($name);
+				} else {
+					$tableName = $this->shadow->getTableName() . '_' . $reference->getTableName();
+					$table->setTableName($tableName);
+					$joinName = $this->shadow->getTableName() . '_' . $this->shadow->getId()->getName();
+					$table->setJoinColumnName($joinName);
+					$inverseName = $reference->getTableName() . '_' . $reference->getId()->getName();
+					$table->setInverseJoinColumnName($inverseName);
 				}
 
 				$join->setJoinTable($table);
@@ -158,14 +189,18 @@ class Annotation {
 		$this->shadow->addJoin($join);
 	}
 
-
-	private function resolveColumn($property) {
+	private function resolveColumn(\ReflectionProperty $property)
+	{
 		$shadowColumn = new Column();
 		$prop = $this->resolver->get('orm', $property->getDocComment(), true);
-		$id = $this->resolver->get('id', $prop);
-		$shadowColumn->setId(!!$id);
 
-		$shadowColumn->setGenerated(!!$this->resolver->get('generated', $prop));
+		if ($id = $this->resolver->get('id', $prop)) {
+			$shadowColumn->setId(!!$id);
+		}
+
+		if ($generated = $this->resolver->get('generated', $prop)) {
+			$shadowColumn->setGenerated(!!$generated);
+		}
 
 		if ($column = $this->resolver->get('column', $prop)) {
 			if ($name = $this->resolver->get('name', $column)) {
@@ -176,42 +211,34 @@ class Annotation {
 
 			if ($type = $this->resolver->get('type', $column)) {
 				$shadowColumn->setType($type);
-			} else {
-				$shadowColumn->setType('string');
 			}
 
 			if ($length = $this->resolver->get('length', $column)) {
 				$shadowColumn->setLength((int) $length);
-			} else {
-				$shadowColumn->setLength(255);
 			}
 
 			if ($scale = $this->resolver->get('scale', $column)) {
 				$shadowColumn->setScale((int) $scale);
-			} else {
-				$shadowColumn->setScale(0);
 			}
 
 			if ($precision = $this->resolver->get('precision', $column)) {
 				$shadowColumn->setPrecision((int) $precision);
-			} else {
-				$shadowColumn->setPrecision(0);
 			}
 
-			$unique = $this->resolver->get('unique', $column);
-			$unique = !is_null($unique) && $unique === 'true' && !$id;
-			$shadowColumn->setUnique($unique);
+			if ($unique = $this->resolver->get('unique', $column)) {
+				$unique = !is_null($unique) && $unique === 'true' && !$id;
+				$shadowColumn->setUnique($unique);
+			}
 
-			$nullable = $this->resolver->get('nullable', $column);
-			$shadowColumn->setNullable(($nullable === 'true' || is_null($nullable)) && !$id && !$unique);
+			if ($nullable = $this->resolver->get('nullable', $column)) {
+				$shadowColumn->setNullable($nullable === 'true' || is_null($nullable));
+			}
+
+			if ($shadowColumn->isId() || $shadowColumn->isUnique()) {
+				$shadowColumn->setNullable(false);
+			}
 		} else {
 			$shadowColumn->setName($property->getName());
-			$shadowColumn->setType('string');
-			$shadowColumn->setLength(255);
-			$shadowColumn->setScale(0);
-			$shadowColumn->setPrecision(0);
-			$shadowColumn->setUnique(false);
-			$shadowColumn->setNullable(true);
 		}
 
 		$shadowColumn->setProperty($property->getName());

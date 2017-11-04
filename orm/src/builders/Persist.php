@@ -3,14 +3,19 @@
 namespace ORM\Builders;
 
 use ORM\Orm;
-use ORM\Core\Column;
-use ORM\Core\Connection;
-use ORM\Core\Join;
+
+use ORM\Constants\CascadeTypes;
+
 use ORM\Core\Proxy;
 
+use ORM\Mappers\Column;
+use ORM\Mappers\Join;
+
+use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
-class Persist {
+class Persist
+{
 
 	private $em;
 
@@ -24,7 +29,8 @@ class Persist {
 
 	private $connection;
 
-	public function __construct(Connection $connection, IEntityManager $em) {
+	public function __construct(IConnection $connection, IEntityManager $em)
+	{
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -34,7 +40,8 @@ class Persist {
 		$this->connection = $connection;
 	}
 
-	public function exec($object, $original=null) {
+	public function exec($object, $original = null)
+	{
 		if (!is_object($object)) {
 			return;
 		}
@@ -59,8 +66,8 @@ class Persist {
 		$this->object = $object;
 		$this->original = $original ?? $object;
 		$this->shadow = $this->orm->getShadow($class);
-		$column = $this->shadow->getId();
-		$id = $column->getProperty();
+		$id = $this->shadow->getId();
+		$prop = $id->getProperty();
 
 		$this->persistBefore();
 
@@ -68,7 +75,9 @@ class Persist {
 			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
 		}
 
-		$this->object->{$id} = $this->fetchNextId();
+		if ($id->isGenerated()) {
+			$this->object->{$prop} = $this->fetchNextId();
+		}
 
 		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);
@@ -77,12 +86,14 @@ class Persist {
 			throw new \Exception('Something went wrong while persistting a register');
 		}
 
-		$lastId = $this->connection->lastInsertId();
+		if ($id->isGenerated()) {
+			$lastId = $this->connection->lastInsertId();
 
-		if ($column->getType() === 'int') {
-			$this->object->{$id} = (int) $lastId;
-		} else {
-			$this->object->{$id} = $lastId;
+			if ($id->getType() === 'int') {
+				$this->object->{$prop} = (int) $lastId;
+			} else {
+				$this->object->{$prop} = $lastId;
+			}
 		}
 
 		$this->persistManyToMany();
@@ -96,7 +107,8 @@ class Persist {
 		return $this->object;
 	}
 
-	private function fetchNextId() {
+	private function fetchNextId()
+	{
 		if (in_array($this->connection->getDriver()->GENERATE_ID_TYPE, ['QUERY', 'SEQUENCE'])) {
 			$statement = $this->connection->prepare($this->connection->getDriver()->GENERATE_ID_QUERY);
 			$executed = $statement->execute();
@@ -113,11 +125,12 @@ class Persist {
 		return null;
 	}
 
-	private function persistManyToMany() {
+	private function persistManyToMany()
+	{
 		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
 			$property = $join->getProperty();
 
-			if (in_array('INSERT', $join->getCascade()) &&
+			if (in_array(CascadeTypes::INSERT, $join->getCascade()) &&
 					!empty($this->object->{$property})) {
 				$this->persistManyCascade($join);
 			}
@@ -129,7 +142,8 @@ class Persist {
 		}
 	}
 
-	public function insertManyToMany($join) {
+	public function insertManyToMany(Join $join)
+	{
 		$reference = $this->orm->getShadow($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
@@ -172,35 +186,39 @@ class Persist {
 		}
 	}
 
-	private function persistBefore() {
+	private function persistBefore()
+	{
 		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
-			if (in_array('INSERT', $join->getCascade())) {
+			if (in_array(CascadeTypes::INSERT, $join->getCascade())) {
 				$this->persistCascade($join);
 			}
 		}
 	}
 
-	private function persistAfter() {
+	private function persistAfter()
+	{
 		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
-			if (in_array('INSERT', $join->getCascade())) {
+			if (in_array(CascadeTypes::INSERT, $join->getCascade())) {
 				$this->persistCascade($join);
 			}
 		}
 
 		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
-			if (in_array('INSERT', $join->getCascade())) {
+			if (in_array(CascadeTypes::INSERT, $join->getCascade())) {
 				$this->persistManyCascade($join);
 			}
 		}
 	}
 
-	private function persistCascade($join) {
+	private function persistCascade(Join $join)
+	{
 		$property = $join->getProperty();
 		$value = $this->object->{$property};
 		$this->object->{$property} = $this->_persist($join, $value);
 	}
 
-	private function persistManyCascade($join) {
+	private function persistManyCascade(Join $join)
+	{
 		$property = $join->getProperty();
 		$values = $this->object->{$property};
 
@@ -213,7 +231,8 @@ class Persist {
 		}
 	}
 
-	private function _persist($join, $value) {
+	private function _persist(Join $join, $value)
+	{
 		if (!is_object($value)) {
 			return $value;
 		}
@@ -240,7 +259,7 @@ class Persist {
 		$builder = Persist::class;
 
 		if ($this->em->find($class, $value->{$id})) {
-			if (in_array('UPDATE', $join->getCascade())) {
+			if (in_array(CascadeTypes::UPDATE, $join->getCascade())) {
 				$builder = Merge::class;
 			} else {
 				if ($proxy) {
@@ -265,7 +284,8 @@ class Persist {
 		}
 	}
 
-	private function generateQuery() {
+	private function generateQuery() : String
+	{
 		$sql = 'INSERT INTO %s (%s) VALUES (%s)';
 
 		$columns = [];
@@ -303,9 +323,11 @@ class Persist {
 		return !empty($columns) ? $query : false;
 	}
 
-	private function convertValue($value, $type) {
+	private function convertValue($value, String $type)
+	{
 		if ($value instanceof \DateTime) {
 			$format = $this->connection->getDriver()->FORMATS[$type] ?? 'Y-m-d';
+
 			return $value->format($format);
 		} else {
 			return $value;

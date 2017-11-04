@@ -4,7 +4,8 @@ namespace ORM\Builders;
 
 use ORM\Builders\Handlers\AggregateHandler;
 
-class Aggregate {
+class Aggregate
+{
 
 	use AggregateHandler;
 

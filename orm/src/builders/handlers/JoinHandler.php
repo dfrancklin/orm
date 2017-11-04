@@ -2,18 +2,15 @@
 
 namespace ORM\Builders\Handlers;
 
-use ORM\Core\Shadow;
-use ORM\Core\Join;
+use ORM\Builders\Query;
 
-trait JoinHandler {
+use ORM\Constants\JoinTypes;
 
-	private static
-			$INNER = 'INNER',
-			$LEFT = 'LEFT',
-			$RIGHT = 'RIGHT',
-			$JOIN_TYPES = [];
+use ORM\Mappers\Shadow;
+use ORM\Mappers\Join;
 
-	private static $initialized;
+trait JoinHandler
+{
 
 	private $joins;
 
@@ -23,28 +20,17 @@ trait JoinHandler {
 
 	private $usedTables;
 
-	private static function initializeJoinHandler() {
-		self::$JOIN_TYPES = [
-			self::$INNER,
-			self::$LEFT,
-			self::$RIGHT
-		];
-	}
-
-	public function join(String $join, String $alias, String $type=null) {
-		if (!self::$initialized) {
-			self::initializeJoinHandler();
-		}
-
+	public function join(String $join, String $alias, String $type = null) : Query
+	{
 		if (array_key_exists($alias, $this->joinsByAlias)) {
 			throw new \Exception('A class with the alias "' . $alias . '" already exist');
 		}
 
 		if (empty($type)) {
-			$type = self::$INNER;
+			$type = JoinTypes::INNER;
 		}
 
-		if (!in_array($type, self::$JOIN_TYPES)) {
+		if (!in_array($type, JoinTypes::TYPES)) {
 			throw new \Exception('The join type informed "' . $type . '" does not exists or is not suppoerted');
 		}
 
@@ -57,7 +43,8 @@ trait JoinHandler {
 		return $this;
 	}
 
-	public function joins(Array $joins) {
+	public function joins(Array $joins) : Query
+	{
 		$this->joins = [];
 
 		foreach ($joins as $join) {
@@ -71,7 +58,8 @@ trait JoinHandler {
 		return $this;
 	}
 
-	private function preProcessJoins($joinInfo, $shadows) {
+	private function preProcessJoins($joinInfo, $shadows)
+	{
 		if (is_null($joinInfo)) {
 			return;
 		}
@@ -109,7 +97,8 @@ trait JoinHandler {
 		return $this->preProcessJoins($next, $shadows);
 	}
 
-	private function validTypes(Join $join, Join $inverseJoin) {
+	private function validTypes(Join $join, Join $inverseJoin) : bool
+	{
 		$valid = false;
 
 		if (($join->getType() === 'hasMany' || $join->getType() == 'hasOne') && $inverseJoin->getType() === 'belongsTo') {
@@ -123,9 +112,10 @@ trait JoinHandler {
 		return $valid;
 	}
 
-	private function resolveJoin() {
+	private function resolveJoin() : String
+	{
 		if (empty($this->joins)) {
-			return;
+			return '';
 		}
 
 		$this->preProcessJoins([$this->target], $this->joins);
@@ -139,13 +129,14 @@ trait JoinHandler {
 		return $sql;
 	}
 
-	private function generateJoins(Array $joinInfo, Join $join) {
+	private function generateJoins(Array $joinInfo, Join $join) : String
+	{
 		list($shadow, $joinType) = $joinInfo;
 
 		if (array_key_exists($join->getShadow()->getClass(), $this->usedTables) &&
 				array_key_exists($shadow->getClass(), $this->usedTables) &&
 				$join->getType() !== 'manyToMany') {
-			return;
+			return '';
 		}
 
 		$method = 'resolveJoin' . ucfirst($join->getType());
@@ -155,7 +146,8 @@ trait JoinHandler {
 		return $sql;
 	}
 
-	private function resolveJoinHasOne(Shadow $shadow, Join $join, String $joinType) {
+	private function resolveJoinHasOne(Shadow $shadow, Join $join, String $joinType) : String
+	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
@@ -182,7 +174,8 @@ trait JoinHandler {
 		return $sql;
 	}
 
-	private function resolveJoinHasMany(Shadow $shadow, Join $join, String $joinType) {
+	private function resolveJoinHasMany(Shadow $shadow, Join $join, String $joinType) : String
+	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
@@ -208,7 +201,8 @@ trait JoinHandler {
 		return $sql;
 	}
 
-	private function resolveJoinManyToMany(Shadow $shadow, Join $join, String $joinType) {
+	private function resolveJoinManyToMany(Shadow $shadow, Join $join, String $joinType) : String
+	{
 		if ($join->getMappedBy()) {
 			$tempJoin = $shadow->getJoins('property', $join->getMappedBy());
 			$shadow = $join->getShadow();
@@ -245,7 +239,8 @@ trait JoinHandler {
 		return $sql;
 	}
 
-	private function resolveJoinBelongsTo(Shadow $shadow, Join $join, String $joinType) {
+	private function resolveJoinBelongsTo(Shadow $shadow, Join $join, String $joinType) : String
+	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {

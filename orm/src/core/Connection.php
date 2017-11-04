@@ -6,7 +6,8 @@ use ORM\Core\Driver;
 
 use ORM\Interfaces\IConnection;
 
-class Connection implements IConnection {
+class Connection implements IConnection
+{
 
 	private $pdo;
 
@@ -14,39 +15,46 @@ class Connection implements IConnection {
 
 	private $defaultSchema;
 
-	public function __construct(\PDO $pdo, Driver $driver, String $defaultSchema) {
+	public function __construct(\PDO $pdo, Driver $driver, ?String $defaultSchema)
+	{
 		$this->pdo = $pdo;
 		$this->driver = $driver;
 		$this->defaultSchema = $defaultSchema;
 	}
 
-	public function prepare(String $sql) : \PDOStatement {
+	public function prepare(String $sql) : \PDOStatement
+	{
 		return $this->pdo->prepare($sql);
 	}
 
-	public function lastInsertId() : String {
+	public function lastInsertId() : String
+	{
 		return $this->pdo->lastInsertId();
 	}
 
-	public function beginTransaction() : bool {
+	public function beginTransaction() : bool
+	{
 		return $this->pdo->beginTransaction();
 	}
 
-	public function commit() : bool {
+	public function commit() : bool
+	{
 		return $this->pdo->commit();
 	}
 
-	public function rollback() : bool {
+	public function rollback() : bool
+	{
 		return $this->pdo->rollback();
 	}
 
-	public function getDriver() {
+	public function getDriver()
+	{
 		return $this->driver;
 	}
 
-	public function getDefaultSchema() {
+	public function getDefaultSchema()
+	{
 		return $this->defaultSchema;
 	}
-
 
 }

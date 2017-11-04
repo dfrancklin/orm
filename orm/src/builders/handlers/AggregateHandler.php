@@ -4,18 +4,22 @@ namespace ORM\Builders\Handlers;
 
 use ORM\Builders\Criteria;
 
-trait AggregateHandler {
+trait AggregateHandler
+{
 
-	public static
-		$QUERY = 'query',
-		$HAVING = 'having';
+	public static $QUERY = 'query';
 
-	private static
-		$AVG = 'avg',
-		$SUM = 'sum',
-		$MIN = 'min',
-		$MAX = 'max',
-		$COUNT = 'count';
+	public static $HAVING = 'having';
+
+	private static $AVG = 'avg';
+
+	private static $SUM = 'sum';
+
+	private static $MIN = 'min';
+
+	private static $MAX = 'max';
+
+	private static $COUNT = 'count';
 
 	private static $templates = [];
 
@@ -31,7 +35,8 @@ trait AggregateHandler {
 
 	private $aggregations;
 
-	public function __construct($builder, $context=null) {
+	public function __construct($builder, $context = null)
+	{
 		$this->builder = $builder;
 		$this->context = $context;
 		$this->criteria = [];
@@ -41,7 +46,8 @@ trait AggregateHandler {
 		}
 	}
 
-	private static function init() {
+	private static function init()
+	{
 		self::$templates = [
 			self::$AVG => self::$AVG . '(%s)',
 			self::$SUM => self::$SUM . '(%s)',
@@ -51,7 +57,8 @@ trait AggregateHandler {
 		];
 	}
 
-	public function __call($method, $parameters) {
+	public function __call($method, $parameters)
+	{
 		if (!self::$initialized) {
 			self::init();
 		}
@@ -72,7 +79,8 @@ trait AggregateHandler {
 		}
 	}
 
-	private function handleHaving($method, $parameters) {
+	private function handleHaving($method, $parameters)
+	{
 		if (count($parameters) !== 1) {
 			throw new \Exception('The method "' . $method . '" expects 1 argument and ' . count($parameters) . ' was provided.');
 		}
@@ -85,13 +93,15 @@ trait AggregateHandler {
 		return $criteria;
 	}
 
-	private function handleQuery($method, $property, $alias=null) {
+	private function handleQuery($method, $property, $alias = null)
+	{
 		array_push($this->aggregations, [$property, $method, $alias]);
 
 		return $this;
 	}
 
-	private function resolveAggregations() {
+	private function resolveAggregations() : String
+	{
 		if ($this->context === self::$HAVING) {
 			throw new \Exception('Invalid method "resolveAggregations" of the "' . __CLASS__ . '" class');
 		}
@@ -115,15 +125,18 @@ trait AggregateHandler {
 		return join(', ', $resolved);
 	}
 
-	private function getAction() {
+	private function getAction() : String
+	{
 		return $this->action;
 	}
 
-	private function getCriteria() {
+	private function getCriteria() : Criteria
+	{
 		return $this->criteria;
 	}
 
-	private function getTemplate() {
+	private function getTemplate() : String
+	{
 		if (!array_key_exists($this->action, self::$templates)) {
 			throw new \Exception('Action "' . $this->action . '" does not exists.');
 		}

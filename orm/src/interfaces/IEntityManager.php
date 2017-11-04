@@ -2,13 +2,14 @@
 
 namespace ORM\Interfaces;
 
-use ORM\Core\Connection;
-
 use ORM\Builders\Query;
 
-interface IEntityManager {
+use ORM\Interfaces\IConnection;
 
-	function __construct(Connection $connection);
+interface IEntityManager
+{
+
+	function __construct(IConnection $connection);
 
 	function find(String $class, $id);
 
@@ -18,10 +19,10 @@ interface IEntityManager {
 
 	function save($object);
 
-	function beginTransaction();
+	function beginTransaction() : bool;
 
-	function commit();
+	function commit() : bool;
 
-	function rollback();
+	function rollback() : bool;
 
 }

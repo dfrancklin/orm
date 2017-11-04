@@ -4,9 +4,13 @@ namespace ORM\Builders;
 
 use ORM\Orm;
 
-use ORM\Core\Connection;
+use ORM\Constants\CascadeTypes;
+
 use ORM\Core\Proxy;
 
+use ORM\Mappers\Join;
+
+use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
 class Remove {
@@ -25,7 +29,8 @@ class Remove {
 
 	private $connection;
 
-	public function __construct(Connection $connection, IEntityManager $em) {
+	public function __construct(IConnection $connection, IEntityManager $em)
+	{
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -35,9 +40,10 @@ class Remove {
 		$this->connection = $connection;
 	}
 
-	public function exec($object, $original=null) {
+	public function exec($object, $original = null) : int
+	{
 		if (!is_object($object)) {
-			return;
+			return 0;
 		}
 
 		$proxy = null;
@@ -94,13 +100,14 @@ class Remove {
 		return $rows;
 	}
 
-	private function removeManyToMany() {
+	private function removeManyToMany() : int
+	{
 		$rows = 0;
 
 		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
 			$property = $join->getProperty();
 
-			if (in_array('DELETE', $join->getCascade())) {
+			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
 				$rows += $this->removeManyCascade($join);
 			}
 
@@ -110,7 +117,8 @@ class Remove {
 		return $rows;
 	}
 
-	private function deleteManyToMany($join) {
+	private function deleteManyToMany(Join $join) : int
+	{
 		$reference = $this->orm->getShadow($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
@@ -128,7 +136,7 @@ class Remove {
 			}
 
 			if (empty($referenceJoin)) {
-				return;
+				return 0;
 			}
 
 			$joinTable = $referenceJoin->getJoinTable();
@@ -151,17 +159,18 @@ class Remove {
 		$statement->execute($values);
 	}
 
-	private function removeBefore() {
+	private function removeBefore() : int
+	{
 		$rows = 0;
 
 		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
-			if (in_array('DELETE', $join->getCascade())) {
+			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
 				$rows += $this->removeCascade($join);
 			}
 		}
 
 		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
-			if (in_array('DELETE', $join->getCascade())) {
+			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
 				$rows += $this->removeManyCascade($join);
 			}
 		}
@@ -169,11 +178,12 @@ class Remove {
 		return $rows;
 	}
 
-	private function removeAfter() {
+	private function removeAfter() : int
+	{
 		$rows = 0;
 
 		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
-			if (in_array('DELETE', $join->getCascade())) {
+			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
 				$rows += $this->removeCascade($join);
 			}
 		}
@@ -181,19 +191,21 @@ class Remove {
 		return $rows;
 	}
 
-	private function removeCascade($join) {
+	private function removeCascade(Join $join) : int
+	{
 		$property = $join->getProperty();
 		$value = $this->proxy->{$property};
 
 		return $this->_remove($join, $value);
 	}
 
-	private function removeManyCascade($join) {
+	private function removeManyCascade(Join $join) : int
+	{
 		$property = $join->getProperty();
 		$values = $this->proxy->{$property};
 
 		if (!is_array($values)) {
-			return;
+			return 0;
 		}
 
 		$rows = 0;
@@ -205,7 +217,8 @@ class Remove {
 		return $rows;
 	}
 
-	private function _remove($join, $value) {
+	private function _remove(Join $join, $value) : int
+	{
 		if (!is_object($value)) {
 			return 0;
 		}
@@ -240,7 +253,8 @@ class Remove {
 		return $rows;
 	}
 
-	private function generateQuery() {
+	private function generateQuery() : ?String
+	{
 		$sql = 'DELETE FROM %s WHERE %s = %s';
 
 		$idName = $idBind = null;
@@ -259,7 +273,7 @@ class Remove {
 		$query = sprintf($sql, $this->shadow->getTableName(), $idName, $idBind);
 		$this->values = $values;
 
-		return ($idName && $idBind) ? $query : false;
+		return ($idName && $idBind) ? $query : null;
 	}
 
 }

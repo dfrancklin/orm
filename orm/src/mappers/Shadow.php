@@ -1,11 +1,17 @@
 <?php
-namespace ORM\Core;
 
-class Shadow {
+namespace ORM\Mappers;
+
+class Shadow
+{
 
 	private $class;
 
 	private $tableName;
+
+	private $schema;
+
+	private $mutable;
 
 	private $alias;
 
@@ -13,47 +19,78 @@ class Shadow {
 
 	private $joins;
 
-	public function __construct($class) {
+	public function __construct($class)
+	{
 		$this->class = $class;
+		$this->mutable = true;
 		$this->columns = [];
 		$this->joins = [];
 	}
 
-	public function getClass() {
+	public function getClass() : String
+	{
 		return $this->class;
 	}
 
-	public function getTableName() {
+	public function getTableName() : String
+	{
 		return $this->tableName;
 	}
 
-	public function setTableName($tableName) {
+	public function setTableName(String $tableName)
+	{
 		$this->tableName = $tableName;
 	}
 
-	function getAlias() {
+	public function getSchema()
+	{
+		return $this->schema;
+	}
+
+	public function setSchema(String $schema) : String
+	{
+		$this->schema = $schema;
+	}
+
+	public function isMutable() : bool
+	{
+		return $this->mutable;
+	}
+
+	public function setMutable(bool $mutable)
+	{
+		$this->mutable = $mutable;
+	}
+
+	public function getAlias() : String
+	{
 		return $this->alias;
 	}
 
-	function setAlias($alias) {
+	public function setAlias(String $alias)
+	{
 		$this->alias = $alias;
 	}
 
-	public function addColumn(Column $column) {
+	public function addColumn(Column $column)
+	{
 		$column->setShadow($this);
 		array_push($this->columns, $column);
 	}
 
-	public function getColumns() {
+	public function getColumns() : Array
+	{
 		return $this->columns;
 	}
 
-	public function addJoin(Join $join) {
+	public function addJoin(Join $join)
+	{
 		$join->setShadow($this);
 		array_push($this->joins, $join);
 	}
 
-	public function getJoins($property = null, $value = null) {
+	public function getJoins(String $property = null, $value = null) : Array
+	{
 		if ($property && $value) {
 			return $this->findByProperty('joins', $property, $value);
 		} else {
@@ -61,23 +98,26 @@ class Shadow {
 		}
 	}
 
-	public function getId() {
-		$ids = [];
+	public function getId() : Column
+	{
+		$id = null;
 
 		foreach ($this->columns as $column) {
 			if ($column->isId()) {
-				array_push($ids, $column);
+				$id = $column;
+				break;
 			}
 		}
 
-		if (!count($ids)) {
+		if (empty($id)) {
 			throw new \Exception("A classe \"{$this->class}\" precisa ter pelo menos uma chave primária", 1);
 		}
 
-		return $ids[0];
+		return $id;
 	}
 
-	public function findColumn($property) {
+	public function findColumn(String $property) : Column
+	{
 		$column = null;
 		$result = $this->findByProperty('columns', 'property', $property);
 
@@ -94,21 +134,18 @@ class Shadow {
 		return $column;
 	}
 
-	private function findByProperty($list, $property, $value) {
+	private function findByProperty(String $list, String $property, $value) : Array
+	{
 		$method = 'get' . ucfirst($property);
 		$columns = [];
 
 		foreach ($this->$list as $column) {
 			if ($column->$method() === $value) {
-				array_push($columns, $column);
+				$columns[] = $column;
 			}
 		}
 
 		return $columns;
-	}
-
-	public function __toString() {
-		return $this->class;
 	}
 
 }

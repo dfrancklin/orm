@@ -2,18 +2,23 @@
 
 namespace ORM\Interfaces;
 
-interface IConnection {
+use ORM\Core\Driver;
 
-	public function prepare(String $sql) : \PDOStatement;
+interface IConnection
+{
 
-	public function lastInsertId() : String;
+	function prepare(String $sql) : \PDOStatement;
 
-	public function beginTransaction() : bool;
+	function lastInsertId() : String;
 
-	public function commit() : bool;
+	function beginTransaction() : bool;
 
-	public function rollback() : bool;
+	function commit() : bool;
 
-	public function getDriver();
+	function rollback() : bool;
+
+	function getDriver() : Driver;
+
+	function getDefaultSchema() : String;
 
 }

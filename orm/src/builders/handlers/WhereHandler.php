@@ -2,19 +2,21 @@
 
 namespace ORM\Builders\Handlers;
 
-use ORM\Core\Column;
-use ORM\Core\Shadow;
+use ORM\Mappers\Column;
+use ORM\Mappers\Shadow;
 
 use ORM\Builders\Criteria;
 use ORM\Builders\Handlers\OperatorHandler;
 
-trait WhereHandler {
+trait WhereHandler
+{
 
 	private $whereConditions;
 
 	private $values;
 
-	public function where(String $property): Criteria {
+	public function where(String $property) : Criteria
+	{
 		$this->chain = OperatorHandler::$WHERE;
 
 		$criteria = new Criteria($this);
@@ -26,9 +28,10 @@ trait WhereHandler {
 		return $criteria;
 	}
 
-	private function resolveWhere() {
+	private function resolveWhere() : String
+	{
 		if ($this->whereConditions === null) {
-			return;
+			return '';
 		}
 
 		$sql = '';
@@ -63,7 +66,8 @@ trait WhereHandler {
 		return $sql;
 	}
 
-	private function resolveWhereCondition($property, $criteria) {
+	private function resolveWhereCondition(String $property, Criteria $criteria) : String
+	{
 		$sql = '';
 
 		list($prop, $shadow, $column) = $this->processProperty($property);
@@ -100,7 +104,8 @@ trait WhereHandler {
 		return $sql;
 	}
 
-	private function processProperty(String $property) : Array {
+	private function processProperty(String $property) : Array
+	{
 		$alias = null;
 
 		if ($index = strpos($property, '.')) {
@@ -125,7 +130,8 @@ trait WhereHandler {
 		return [$property, $shadow, $column];
 	}
 
-	private function processValues(Array $values, $column) : Array {
+	private function processValues(Array $values, $column) : Array
+	{
 		$type = '';
 
 		if ($column instanceof Column) {
@@ -150,7 +156,8 @@ trait WhereHandler {
 		return $processedValues;
 	}
 
-	private function findShadow(String $alias) {
+	private function findShadow(String $alias) : Shadow
+	{
 		$shadow = null;
 
 		if (!array_key_exists($alias, $this->joinsByAlias)) {

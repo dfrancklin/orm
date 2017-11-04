@@ -2,18 +2,21 @@
 
 namespace ORM;
 
-use ORM\Core\Annotation;
+use ORM\Builders\TableManager;
+
 use ORM\Core\Connection;
 use ORM\Core\Driver;
 use ORM\Core\EntityManager;
-use ORM\Core\Shadow;
 
-use ORM\Builders\TableManager;
+use ORM\Helpers\Annotation;
 
 use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
-class Orm {
+use ORM\Mappers\Shadow;
+
+class Orm
+{
 
 	private static $instance;
 
@@ -39,7 +42,7 @@ class Orm {
 		return self::$instance;
 	}
 
-	public function setConnection(String $name = 'default', Array $config = [])
+	public function setConnection(String $name, Array $config = [])
 	{
 		$this->addConnection($name, $config);
 		$this->defaultConnection = $name;
@@ -79,16 +82,21 @@ class Orm {
 		$dsn = $this->getDSN($config);
 		$driver = $this->loadDriver($config['db'], $config['version'] ?? null);
 
-		$pdo = new \PDO($dsn, $config['user'], $config['pass']);
+		$pdo = new \PDO($dsn, $config['user'] ?? null, $config['pass'] ?? null);
+
 		$pdo->setAttribute(\PDO::ATTR_STRINGIFY_FETCHES, false);
 		$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 		$pdo->setAttribute(\PDO::ATTR_ORACLE_NULLS, \PDO::NULL_EMPTY_STRING);
 
-		return new Connection($pdo, $driver, $config['schema']);
+		return new Connection($pdo, $driver, $config['schema'] ?? null);
 	}
 
-	private function getConfiguration(String $name = 'default') : Array
+	private function getConfiguration(String $name = null) : Array
 	{
+		if (empty($name)) {
+			$name = $this->defaultConnection;
+		}
+
 		$configFile = __DIR__ . '/../connection.config.php';
 
 		if (!file_exists($configFile)) {
@@ -96,10 +104,6 @@ class Orm {
 		}
 
 		require $configFile;
-
-		if (empty(trim($name))) {
-			$name = 'default';
-		}
 
 		if (!isset($connections[$name])) {
 			throw new \Exception("Configuração de conexão \"$name\" não definida");
@@ -148,21 +152,21 @@ class Orm {
 	{
 		switch ($config['db']) {
 			case 'mysql':
-				if ($this->validateFields(['db', 'host', 'schema', 'user', 'pass'])) {
+				if ($this->validateFields(['db', 'host', 'schema', 'user', 'pass'], $config)) {
 					return "$config[db]:host=$config[host];dbname=$config[schema]";
 				}
 				break;
-			// case 'sqlite':
-			// case 'sqlite2':
-			// 	if ($this->validateFields(['db', 'file'])) {
-			// 		return "$config[db]:$config[file]";
-			// 	}
+			case 'sqlite':
+			case 'sqlite2':
+				if ($this->validateFields(['db', 'file'], $config)) {
+					return "$config[db]:$config[file]";
+				}
 		}
 
 		throw new \Exception('The database "' . $config['db'] . '" is not supported yet');
 	}
 
-	private function validateFields(Array $fields) : bool
+	private function validateFields(Array $fields, Array $config) : bool
 	{
 		foreach($fields as $field) {
 			if (!isset($config[$field])) {
@@ -173,7 +177,7 @@ class Orm {
 		return true;
 	}
 
-	public function getConnection(String $name = null) : Connection
+	public function getConnection(String $name = null) : IConnection
 	{
 		if (empty($name)) {
 			$name = $this->defaultConnection;

@@ -4,7 +4,12 @@ namespace ORM\Core;
 
 use ORM\Orm;
 
-class Proxy {
+use ORM\Mappers\Join;
+
+use ORM\Interfaces\IEntityManager;
+
+class Proxy
+{
 
 	private $em;
 
@@ -16,7 +21,8 @@ class Proxy {
 
 	private $values;
 
-	public function __construct($em, $object, $values) {
+	public function __construct(IEntityManager $em, $object, Array $values)
+	{
 		$this->orm = Orm::getInstance();
 		$this->em = $em;
 		$this->object = $object;
@@ -24,7 +30,8 @@ class Proxy {
 		$this->shadow = $this->orm->getShadow(get_class($object));
 	}
 
-	public function __get($property) {
+	public function __get(String $property)
+	{
 		if (!property_exists($this->shadow->getClass(), $property)) {
 			throw new \Exception('The property "' . $property . '" does not exists on class "' . $this->shadow->getClass() . '"');
 		}
@@ -42,7 +49,8 @@ class Proxy {
 		return $this->object->{$property};
 	}
 
-	public function __set($property, $value) {
+	public function __set(String $property, $value)
+	{
 		if (!property_exists($this->shadow->getClass(), $property)) {
 			throw new \Exception('The property "' . $property . '" does not exists on class "' . $this->shadow->getClass() . '"');
 		}
@@ -50,7 +58,8 @@ class Proxy {
 		$this->object->{$property} = $value;
 	}
 
-	public function __call($method, $arguments) {
+	public function __call(String $method, Array $arguments)
+	{
 		if (!method_exists($this->shadow->getClass(), $method)) {
 			throw new \Exception('The method "' . $method . '" does not exists on class "' . $this->shadow->getClass() . '"');
 		}
@@ -58,15 +67,18 @@ class Proxy {
 		return $this->object->{$method}(...$arguments);
 	}
 
-	public function __isset($name) {
+	public function __isset(String $name) : bool
+	{
 		return isset($this->object->{$name});
 	}
 
-	public function __unset($name) {
+	public function __unset(String $name)
+	{
 		unset($this->object->{$name});
 	}
 
-	private function lazy(Join $join, String $property) {
+	private function lazy(Join $join, String $property)
+	{
 		if (!is_null($this->object->{$property})) {
 			return $this->object->{$property};
 		}
@@ -76,7 +88,8 @@ class Proxy {
 		return $this->$method($join, $property);
 	}
 
-	private function lazyHasOne(Join $join) {
+	private function lazyHasOne(Join $join)
+	{
 		$class = $join->getReference();
 		$reference = $this->orm->getShadow($class);
 		$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
@@ -104,7 +117,8 @@ class Proxy {
 		return false;
 	}
 
-	private function lazyHasMany(Join $join) {
+	private function lazyHasMany(Join $join)
+	{
 		$class = $join->getReference();
 		$reference = $this->orm->getShadow($class);
 		$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
@@ -133,7 +147,8 @@ class Proxy {
 		return false;
 	}
 
-	private function lazyManyToMany(Join $join) {
+	private function lazyManyToMany(Join $join)
+	{
 		$class = $join->getReference();
 		$alias = '_x';
 		$joinClass = $join->getShadow()->getClass();
@@ -152,7 +167,8 @@ class Proxy {
 		return $rs;
 	}
 
-	private function lazyBelongsTo(Join $join) {
+	private function lazyBelongsTo(Join $join)
+	{
 		if (!array_key_exists($join->getProperty(), $this->values)) {
 			return false;
 		}
@@ -173,11 +189,13 @@ class Proxy {
 		return $rs;
 	}
 
-	public function __getObject() {
+	public function __getObject()
+	{
 		return $this->object;
 	}
 
-	public function __setObject($object) {
+	public function __setObject($object)
+	{
 		$this->object = $object;
 	}
 

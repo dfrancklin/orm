@@ -2,15 +2,17 @@
 
 namespace ORM\Builders\Handlers;
 
-trait OrderByHandler {
+use ORM\Constants\OrderTypes;
 
-	public static $ASC = 'ASC', $DESC = 'DESC';
+trait OrderByHandler
+{
 
 	private $orders;
 
-	public function orderBy($order, $dir=null) {
-		if (!$dir || ($dir !== self::$ASC && self::$DESC)) {
-			$dir = self::$ASC;
+	public function orderBy($order, $dir = null)
+	{
+		if (empty($dir) || !in_array($dir, OrderTypes::TYPES)) {
+			$dir = OrderTypes::ASC;
 		}
 
 		array_push($this->orders, [$order, $dir]);
@@ -18,7 +20,8 @@ trait OrderByHandler {
 		return $this;
 	}
 
-	private function resolveOrderBy() {
+	private function resolveOrderBy() : String
+	{
 		$resolved = [];
 		$sql = '';
 

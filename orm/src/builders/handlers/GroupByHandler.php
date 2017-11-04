@@ -2,17 +2,20 @@
 
 namespace ORM\Builders\Handlers;
 
-trait GroupByHandler {
+trait GroupByHandler
+{
 
 	private $groups;
 
-	public function groupBy(...$groups) {
+	public function groupBy(...$groups)
+	{
 		$this->groups = $groups;
 
 		return $this;
 	}
 
-	private function resolveGroupBy() {
+	private function resolveGroupBy() : String
+	{
 		$resolved = [];
 		$sql = '';
 

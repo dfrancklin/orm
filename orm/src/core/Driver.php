@@ -2,7 +2,8 @@
 
 namespace ORM\Core;
 
-abstract class Driver {
+abstract class Driver
+{
 
 	public $GENERATE_ID_TYPE;
 
@@ -15,6 +16,8 @@ abstract class Driver {
 	public $IGNORE_ID_DATA_TYPE = false;
 
 	public $SUPPORTS_IF_EXISTS = false;
+
+	public $FK_ENABLES = true;
 
 	public $PAGE_TEMPLATE;
 

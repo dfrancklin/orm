@@ -4,7 +4,6 @@ namespace ORM\Builders;
 
 use ORM\Orm;
 
-use ORM\Core\Connection;
 use ORM\Core\Proxy;
 
 use ORM\Builders\Handlers\AggregateHandler;
@@ -15,11 +14,19 @@ use ORM\Builders\Handlers\OperatorHandler;
 use ORM\Builders\Handlers\OrderByHandler;
 use ORM\Builders\Handlers\WhereHandler;
 
+use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
-class Query {
+class Query
+{
 
-	use AggregateHandler, GroupByHandler, HavingHandler, JoinHandler, OperatorHandler, OrderByHandler, WhereHandler;
+	use AggregateHandler,
+		GroupByHandler,
+		HavingHandler,
+		JoinHandler,
+		OperatorHandler,
+		OrderByHandler,
+		WhereHandler;
 
 	private $orm;
 
@@ -41,7 +48,8 @@ class Query {
 
 	private $top;
 
-	public function __construct(Connection $connection, IEntityManager $em) {
+	public function __construct(IConnection $connection, IEntityManager $em)
+	{
 		if (!$connection) {
 			throw new \Exception('Conexão não definida');
 		}
@@ -63,13 +71,15 @@ class Query {
 		$this->orders = [];
 	}
 
-	public function distinct() {
+	public function distinct() : Query
+	{
 		$this->distinct = true;
 
 		return $this;
 	}
 
-	public function from(String $from, String $alias) {
+	public function from(String $from, String $alias) : Query
+	{
 		$shadow = $this->orm->getShadow($from);
 		$shadow->setAlias($alias);
 
@@ -79,7 +89,8 @@ class Query {
 		return $this;
 	}
 
-	public function page($page, $quantity) {
+	public function page($page, $quantity) : Query
+	{
 		if ($page <= 0) {
 			throw new \Exception('The "page" argument must be an integer, positive and bigger than zero number');
 		}
@@ -95,13 +106,15 @@ class Query {
 		return $this;
 	}
 
-	public function top($top) {
+	public function top($top) : Query
+	{
 		$this->top = $top;
 
 		return $this;
 	}
 
-	public function all() {
+	public function all() : Array
+	{
 		$query = $this->generateQuery();
 
 		$statement = $this->connection->prepare($query);
@@ -119,7 +132,8 @@ class Query {
 		return $resultSet;
 	}
 
-	public function one() {
+	public function one()
+	{
 		$this->top(1);
 		$query = $this->generateQuery();
 
@@ -142,7 +156,8 @@ class Query {
 		return $resultSet;
 	}
 
-	private function generateQuery() {
+	private function generateQuery() : String
+	{
 		$query = 'SELECT ';
 
 		if ($this->distinct) {
@@ -181,23 +196,33 @@ class Query {
 		return $query;
 	}
 
-	private function mapResultSet($resultSet) {
+	private function mapResultSet($resultSet) : Array
+	{
 		$mapped = [];
 
 		foreach ($resultSet as $result) {
 			$proxy = $this->mapOne($result);
-			array_push($mapped, $proxy);
+			$mapped[] = $proxy;
 		}
 
 		return $mapped;
 	}
 
-	private function mapOne($resultSet) {
+	private function mapOne($resultSet)
+	{
 		$class = $this->target->getClass();
 		$object = new $class;
 
 		foreach ($this->target->getColumns() as $column) {
-			$object->{$column->getProperty()} = $this->convertType($resultSet[$column->getName()], $column->getType());
+			$name = $column->getName();
+
+			if (isset($resultSet[$name])) {
+				$value = $resultSet[$name];
+				$type = $column->getType();
+				$property = $column->getProperty();
+
+				$object->{$property} = $this->convertType($value, $type);
+			}
 		}
 
 		$joins = $this->target->getJoins();
@@ -209,8 +234,14 @@ class Query {
 		$values = [];
 
 		foreach ($joins as $column) {
-			if (isset($resultSet[$column->getName()])) {
-				$values[$column->getProperty()] = $this->convertType($resultSet[$column->getName()], $column->getType());
+			$name = $column->getName();
+
+			if (isset($resultSet[$name])) {
+				$value = $resultSet[$name];
+				$type = $column->getType();
+				$property = $column->getProperty();
+
+				$values[$property] = $this->convertType($value, $type);
 			}
 		}
 
@@ -219,12 +250,17 @@ class Query {
 		return $proxy;
 	}
 
-	public function convertType($value, $type) {
+	public function convertType($value, $type)
+	{
 		switch ($type) {
-			case 'int': return (int) $value;
-			case 'float': return (float) $value;
-			case 'datetime': return new \DateTime($value);
-			default: return $value;
+			case 'int':
+				return (int) $value;
+			case 'float':
+				return (float) $value;
+			case 'datetime':
+				return new \DateTime($value);
+			default:
+				return $value;
 		}
 	}
 

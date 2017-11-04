@@ -4,27 +4,29 @@ namespace ORM\Core;
 
 use ORM\Orm;
 
-use ORM\Core\Connection;
-
 use ORM\Builders\Merge;
 use ORM\Builders\Persist;
 use ORM\Builders\Query;
 use ORM\Builders\Remove;
 
+use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
-class EntityManager implements IEntityManager {
+class EntityManager implements IEntityManager
+{
 
 	private $connection;
 
 	private $transactionActive;
 
-	public function __construct(Connection $connection) {
+	public function __construct(IConnection $connection)
+	{
 		$this->connection = $connection;
 		$this->orm = Orm::getInstance();
 	}
 
-	public function find(String $class, $id) {
+	public function find(String $class, $id)
+	{
 		$shadow = $this->orm->getShadow($class);
 		$alias = strtolower($shadow->getTableName()[0]);
 		$prop = $alias . '.' . $shadow->getId()->getProperty();
@@ -34,11 +36,13 @@ class EntityManager implements IEntityManager {
 		return $query->from($class, $alias)->where($prop)->equals($id)->one();
 	}
 
-	public function createQuery() : Query {
+	public function createQuery() : Query
+	{
 		return new Query($this->connection, $this);
 	}
 
-	public function remove($object) {
+	public function remove($object)
+	{
 		$proxy = null;
 
 		if ($object instanceof Proxy) {
@@ -55,7 +59,8 @@ class EntityManager implements IEntityManager {
 		return;
 	}
 
-	public function save($object) {
+	public function save($object)
+	{
 		if (!$this->transactionActive) {
 			throw new \Exception('A transaction must be active in order to save an object');
 		}
@@ -92,46 +97,53 @@ class EntityManager implements IEntityManager {
 		return $saved;
 	}
 
-	public function beginTransaction() {
+	public function beginTransaction() : bool
+	{
 		if ($this->transactionActive) {
 			throw new \Exception('A transaction is already active');
 		}
 
 		if ($this->connection->beginTransaction()) {
 			$this->transactionActive = true;
+
 			return true;
 		}
 
 		throw new \Exception('Something went wrong while beginning a transaction');
 	}
 
-	public function commit() {
+	public function commit() : bool
+	{
 		if (!$this->transactionActive) {
 			throw new \Exception('A transaction must be active in order to commit');
 		}
 
 		if ($this->connection->commit()) {
 			$this->transactionActive = false;
+
 			return true;
 		}
 
 		throw new \Exception('Something went wrong while committing a transaction');
 	}
 
-	public function rollback() {
+	public function rollback() : bool
+	{
 		if (!$this->transactionActive) {
 			throw new \Exception('A transaction must be active in order to rollback');
 		}
 
 		if ($this->connection->rollback()) {
 			$this->transactionActive = false;
+
 			return true;
 		}
 
 		throw new \Exception('Something went wrong while rolling back a transaction');
 	}
 
-	private function persist($object) {
+	private function persist($object)
+	{
 		if ($this->exists($object)) {
 			return $this->merge($object);
 		}
@@ -141,7 +153,8 @@ class EntityManager implements IEntityManager {
 		return $persist->exec($object);
 	}
 
-	private function merge($object) {
+	private function merge($object)
+	{
 		if (!$this->exists($object)) {
 			return $this->persist($object);
 		}
@@ -151,7 +164,8 @@ class EntityManager implements IEntityManager {
 		return $merge->exec($object);
 	}
 
-	private function exists($object) {
+	private function exists($object) : bool
+	{
 		$class = get_class($object);
 		$shadow = $this->orm->getShadow($class);
 		$id = $shadow->getId();
