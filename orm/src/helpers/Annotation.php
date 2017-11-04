@@ -1,11 +1,14 @@
 <?php
 
-namespace ORM\Core;
+namespace ORM\Helpers;
 
 use ORM\Orm;
 
 use ORM\Constants\CascadeTypes;
 
+use ORM\Mappers\Column;
+use ORM\Mappers\Join;
+use ORM\Mappers\JoinTable;
 use ORM\Mappers\Shadow;
 
 class Annotation
@@ -61,8 +64,9 @@ class Annotation
 
 		$this->shadow->setTableName($name);
 
-		$schema = $this->resolver->get('schema', $table);
-		$this->shadow->setSchema($schema);
+		if ($schema = $this->resolver->get('schema', $table)) {
+			$this->shadow->setSchema($schema);
+		}
 
 		if ($mutable = $this->resolver->get('mutable', $table)) {
 			$this->shadow->setMutable($mutable === 'true');
@@ -145,8 +149,9 @@ class Annotation
 						$table->setTableName($tableName);
 					}
 
-					$schema = $this->resolver->get('schema', $joinTable);
-					$table->setSchema($schema);
+					if ($schema = $this->resolver->get('schema', $joinTable)) {
+						$table->setSchema($schema);
+					}
 
 					if ($joinColumn = $this->resolver->get('join', $joinTable)) {
 						$name = $this->resolver->get('name', $joinColumn);
@@ -180,7 +185,7 @@ class Annotation
 				$join->setName($name);
 			}
 
-			if (!$join->getName()) {
+			if (empty($join->getName())) {
 				$id = $this->shadow->getId()->getName();
 				$join->setName($property->getName() . '_' . $id);
 			}

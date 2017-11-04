@@ -116,7 +116,7 @@ class Shadow
 		return $id;
 	}
 
-	public function findColumn(String $property) : Column
+	public function findColumn(String $property)
 	{
 		$column = null;
 		$result = $this->findByProperty('columns', 'property', $property);

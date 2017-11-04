@@ -19,6 +19,6 @@ interface IConnection
 
 	function getDriver() : Driver;
 
-	function getDefaultSchema() : String;
+	function getDefaultSchema() : ?String;
 
 }

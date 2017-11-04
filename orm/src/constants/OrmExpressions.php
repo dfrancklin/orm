@@ -20,7 +20,7 @@ class OrmExpressions
 	// Joins
 	const HAS_ONE = '/HasOne\([^\)]+\)/i';
 	const HAS_MANY = '/HasMany\([^\)]+\)/i';
-	const MATY_TO_MANY = '/ManyToMany\([^\)]+\)/i';
+	const MANY_TO_MANY = '/ManyToMany\([^\)]+\)/i';
 	const BELONGS_TO = '/BelongsTo\([^\)]+\)/i';
 	const JOIN_COLUMN = '/JoinColumn\([' . self::ANY . ']+\)/i';
 	const JOIN_TABLE = '/JoinTable\(.+\)/i';

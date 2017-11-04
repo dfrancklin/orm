@@ -47,12 +47,12 @@ class Connection implements IConnection
 		return $this->pdo->rollback();
 	}
 
-	public function getDriver()
+	public function getDriver() : Driver
 	{
 		return $this->driver;
 	}
 
-	public function getDefaultSchema()
+	public function getDefaultSchema() : ?String
 	{
 		return $this->defaultSchema;
 	}

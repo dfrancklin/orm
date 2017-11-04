@@ -13,9 +13,7 @@ use App\Models\GreeningU\Usuario;
 
 $orm = Orm::getInstance();
 $orm->addConnection('GreeningU');
-$orm->addConnection('default');
 $em = $orm->createEntityManager('GreeningU');
-$em2 = $orm->createEntityManager('default');
 
 $usuario = $em->find(Usuario::class, 1);
 $comunidade = $em->find(Comunidade::class, 1);

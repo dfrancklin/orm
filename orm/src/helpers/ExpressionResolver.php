@@ -1,13 +1,13 @@
 <?php
 
-namespace ORM\Helper;
+namespace ORM\Helpers;
 
 use ORM\Constants\OrmExpressions;
 
 class ExpressionResolver
 {
 
-	public static function get(String $expression, String $comment, bool $all = false) : String
+	public static function get(String $expression, ?String $comment, bool $all = false) : ?String
 	{
 		$expression = preg_replace("/[A-Z]/", "_$0", $expression);
 		$expression = strtoupper($expression);
@@ -51,7 +51,7 @@ class ExpressionResolver
 		}
 	}
 
-	public static function stripChars(String $comment) : String
+	public static function stripChars(?String $comment) : ?String
 	{
 		$comment = preg_replace("/\n?@ORM/i", "|@ORM", $comment, -1, $count);
 		$comment = preg_replace("/(\/\*|\*\/|\*|\s+)*/i", "", $comment);

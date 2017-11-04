@@ -156,7 +156,7 @@ trait WhereHandler
 		return $processedValues;
 	}
 
-	private function findShadow(String $alias) : Shadow
+	private function findShadow(String $alias)
 	{
 		$shadow = null;
 

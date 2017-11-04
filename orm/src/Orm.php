@@ -30,7 +30,6 @@ class Orm
 	{
 		$this->shadows = [];
 		$this->connections = [];
-		$this->defaultConnection = 'default';
 	}
 
 	public static function getInstance() : Orm
@@ -205,7 +204,7 @@ class Orm
 		}
 
 		if (!array_key_exists($class, $this->shadows)) {
-			$annotation = new Annotation($this, $class);
+			$annotation = new Annotation($class);
 			$shadow = $annotation->mapper();
 			$this->shadows[$class] = $shadow;
 		}

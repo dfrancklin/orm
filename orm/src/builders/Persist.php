@@ -75,6 +75,7 @@ class Persist
 			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
 		}
 
+		vd($query, $this->values);
 		if ($id->isGenerated()) {
 			$this->object->{$prop} = $this->fetchNextId();
 		}

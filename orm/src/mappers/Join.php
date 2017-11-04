@@ -59,7 +59,7 @@ class Join
 		$this->reference = $reference;
 	}
 
-	public function getName() : String
+	public function getName() : ?String
 	{
 		return $this->name;
 	}
@@ -79,7 +79,7 @@ class Join
 		$this->property = $property;
 	}
 
-	public function getMappedBy() : String
+	public function getMappedBy() : ?String
 	{
 		return $this->mappedBy;
 	}

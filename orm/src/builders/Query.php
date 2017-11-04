@@ -117,6 +117,8 @@ class Query
 	{
 		$query = $this->generateQuery();
 
+		vd($query, $this->values);
+
 		$statement = $this->connection->prepare($query);
 		$hasResults = $statement->execute($this->values);
 		$resultSet = [];
@@ -137,6 +139,7 @@ class Query
 		$this->top(1);
 		$query = $this->generateQuery();
 
+		vd($query, $this->values);
 		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);
 		$resultSet = null;
@@ -173,7 +176,17 @@ class Query
 			$query .= join(', ', $this->columns);
 		}
 
-		$query .= "\n" . 'FROM ' . $this->target->getTableName() . ' ' . $this->target->getAlias();
+		$tableName = '';
+
+		if (!empty($this->target->getSchema())) {
+			$tableName .= $this->target->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$tableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$tableName .= $this->target->getTableName();
+
+		$query .= "\n" . 'FROM ' . $tableName . ' ' . $this->target->getAlias();
 
 		if (property_exists(__CLASS__, 'usedTables')) {
 			$this->usedTables[$this->target->getClass()] = $this->target;

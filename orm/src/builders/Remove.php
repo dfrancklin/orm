@@ -86,6 +86,7 @@ class Remove {
 			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
 		}
 
+		vd($query, $this->values);
 		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);
 
@@ -117,7 +118,7 @@ class Remove {
 		return $rows;
 	}
 
-	private function deleteManyToMany(Join $join) : int
+	private function deleteManyToMany(Join $join)
 	{
 		$reference = $this->orm->getShadow($join->getReference());
 		$property = $join->getProperty();
@@ -136,7 +137,7 @@ class Remove {
 			}
 
 			if (empty($referenceJoin)) {
-				return 0;
+				return;
 			}
 
 			$joinTable = $referenceJoin->getJoinTable();

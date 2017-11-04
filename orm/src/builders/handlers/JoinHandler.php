@@ -151,24 +151,52 @@ trait JoinHandler
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= $join->getShadow()->getTableName() . ' ' . $join->getShadow()->getAlias();
+			$tableName = '';
+
+			if (!empty($join->getShadow()->getSchema())) {
+				$tableName .= $join->getShadow()->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $join->getShadow()->getTableName();
+
+			$sql .= $tableName . ' ' . $join->getShadow()->getAlias();
 		} else {
-			$sql .= $shadow->getTableName() . ' ' . $shadow->getAlias();
+			$tableName = '';
+
+			if (!empty($shadow->getSchema())) {
+				$tableName .= $shadow->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $shadow->getTableName();
+
+			$sql .= $tableName . ' ' . $shadow->getAlias();
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $join->getShadow()->getTableName() . '.';
+		$sql .= $join->getShadow()->getAlias() . '.';
 
-		$belongsTo = $shadow->getJoins('reference', $join->getShadow()->getClass());
+		$_joins = $shadow->getJoins('reference', $join->getShadow()->getClass());
+		$belongsTo = null;
 
-		if (!is_array($belongsTo) && $belongsTo) {
+		foreach ($_joins as $_join) {
+			if ($_join->getType() === 'belongsTo') {
+				$belongsTo = $_join;
+				break;
+			}
+		}
+
+		if (!empty($belongsTo)) {
 			$sql .= $belongsTo->getName() . ' = ';
 		} else {
-			$sql .= $shadow->getTableName() . '_';
+			$sql .= $shadow->getAlias() . '_';
 			$sql .= $shadow->getId()->getName() . ' = ';
 		}
 
-		$sql .= $shadow->getTableName() . '.';
+		$sql .= $shadow->getAlias() . '.';
 		$sql .= $shadow->getId()->getName();
 
 		return $sql;
@@ -179,9 +207,29 @@ trait JoinHandler
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= $shadow->getTableName() . ' ' . $shadow->getAlias();
+			$tableName = '';
+
+			if (!empty($shadow->getSchema())) {
+				$tableName .= $shadow->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $shadow->getTableName();
+
+			$sql .= $tableName . ' ' . $shadow->getAlias();
 		} else {
-			$sql .= $join->getShadow()->getTableName();
+			$tableName = '';
+
+			if (!empty($join->getShadow()->getSchema())) {
+				$tableName .= $join->getShadow()->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $join->getShadow()->getTableName();
+
+			$sql .= $tableName . ' ' . $join->getShadow()->getAlias();
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
@@ -189,9 +237,17 @@ trait JoinHandler
 		$sql .= $join->getShadow()->getId()->getName() . ' = ';
 		$sql .= $shadow->getAlias() . '.';
 
-		$belongsTo = $shadow->getJoins('reference', $join->getShadow()->getClass());
+		$_joins = $shadow->getJoins('reference', $join->getShadow()->getClass());
+		$belongsTo = null;
 
-		if (!is_array($belongsTo) && $belongsTo) {
+		foreach ($_joins as $_join) {
+			if ($_join->getType() === 'belongsTo') {
+				$belongsTo = $_join;
+				break;
+			}
+		}
+
+		if (!empty($belongsTo)) {
 			$sql .= $belongsTo->getName();
 		} else {
 			$sql .= $join->getShadow()->getTableName() . '_';
@@ -211,29 +267,59 @@ trait JoinHandler
 
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
+		$joinTableName = '';
+
+		if (!empty($join->getJoinTable()->getSchema())) {
+			$joinTableName .= $join->getJoinTable()->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$joinTableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$joinTableName .= $join->getJoinTable()->getTableName();
+		$joinTableAlias = $shadow->getAlias() . '_' . $join->getShadow()->getAlias();
+
 		if (!array_key_exists($join->getShadow()->getClass(), $this->usedTables)) {
-			$sql .= $join->getJoinTable()->getTableName();
+			$tableName = '';
+
+			if (!empty($join->getShadow()->getSchema())) {
+				$tableName .= $join->getShadow()->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $join->getShadow()->getTableName();
+
+			$sql .= $joinTableName . ' ' . $joinTableAlias;
 			$sql .= "\n\t\t" . 'ON ';
-			$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getInverseJoinColumnName() . ' = ';
+			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseJoinColumnName() . ' = ';
 			$sql .= $shadow->getAlias() . '.';
 			$sql .= $shadow->getId()->getName();
 
 			$sql .= "\n\t" . $joinType . ' JOIN ';
-			$sql .= $join->getShadow()->getTableName();
-			$sql .= ' ' . $join->getShadow()->getAlias();
+			$sql .= $tableName . ' ' . $join->getShadow()->getAlias();
 		} else {
-			$sql .= $join->getJoinTable()->getTableName();
+			$sql .= $joinTableName . ' ' . $joinTableAlias;
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
 		$sql .= $join->getShadow()->getAlias() . '.';
 		$sql .= $join->getShadow()->getId()->getName() . ' = ';
-		$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getJoinColumnName();
+		$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getJoinColumnName();
 
 		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= "\n\t" . $joinType . ' JOIN ' . $shadow->getTableName() . ' ' . $shadow->getAlias() . "\n\t\t" . 'ON ';
+			$tableName = '';
+
+			if (!empty($shadow->getSchema())) {
+				$tableName .= $shadow->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $shadow->getTableName();
+
+			$sql .= "\n\t" . $joinType . ' JOIN ' . $tableName . ' ' . $shadow->getAlias() . "\n\t\t" . 'ON ';
 			$sql .= $shadow->getAlias() . '.' . $shadow->getId()->getName() . ' = ';
-			$sql .= $join->getJoinTable()->getTableName() . '.' . $join->getJoinTable()->getInverseJoinColumnName();
+			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseJoinColumnName();
 		}
 
 		return $sql;
@@ -243,11 +329,32 @@ trait JoinHandler
 	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
-		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
-			$sql .= $join->getShadow()->getTableName();
-		} else {
-			$sql .= $shadow->getTableName();
+		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
+			$tableName = '';
+
+			if (!empty($shadow->getSchema())) {
+				$tableName .= $shadow->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $shadow->getTableName();
+
+			$sql .= $tableName;
 			$sql .= ' ' . $shadow->getAlias();
+		} else {
+			$tableName = '';
+
+			if (!empty($join->getShadow()->getSchema())) {
+				$tableName .= $join->getShadow()->getSchema() . '.';
+			} elseif (!empty($this->connection->getDefaultSchema())) {
+				$tableName .= $this->connection->getDefaultSchema() . '.';
+			}
+
+			$tableName .= $join->getShadow()->getTableName();
+
+			$sql .= $tableName;
+			$sql .= ' ' . $join->getShadow()->getAlias();
 		}
 
 		$sql .= "\n\t\t" . 'ON ';

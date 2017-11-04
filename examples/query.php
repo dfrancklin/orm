@@ -8,6 +8,8 @@ include_once '../orm/load.php';
 
 use ORM\Orm;
 
+use App\Models\GreeningU\Usuario;
+
 $orm = Orm::getInstance();
 $em = $orm->createEntityManager('GreeningU');
 $query = $em->createQuery();

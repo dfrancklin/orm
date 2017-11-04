@@ -1,6 +1,6 @@
 <?php
 
-namespace ORM\Core;
+namespace ORM\Mappers;
 
 class JoinTable
 {
@@ -23,7 +23,7 @@ class JoinTable
 		$this->tableName = $tableName;
 	}
 
-	public function getSchema() : String
+	public function getSchema() : ?String
 	{
 		return $this->schema;
 	}
