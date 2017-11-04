@@ -5,7 +5,8 @@ namespace App\Models\GreeningU;
 /**
  * @ORM/Entity
  */
-class Voto {
+class Voto
+{
 
 	/**
 	 * @ORM/Id

@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Models\Store;
 
 /**
  * @ORM/Entity
  * @ORM/Table(name=clients)
  */
-class Client {
+class Client
+{
 
 	/**
 	 * @ORM/Id

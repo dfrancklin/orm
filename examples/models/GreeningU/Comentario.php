@@ -5,7 +5,8 @@ namespace App\Models\GreeningU;
 /**
  * @ORM/Entity
  */
-class Comentario {
+class Comentario
+{
 
 	/**
 	 * @ORM/Id

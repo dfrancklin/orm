@@ -5,7 +5,8 @@ namespace App\Models\GreeningU;
 /**
  * @ORM/Entity
  */
-class Comunidade {
+class Comunidade
+{
 
 	/**
 	 * @ORM/Id
@@ -39,7 +40,8 @@ class Comunidade {
 	 */
 	public $posts;
 
-	public function addUsuario(...$usuarios) {
+	public function addUsuario(...$usuarios)
+	{
 		if (!is_array($this->usuarios)) {
 			$this->usuarios = [];
 		}
@@ -52,7 +54,8 @@ class Comunidade {
 		}
 	}
 
-	public function addPosts(...$posts) {
+	public function addPosts(...$posts)
+	{
 		if (!is_array($this->posts)) {
 			$this->posts = [];
 		}

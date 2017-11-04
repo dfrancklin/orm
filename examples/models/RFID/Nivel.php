@@ -5,15 +5,16 @@ namespace App\Models\RFID;
 /**
  * @ORM/Entity
  */
-class Nivel {
+class Nivel
+{
 
 	/**
 	 * @ORM/Id
 	 * @ORM/Generated
 	 * @ORM/Column(type=int)
 	 */
-	private $id;
+	public $id;
 
-	private $nome;
+	public $nome;
 
 }

@@ -3,8 +3,12 @@
 include 'config.php';
 include 'autoloader.php';
 include 'functions.php';
-include 'load.php';
 
+include_once '../orm/load.php';
+
+use ORM\Orm;
+
+$orm = Orm::getInstance();
 $orm->setConnection('GreeningU');
 $em = $orm->createEntityManager('GreeningU');
 

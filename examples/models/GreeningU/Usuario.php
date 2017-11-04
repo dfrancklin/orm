@@ -5,7 +5,8 @@ namespace App\Models\GreeningU;
 /**
  * @ORM/Entity
  */
-class Usuario {
+class Usuario
+{
 
 	/**
 	 * @ORM/Id
@@ -75,7 +76,8 @@ class Usuario {
 	 */
 	public $votos;
 
-	public function addAssinaturas(...$comunidades) {
+	public function addAssinaturas(...$comunidades)
+	{
 		if (!is_array($this->assinaturas)) {
 			$this->assinaturas = [];
 		}
@@ -88,7 +90,8 @@ class Usuario {
 		}
 	}
 
-	public function addPosts(...$posts) {
+	public function addPosts(...$posts)
+	{
 		if (!is_array($this->posts)) {
 			$this->posts = [];
 		}

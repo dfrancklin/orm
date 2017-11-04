@@ -6,7 +6,8 @@ namespace App\Models\RFID;
  * @ORM/Entity
  * @ORM/Table(name=ambientes)
  */
-class Ambiente {
+class Ambiente
+{
 
 	/**
 	 * @ORM/Id

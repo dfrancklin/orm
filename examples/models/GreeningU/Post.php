@@ -5,7 +5,8 @@ namespace App\Models\GreeningU;
 /**
  * @ORM/Entity
  */
-class Post {
+class Post
+{
 
 	/**
 	 * @ORM/Id
