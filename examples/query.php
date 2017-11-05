@@ -13,7 +13,7 @@ use App\Models\GreeningU\Usuario;
 $orm = Orm::getInstance();
 $em = $orm->createEntityManager('GreeningU');
 $query = $em->createQuery();
-$usuarios = $query->from(Usuario::class, 'u')->all();
+$usuarios = $query->from(Usuario::class, 'u')->list();
 
 pr('<h1>Usuários (' . count($usuarios) . ')</h1>');
 

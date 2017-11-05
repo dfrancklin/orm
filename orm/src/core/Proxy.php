@@ -139,7 +139,7 @@ class Proxy
 			$rs = $query->distinct()
 					->from($class, $alias)
 					->where($prop)->equals($value)
-					->all();
+					->list();
 
 			return $rs;
 		}
@@ -162,7 +162,7 @@ class Proxy
 				->from($class, $alias)
 				->join($joinClass, $joinAlias)
 				->where($prop)->equals($value)
-				->all();
+				->list();
 
 		return $rs;
 	}

@@ -113,7 +113,7 @@ class Query
 		return $this;
 	}
 
-	public function all() : Array
+	public function list() : Array
 	{
 		$query = $this->generateQuery();
 

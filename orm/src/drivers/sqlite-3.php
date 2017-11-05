@@ -8,6 +8,7 @@ if (!class_exists('SQLiteDriver_3')) {
 	{
 
 		const NAME = 'SQLite';
+
 		const VERSION = '3';
 
 		public function __construct()
@@ -16,8 +17,8 @@ if (!class_exists('SQLiteDriver_3')) {
 			$this->GENERATE_ID_ATTR = 'AUTOINCREMENT';
 			$this->SUPPORTS_IF_EXISTS = true;
 			$this->FK_ENABLES = false;
-			$this->PAGE_TEMPLATE = '%s ' . "\n" . ' LIMIT %d, %d';
-			$this->TOP_TEMPLATE = '%s ' . "\n" . ' LIMIT %d';
+			$this->PAGE_TEMPLATE = '%s ' . "\n" . 'LIMIT %d, %d';
+			$this->TOP_TEMPLATE = '%s ' . "\n" . 'LIMIT %d';
 			$this->DATA_TYPES = [
 				'string' => 'TEXT',
 				'int' => 'INTEGER',
