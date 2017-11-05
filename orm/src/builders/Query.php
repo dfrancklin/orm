@@ -78,9 +78,14 @@ class Query
 		return $this;
 	}
 
-	public function from(String $from, String $alias) : Query
+	public function from(String $from, String $alias=null) : Query
 	{
 		$shadow = $this->orm->getShadow($from);
+
+		if (empty($alias)) {
+			$alias = strtolower($shadow->getTableName()[0]);
+		}
+
 		$shadow->setAlias($alias);
 
 		$this->target = $shadow;

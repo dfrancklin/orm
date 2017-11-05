@@ -17,7 +17,7 @@ abstract class Driver
 
 	public $SUPPORTS_IF_EXISTS = false;
 
-	public $FK_ENABLES = true;
+	public $FK_ENABLE = true;
 
 	public $PAGE_TEMPLATE;
 

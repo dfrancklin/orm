@@ -57,8 +57,7 @@ class TableManager
 		}
 
 		if ($driver->GENERATE_ID_TYPE === 'SEQUENCE') {
-			$_drops = $this->resolveDropSequence($driver->SEQUENCE_NAME);
-			$drops = array_merge($drops, $_drops);
+			$drops[] = $this->resolveDropSequence($driver->SEQUENCE_NAME);
 		}
 
 		foreach($drops as $drop) {
@@ -78,8 +77,7 @@ class TableManager
 		}
 
 		if ($driver->GENERATE_ID_TYPE === 'SEQUENCE') {
-			$_drops = $this->resolveDropSequence($driver->SEQUENCE_NAME);
-			$drops = array_merge($drops, $_drops);
+			$creates[] = $this->resolveCreateSequence($driver->SEQUENCE_NAME);
 		}
 
 		foreach($creates as $create) {
@@ -139,7 +137,10 @@ class TableManager
 			$creates = array_merge($creates, $_creates);
 
 			$columns[] = $this->resolveCreateColumn($id, $join);
-			$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $join->getName(), $referenceTableName, $id->getName());
+
+			if ($driver->FK_ENABLE) {
+				$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $join->getName(), $referenceTableName, $id->getName());
+			}
 		}
 
 		$columns = array_merge($columns, $foreigns);
@@ -263,8 +264,10 @@ class TableManager
 		$columns[] = $this->resolveCreateColumn($shadow->getId(), null, $joinTable->getJoinColumnName());
 		$columns[] = $this->resolveCreateColumn($reference->getId(), null, $joinTable->getInverseJoinColumnName());
 
-		$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getJoinColumnName(), $tableName, $shadow->getId()->getName());
-		$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getInverseJoinColumnName(), $referenceTableName, $reference->getId()->getName());
+		if ($driver->FK_ENABLE) {
+			$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getJoinColumnName(), $tableName, $shadow->getId()->getName());
+			$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getInverseJoinColumnName(), $referenceTableName, $reference->getId()->getName());
+		}
 
 		$columns = array_merge($columns, $foreigns);
 
@@ -281,9 +284,9 @@ class TableManager
 		return $create;
 	}
 
-	private function resolveCreateSequence(String $sequenceName) : Array
+	private function resolveCreateSequence(String $sequenceName) : String
 	{
-		return [sprintf(self::CREATE_SEQUENCE_TEMPLATE, $sequenceName)];
+		return sprintf(self::CREATE_SEQUENCE_TEMPLATE, $sequenceName);
 	}
 
 	private function resolveDropTable(Shadow $shadow, Join $join = null) : Array
@@ -383,9 +386,9 @@ class TableManager
 		return $drops;
 	}
 
-	private function resolveDropSequence(String $sequenceName) : Array
+	private function resolveDropSequence(String $sequenceName) : String
 	{
-		return [sprintf(self::DROP_SEQUENCE_TEMPLATE, $sequenceName)];
+		return sprintf(self::DROP_SEQUENCE_TEMPLATE, $sequenceName);
 	}
 
 	public function checkIfExists(String $tableName) : bool
