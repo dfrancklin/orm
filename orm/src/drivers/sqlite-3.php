@@ -27,6 +27,7 @@ if (!class_exists('SQLiteDriver_3')) {
 				'date' => 'TEXT',
 				'time' => 'TEXT',
 				'datetime' => 'TEXT',
+				'bool' => 'INTEGER'
 			];
 		}
 

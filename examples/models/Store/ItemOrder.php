@@ -22,10 +22,13 @@ class ItemOrder
 	public $order;
 
 	/**
-	 * @ORM/HasOne(class=App\Models\Store\Product)
+	 * @ORM/BelongsTo(class=App\Models\Store\Product)
 	 */
 	public $product;
 
+	/**
+	 * @ORM/Column(type=int)
+	 */
 	public $quantity;
 
 }

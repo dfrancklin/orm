@@ -4,9 +4,6 @@ namespace ORM\Builders;
 
 use ORM\Builders\Query;
 
-use ORM\Mappers\Shadow;
-use ORM\Mappers\Column;
-
 use ORM\Builders\Handlers\OperatorHandler;
 
 class Criteria
@@ -169,8 +166,6 @@ class Criteria
 
 		return $this->builder;
 	}
-
-	// Getters
 
 	public function getAction() : String
 	{

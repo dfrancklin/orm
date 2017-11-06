@@ -13,7 +13,10 @@ use ORM\Mappers\Join;
 use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
-class Remove {
+class Remove
+{
+
+	const DELETE_TEMPLATE = 'DELETE FROM %s WHERE %s = %s';
 
 	private $em;
 
@@ -21,7 +24,7 @@ class Remove {
 
 	private $proxy;
 
-	private $shadow;
+	private $table;
 
 	private $object;
 
@@ -66,10 +69,10 @@ class Remove {
 		$this->proxy = $proxy;
 		$this->object = $object;
 		$this->original = $original ?? $object;
-		$this->shadow = $this->orm->getShadow($class);
+		$this->table = $this->orm->getTable($class);
 
 		if (!$this->proxy) {
-			foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
+			foreach ($this->table->getJoins('type', 'belongsTo') as $join) {
 				$property = $join->getProperty();
 				$values[$property] = $this->object->{$property};
 			}
@@ -83,7 +86,7 @@ class Remove {
 		$rows += $this->removeBefore();
 
 		if (!($query = $this->generateQuery())) {
-			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
+			throw new \Exception('The object of the class "' . $this->table->getClass() . '" seems to be empty');
 		}
 
 		vd($query, $this->values);
@@ -105,7 +108,7 @@ class Remove {
 	{
 		$rows = 0;
 
-		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
+		foreach ($this->table->getJoins('type', 'manyToMany') as $join) {
 			$property = $join->getProperty();
 
 			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
@@ -120,7 +123,7 @@ class Remove {
 
 	private function deleteManyToMany(Join $join)
 	{
-		$reference = $this->orm->getShadow($join->getReference());
+		$reference = $this->orm->getTable($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
 		$column = null;
@@ -128,7 +131,7 @@ class Remove {
 
 		if ($join->getMappedBy()) {
 			$referenceJoin = null;
-			$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+			$referenceJoins = $reference->getJoins('reference', $this->table->getClass());
 
 			foreach ($referenceJoins as $j) {
 				if ($j->getType() === 'manyToMany') {
@@ -141,20 +144,19 @@ class Remove {
 			}
 
 			$joinTable = $referenceJoin->getJoinTable();
-			$column = $joinTable->getInverseJoinColumnName();
+			$column = $joinTable->getInverseName();
 			$id = $reference->getId()->getProperty();
 		} else {
 			$joinTable = $join->getJoinTable();
-			$column = $joinTable->getJoinColumnName();
-			$id = $this->shadow->getId()->getProperty();
+			$column = $joinTable->getJoinName();
+			$id = $this->table->getId()->getProperty();
 		}
 
-		$template = 'DELETE FROM %s WHERE %s = %s';
-		$table = $joinTable->getTableName();
+		$table = $joinTable->getName();
 		$bind = ':' . $column;
 		$values[$bind] = $this->object->{$id};
 
-		$sql = sprintf($template, $table, $column, $bind);
+		$sql = sprintf(self::DELETE_TEMPLATE, $table, $column, $bind);
 
 		$statement = $this->connection->prepare($sql);
 		$statement->execute($values);
@@ -164,13 +166,13 @@ class Remove {
 	{
 		$rows = 0;
 
-		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
+		foreach ($this->table->getJoins('type', 'hasOne') as $join) {
 			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
 				$rows += $this->removeCascade($join);
 			}
 		}
 
-		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
+		foreach ($this->table->getJoins('type', 'hasMany') as $join) {
 			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
 				$rows += $this->removeManyCascade($join);
 			}
@@ -183,7 +185,7 @@ class Remove {
 	{
 		$rows = 0;
 
-		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
+		foreach ($this->table->getJoins('type', 'belongsTo') as $join) {
 			if (in_array(CascadeTypes::DELETE, $join->getCascade())) {
 				$rows += $this->removeCascade($join);
 			}
@@ -237,12 +239,12 @@ class Remove {
 		$class = get_class($value);
 
 		if ($class !== $reference) {
-			throw new \Exception('The type of the property "' . $this->shadow->getClass() .'::' . $property . '"
+			throw new \Exception('The type of the property "' . $this->table->getClass() .'::' . $property . '"
 									should be "' . $reference . '", but "' . $class . '" was given');
 		}
 
-		$shadow = $this->orm->getShadow($class);
-		$id = $shadow->getId()->getProperty();
+		$table = $this->orm->getTable($class);
+		$id = $table->getId()->getProperty();
 
 		if (!$this->em->find($class, $value->{$id})) {
 			return 0;
@@ -256,12 +258,10 @@ class Remove {
 
 	private function generateQuery() : ?String
 	{
-		$sql = 'DELETE FROM %s WHERE %s = %s';
-
 		$idName = $idBind = null;
 		$values = [];
 
-		foreach ($this->shadow->getColumns() as $column) {
+		foreach ($this->table->getColumns() as $column) {
 			if ($column->isId()) {
 				$idName = $column->getProperty();
 				$idBind = ':' . $column->getProperty();
@@ -271,7 +271,11 @@ class Remove {
 			}
 		}
 
-		$query = sprintf($sql, $this->shadow->getTableName(), $idName, $idBind);
+		$query = sprintf(
+			self::DELETE_TEMPLATE,
+			$this->table->getName(),
+			$idName,
+			$idBind);
 		$this->values = $values;
 
 		return ($idName && $idBind) ? $query : null;

@@ -16,6 +16,9 @@ class Product
 	 */
 	private $id;
 
+	/**
+	 * @ORM/Column(type=lob)
+	 */
 	private $description;
 
 	/**

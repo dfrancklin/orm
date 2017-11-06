@@ -22,10 +22,11 @@ if (!class_exists('MySQLDriver_5_7_11')) {
 				'string' => 'VARCHAR(%d)',
 				'int' => 'INTEGER',
 				'float' => 'DOUBLE',
-				'lob' => 'CLOB',
+				'lob' => 'TEXT',
 				'date' => 'DATE',
 				'time' => 'TIME',
 				'datetime' => 'DATETIME',
+				'bool' => 'TINYINT(1)',
 			];
 		}
 

@@ -67,7 +67,7 @@ trait HavingHandler
 		$sql = '';
 
 		list($property, $criteria) = $condition->getCriteria();
-		list($prop, $shadow, $column) = $this->processProperty($property);
+		list($prop, , $column) = $this->processProperty($property);
 		$values = $this->processValues($criteria->getValues(), $column);
 		$alias = str_replace('.', '_', $property);
 		$args = [$condition->getTemplate()];

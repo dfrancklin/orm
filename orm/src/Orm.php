@@ -13,14 +13,14 @@ use ORM\Helpers\Annotation;
 use ORM\Interfaces\IConnection;
 use ORM\Interfaces\IEntityManager;
 
-use ORM\Mappers\Shadow;
+use ORM\Mappers\Table;
 
 class Orm
 {
 
 	private static $instance;
 
-	private $shadows;
+	private $tables;
 
 	private $connections;
 
@@ -28,7 +28,7 @@ class Orm
 
 	protected function __construct()
 	{
-		$this->shadows = [];
+		$this->tables = [];
 		$this->connections = [];
 	}
 
@@ -197,19 +197,19 @@ class Orm
 		throw new \Exception("Não foram encontradas conexões definidas para \"$name\"");
 	}
 
-	public function getShadow(String $class) : Shadow
+	public function getTable(String $class) : Table
 	{
 		if (!$class) {
 			throw new \Exception('Necessário informar o nome da classe');
 		}
 
-		if (!array_key_exists($class, $this->shadows)) {
+		if (!array_key_exists($class, $this->tables)) {
 			$annotation = new Annotation($class);
-			$shadow = $annotation->mapper();
-			$this->shadows[$class] = $shadow;
+			$table = $annotation->mapper();
+			$this->tables[$class] = $table;
 		}
 
-		return $this->shadows[$class];
+		return $this->tables[$class];
 	}
 
 	public function createEntityManager(String $connectionName = null) : IEntityManager

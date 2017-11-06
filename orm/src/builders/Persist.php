@@ -17,11 +17,13 @@ use ORM\Interfaces\IEntityManager;
 class Persist
 {
 
+	const INSERT_TEMPLATE = 'INSERT INTO %s (%s) VALUES (%s)';
+
 	private $em;
 
 	private $orm;
 
-	private $shadow;
+	private $table;
 
 	private $object;
 
@@ -65,14 +67,14 @@ class Persist
 		$class = get_class($object);
 		$this->object = $object;
 		$this->original = $original ?? $object;
-		$this->shadow = $this->orm->getShadow($class);
-		$id = $this->shadow->getId();
+		$this->table = $this->orm->getTable($class);
+		$id = $this->table->getId();
 		$prop = $id->getProperty();
 
 		$this->persistBefore();
 
 		if (!($query = $this->generateQuery())) {
-			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
+			throw new \Exception('The object of the class "' . $this->table->getClass() . '" seems to be empty');
 		}
 
 		vd($query, $this->values);
@@ -128,7 +130,7 @@ class Persist
 
 	private function persistManyToMany()
 	{
-		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
+		foreach ($this->table->getJoins('type', 'manyToMany') as $join) {
 			$property = $join->getProperty();
 
 			if (in_array(CascadeTypes::INSERT, $join->getCascade()) &&
@@ -145,13 +147,13 @@ class Persist
 
 	public function insertManyToMany(Join $join)
 	{
-		$reference = $this->orm->getShadow($join->getReference());
+		$reference = $this->orm->getTable($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
 
 		if ($join->getMappedBy()) {
 			$referenceJoin = null;
-			$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+			$referenceJoins = $reference->getJoins('reference', $this->table->getClass());
 
 			foreach ($referenceJoins as $j) {
 				if ($j->getType() === 'manyToMany') {
@@ -168,19 +170,23 @@ class Persist
 			$joinTable = $join->getJoinTable();
 		}
 
-		$template = 'INSERT INTO %s (%s) VALUES (%s)';
-		$table = $joinTable->getTableName();
-		$columns = [$joinTable->getJoinColumnName(), $joinTable->getInverseJoinColumnName()];
-		$binds = [':' . $joinTable->getJoinColumnName(), ':' . $joinTable->getInverseJoinColumnName()];
+		$table = $joinTable->getName();
+		$columns = [$joinTable->getJoinName(), $joinTable->getInverseName()];
+		$binds = [':' . $joinTable->getJoinName(), ':' . $joinTable->getInverseName()];
 		$values = [];
-		$sql = sprintf($template, $table, implode(', ', $columns), implode(', ', $binds));
+		$sql = sprintf(
+			self::INSERT_TEMPLATE,
+			$table,
+			implode(', ', $columns),
+			implode(', ', $binds)
+		);
 
-		$id = $this->shadow->getId()->getProperty();
+		$id = $this->table->getId()->getProperty();
 		$referenceId = $reference->getId()->getProperty();
 
 		foreach($this->object->{$property} as $p) {
-			$values[':' . $joinTable->getJoinColumnName()] = $this->object->{$id};
-			$values[':' . $joinTable->getInverseJoinColumnName()] = $p->{$referenceId};
+			$values[':' . $joinTable->getJoinName()] = $this->object->{$id};
+			$values[':' . $joinTable->getInverseName()] = $p->{$referenceId};
 
 			$statement = $this->connection->prepare($sql);
 			$statement->execute($values);
@@ -189,7 +195,7 @@ class Persist
 
 	private function persistBefore()
 	{
-		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
+		foreach ($this->table->getJoins('type', 'belongsTo') as $join) {
 			if (in_array(CascadeTypes::INSERT, $join->getCascade())) {
 				$this->persistCascade($join);
 			}
@@ -198,13 +204,13 @@ class Persist
 
 	private function persistAfter()
 	{
-		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
+		foreach ($this->table->getJoins('type', 'hasOne') as $join) {
 			if (in_array(CascadeTypes::INSERT, $join->getCascade())) {
 				$this->persistCascade($join);
 			}
 		}
 
-		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
+		foreach ($this->table->getJoins('type', 'hasMany') as $join) {
 			if (in_array(CascadeTypes::INSERT, $join->getCascade())) {
 				$this->persistManyCascade($join);
 			}
@@ -251,12 +257,12 @@ class Persist
 		$class = get_class($value);
 
 		if ($class !== $reference) {
-			throw new \Exception('The type of the property "' . $this->shadow->getClass() .'::' . $property . '"
+			throw new \Exception('The type of the property "' . $this->table->getClass() .'::' . $property . '"
 									should be "' . $reference . '", but "' . $class . '" was given');
 		}
 
-		$shadow = $this->orm->getShadow($class);
-		$id = $shadow->getId()->getProperty();
+		$table = $this->orm->getTable($class);
+		$id = $table->getId()->getProperty();
 		$builder = Persist::class;
 
 		if ($this->em->find($class, $value->{$id})) {
@@ -287,20 +293,18 @@ class Persist
 
 	private function generateQuery() : String
 	{
-		$sql = 'INSERT INTO %s (%s) VALUES (%s)';
-
 		$columns = [];
 		$binds = [];
 		$values = [];
 
-		foreach (array_merge($this->shadow->getColumns(), $this->shadow->getJoins()) as $column) {
+		foreach (array_merge($this->table->getColumns(), $this->table->getJoins()) as $column) {
 			if ($column instanceof Join && $column->getType() !== 'belongsTo') {
 				continue;
 			}
 
 			if ($column instanceof Join && !empty($this->object->{$column->getProperty()})) {
 				$class = $column->getReference();
-				$reference = $this->orm->getShadow($class);
+				$reference = $this->orm->getTable($class);
 				$id = $reference->getId();
 				$prop = $id->getProperty();
 				$join = $this->object->{$column->getProperty()};
@@ -318,7 +322,12 @@ class Persist
 			}
 		}
 
-		$query = sprintf($sql, $this->shadow->getTableName(), implode(', ', $columns), implode(', ', $binds));
+		$query = sprintf(
+			self::INSERT_TEMPLATE,
+			$this->table->getName(),
+			implode(', ', $columns),
+			implode(', ', $binds)
+		);
 		$this->values = $values;
 
 		return !empty($columns) ? $query : false;
@@ -330,6 +339,8 @@ class Persist
 			$format = $this->connection->getDriver()->FORMATS[$type] ?? 'Y-m-d';
 
 			return $value->format($format);
+		} elseif (is_bool($value)) {
+			return $value ? 1 : 0;
 		} else {
 			return $value;
 		}

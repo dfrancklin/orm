@@ -17,7 +17,7 @@ class Order
 	public $id;
 
 	/**
-	 * @ORM/BelongsTo(class=App\Models\Store\Client)
+	 * @ORM/BelongsTo(class=App\Models\Store\Customer)
 	 */
 	public $client;
 

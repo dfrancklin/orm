@@ -3,7 +3,7 @@
 namespace ORM\Builders\Handlers;
 
 use ORM\Mappers\Column;
-use ORM\Mappers\Shadow;
+use ORM\Mappers\Table;
 
 use ORM\Builders\Criteria;
 use ORM\Builders\Handlers\OperatorHandler;
@@ -70,7 +70,7 @@ trait WhereHandler
 	{
 		$sql = '';
 
-		list($prop, $shadow, $column) = $this->processProperty($property);
+		list($prop, $table, $column) = $this->processProperty($property);
 		$values = $this->processValues($criteria->getValues(), $column);
 		$alias = str_replace('.', '_', $property);
 		$args = [$prop];
@@ -113,21 +113,21 @@ trait WhereHandler
 			$property = substr($property, $index + 1);
 		}
 
-		if (!($shadow = $this->findShadow($alias))) {
+		if (!($table = $this->findTable($alias))) {
 			throw new \Exception('Invalid alias "' . $alias . '"');
 		}
 
-		if (is_array($shadow)) {
-			$shadow = $shadow[0];
+		if (is_array($table)) {
+			$table = $table[0];
 		}
 
-		if (!($column = $shadow->findColumn($property))) {
+		if (!($column = $table->findColumn($property))) {
 			throw new \Exception('Invalid property "' . $property . '"');
 		}
 
 		$property = $alias . '.' . $column->getName();
 
-		return [$property, $shadow, $column];
+		return [$property, $table, $column];
 	}
 
 	private function processValues(Array $values, $column) : Array
@@ -138,7 +138,7 @@ trait WhereHandler
 			$type = $column->getType();
 		} else {
 			$class = $column->getReference();
-			$reference = $this->orm->getShadow($class);
+			$reference = $this->orm->getTable($class);
 			$type = $reference->getId()->getType();
 		}
 
@@ -156,9 +156,9 @@ trait WhereHandler
 		return $processedValues;
 	}
 
-	private function findShadow(String $alias)
+	private function findTable(String $alias)
 	{
-		$shadow = null;
+		$table = null;
 
 		if (!array_key_exists($alias, $this->joinsByAlias)) {
 			throw new \Exception('Invalid alias "' . $alias . '"');

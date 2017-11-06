@@ -17,11 +17,13 @@ use ORM\Interfaces\IEntityManager;
 class Merge
 {
 
+	const UPDATE_TEMPLATE = 'UPDATE %s SET %s WHERE %s = %s';
+
 	private $em;
 
 	private $orm;
 
-	private $shadow;
+	private $table;
 
 	private $object;
 
@@ -65,13 +67,13 @@ class Merge
 		$class = get_class($object);
 		$this->object = $object;
 		$this->original = $original ?? $object;
-		$this->shadow = $this->orm->getShadow($class);
-		$id = $this->shadow->getId()->getProperty();
+		$this->table = $this->orm->getTable($class);
+		$id = $this->table->getId()->getProperty();
 
 		$this->updateBefore();
 
 		if (!($query = $this->generateQuery())) {
-			throw new \Exception('The object of the class "' . $this->shadow->getClass() . '" seems to be empty');
+			throw new \Exception('The object of the class "' . $this->table->getClass() . '" seems to be empty');
 		}
 
 		vd($query, $this->values);
@@ -91,7 +93,7 @@ class Merge
 
 	private function updateManyToMany()
 	{
-		foreach ($this->shadow->getJoins('type', 'manyToMany') as $join) {
+		foreach ($this->table->getJoins('type', 'manyToMany') as $join) {
 			$property = $join->getProperty();
 
 			if (in_array(CascadeTypes::UPDATE, $join->getCascade())
@@ -109,7 +111,7 @@ class Merge
 
 	private function deleteManyToMany(Join $join)
 	{
-		$reference = $this->orm->getShadow($join->getReference());
+		$reference = $this->orm->getTable($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
 		$column = null;
@@ -117,7 +119,7 @@ class Merge
 
 		if ($join->getMappedBy()) {
 			$referenceJoin = null;
-			$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+			$referenceJoins = $reference->getJoins('reference', $this->table->getClass());
 
 			foreach ($referenceJoins as $j) {
 				if ($j->getType() === 'manyToMany') {
@@ -130,20 +132,24 @@ class Merge
 			}
 
 			$joinTable = $referenceJoin->getJoinTable();
-			$column = $joinTable->getInverseJoinColumnName();
+			$column = $joinTable->getInverseName();
 			$id = $reference->getId()->getProperty();
 		} else {
 			$joinTable = $join->getJoinTable();
-			$column = $joinTable->getJoinColumnName();
-			$id = $this->shadow->getId()->getProperty();
+			$column = $joinTable->getJoinName();
+			$id = $this->table->getId()->getProperty();
 		}
 
-		$template = 'DELETE FROM %s WHERE %s = %s';
-		$table = $joinTable->getTableName();
+		$table = $joinTable->getName();
 		$bind = ':' . $column;
 		$values[$bind] = $this->object->{$id};
 
-		$sql = sprintf($template, $table, $column, $bind);
+		$sql = sprintf(
+			Remove::DELETE_TEMPLATE,
+			$table,
+			$column,
+			$bind
+		);
 
 		$statement = $this->connection->prepare($sql);
 		$statement->execute($values);
@@ -151,13 +157,13 @@ class Merge
 
 	private function insertManyToMany(Join $join)
 	{
-		$reference = $this->orm->getShadow($join->getReference());
+		$reference = $this->orm->getTable($join->getReference());
 		$property = $join->getProperty();
 		$joinTable = null;
 
 		if ($join->getMappedBy()) {
 			$referenceJoin = null;
-			$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+			$referenceJoins = $reference->getJoins('reference', $this->table->getClass());
 
 			foreach ($referenceJoins as $j) {
 				if ($j->getType() === 'manyToMany') {
@@ -174,19 +180,23 @@ class Merge
 			$joinTable = $join->getJoinTable();
 		}
 
-		$template = 'INSERT INTO %s (%s) VALUES (%s)';
-		$table = $joinTable->getTableName();
-		$columns = [$joinTable->getJoinColumnName(), $joinTable->getInverseJoinColumnName()];
-		$binds = [':' . $joinTable->getJoinColumnName(), ':' . $joinTable->getInverseJoinColumnName()];
+		$table = $joinTable->getName();
+		$columns = [$joinTable->getJoinName(), $joinTable->getInverseName()];
+		$binds = [':' . $joinTable->getJoinName(), ':' . $joinTable->getInverseName()];
 		$values = [];
-		$sql = sprintf($template, $table, implode(', ', $columns), implode(', ', $binds));
+		$sql = sprintf(
+			Persist::INSERT_TEMPLATE,
+			$table,
+			implode(', ', $columns),
+			implode(', ', $binds)
+		);
 
-		$id = $this->shadow->getId()->getProperty();
+		$id = $this->table->getId()->getProperty();
 		$referenceId = $reference->getId()->getProperty();
 
 		foreach($this->object->{$property} as $p) {
-			$values[':' . $joinTable->getJoinColumnName()] = $this->object->{$id};
-			$values[':' . $joinTable->getInverseJoinColumnName()] = $p->{$referenceId};
+			$values[':' . $joinTable->getJoinName()] = $this->object->{$id};
+			$values[':' . $joinTable->getInverseName()] = $p->{$referenceId};
 
 			$statement = $this->connection->prepare($sql);
 			$statement->execute($values);
@@ -195,7 +205,7 @@ class Merge
 
 	private function updateBefore()
 	{
-		foreach ($this->shadow->getJoins('type', 'belongsTo') as $join) {
+		foreach ($this->table->getJoins('type', 'belongsTo') as $join) {
 			if (in_array(CascadeTypes::UPDATE, $join->getCascade())) {
 				$this->updateCascade($join);
 			}
@@ -204,13 +214,13 @@ class Merge
 
 	private function updateAfter()
 	{
-		foreach ($this->shadow->getJoins('type', 'hasOne') as $join) {
+		foreach ($this->table->getJoins('type', 'hasOne') as $join) {
 			if (in_array(CascadeTypes::UPDATE, $join->getCascade())) {
 				$this->updateCascade($join);
 			}
 		}
 
-		foreach ($this->shadow->getJoins('type', 'hasMany') as $join) {
+		foreach ($this->table->getJoins('type', 'hasMany') as $join) {
 			if (in_array(CascadeTypes::UPDATE, $join->getCascade())) {
 				$this->updateManyCascade($join);
 			}
@@ -257,12 +267,12 @@ class Merge
 		$class = get_class($value);
 
 		if ($class !== $reference) {
-			throw new \Exception('The type of the property "' . $this->shadow->getClass() .'::' . $property . '"
+			throw new \Exception('The type of the property "' . $this->table->getClass() .'::' . $property . '"
 									should be "' . $reference . '", but "' . $class . '" was given');
 		}
 
-		$shadow = $this->orm->getShadow($class);
-		$id = $shadow->getId()->getProperty();
+		$table = $this->orm->getTable($class);
+		$id = $table->getId()->getProperty();
 		$builder = Merge::class;
 
 		if (!$this->em->find($class, $value->{$id})) {
@@ -293,13 +303,10 @@ class Merge
 
 	private function generateQuery() : String
 	{
-		$sql = 'UPDATE %s SET %s WHERE %s = %s';
-
 		$idName = $idBind = null;
-		$sets = [];
-		$values = [];
+		$sets = $values = [];
 
-		foreach (array_merge($this->shadow->getColumns(), $this->shadow->getJoins()) as $column) {
+		foreach (array_merge($this->table->getColumns(), $this->table->getJoins()) as $column) {
 			if ($column instanceof Join && $column->getType() !== 'belongsTo') {
 				continue;
 			}
@@ -318,7 +325,7 @@ class Merge
 				if (!is_null($join)) {
 					if (is_object($join)) {
 						$class = $column->getReference();
-						$reference = $this->orm->getShadow($class);
+						$reference = $this->orm->getTable($class);
 						$id = $reference->getId()->getProperty();
 
 						if (!empty($join->{$id})) {
@@ -344,7 +351,13 @@ class Merge
 			}
 		}
 
-		$query = sprintf($sql, $this->shadow->getTableName(), implode(', ', $sets), $idName, $idBind);
+		$query = sprintf(
+			self::UPDATE_TEMPLATE,
+			$this->table->getName(),
+			implode(', ', $sets),
+			$idName,
+			$idBind
+		);
 		$this->values = $values;
 
 		return !empty($sets) ? $query : false;
@@ -356,6 +369,8 @@ class Merge
 			$format = $this->connection->getDriver()->FORMATS[$type] ?? 'Y-m-d';
 
 			return $value->format($format);
+		} elseif (is_bool($value)) {
+			return $value ? 1 : 0;
 		} else {
 			return $value;
 		}

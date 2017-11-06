@@ -6,7 +6,7 @@ use ORM\Orm;
 
 use ORM\Mappers\Column;
 use ORM\Mappers\Join;
-use ORM\Mappers\Shadow;
+use ORM\Mappers\Table;
 
 use ORM\Interfaces\IConnection;
 
@@ -27,7 +27,7 @@ class TableManager
 
 	private $classes;
 
-	private $shadows;
+	private $tables;
 
 	private $connection;
 
@@ -39,7 +39,7 @@ class TableManager
 	{
 		$this->orm = Orm::getInstance();
 		$this->classes = $this->loadClasses($namespace, $modelsFolder);
-		$this->shadows = $this->loadShadows();
+		$this->tables = $this->loadTables();
 		$this->connection = $connection;
 
 		$this->droped = [];
@@ -51,8 +51,8 @@ class TableManager
 		$drops = [];
 		$driver = $this->connection->getDriver();
 
-		foreach ($this->shadows as $shadow) {
-			$_drops = $this->resolveDropTable($shadow);
+		foreach ($this->tables as $table) {
+			$_drops = $this->resolveDropTable($table);
 			$drops = array_merge($drops, $_drops);
 		}
 
@@ -71,8 +71,8 @@ class TableManager
 		$creates = [];
 		$driver = $this->connection->getDriver();
 
-		foreach ($this->shadows as $shadow) {
-			$_creates = $this->resolveCreateTable($shadow);
+		foreach ($this->tables as $table) {
+			$_creates = $this->resolveCreateTable($table);
 			$creates = array_merge($creates, $_creates);
 		}
 
@@ -86,13 +86,13 @@ class TableManager
 		}
 	}
 
-	private function resolveCreateTable(Shadow $shadow) : Array
+	private function resolveCreateTable(Table $table) : Array
 	{
-		if (in_array($shadow->getClass(), $this->created)) {
+		if (in_array($table->getClass(), $this->created)) {
 			return [];
 		}
 
-		$this->created[] = $shadow->getClass();
+		$this->created[] = $table->getClass();
 
 		$creates = [];
 		$columns = [];
@@ -102,26 +102,26 @@ class TableManager
 		$exists = false;
 		$tableName = '';
 
-		if (!empty($shadow->getSchema())) {
-			$tableName .= $shadow->getSchema() . '.';
+		if (!empty($table->getSchema())) {
+			$tableName .= $table->getSchema() . '.';
 		} elseif (!empty($this->connection->getDefaultSchema())) {
 			$tableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$tableName .= $shadow->getTableName();
+		$tableName .= $table->getName();
 
-		foreach ($shadow->getColumns() as $column) {
+		foreach ($table->getColumns() as $column) {
 			$columns[] = $this->resolveCreateColumn($column);
 		}
 
-		foreach ($shadow->getJoins('type', 'belongsTo') as $join) {
+		foreach ($table->getJoins('type', 'belongsTo') as $join) {
 			$reference = $join->getReference();
 
-			if (!isset($this->shadows[$reference])) {
-				$this->shadows[$reference] = $this->orm->getShadow($reference);
+			if (!isset($this->tables[$reference])) {
+				$this->tables[$reference] = $this->orm->getTable($reference);
 			}
 
-			$reference = $this->shadows[$reference];
+			$reference = $this->tables[$reference];
 			$id = $reference->getId();
 			$referenceTableName = '';
 
@@ -131,7 +131,7 @@ class TableManager
 				$referenceTableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$referenceTableName .= $reference->getTableName();
+			$referenceTableName .= $reference->getName();
 
 			$_creates = $this->resolveCreateTable($reference);
 			$creates = array_merge($creates, $_creates);
@@ -153,9 +153,9 @@ class TableManager
 			$creates[] = sprintf(self::CREATE_TABLE_TEMPLATE, $ifNotExists, $tableName, implode(', ', $columns));
 		}
 
-		foreach ($shadow->getJoins('type', 'manyToMany') as $join) {
+		foreach ($table->getJoins('type', 'manyToMany') as $join) {
 			if (empty($join->getMappedBy())) {
-				$create = $this->resolveJoinTable($shadow, $join);
+				$create = $this->resolveJoinTable($table, $join);
 				$creates[] = $create;
 			}
 		}
@@ -220,18 +220,18 @@ class TableManager
 		return "\n\t" . $definition;
 	}
 
-	private function resolveJoinTable(Shadow $shadow, Join $join) : String
+	private function resolveJoinTable(Table $table, Join $join) : String
 	{
 		$driver = $this->connection->getDriver();
 		$referenceClass = $join->getReference();
 		$ifNotExists = $driver->SUPPORTS_IF_EXISTS ? 'IF NOT EXISTS ' : null;
 		$joinTable = $join->getJoinTable();
 
-		if (!isset($this->shadows[$referenceClass])) {
-			$this->shadows[$referenceClass] = $this->orm->getShadow($referenceClass);
+		if (!isset($this->tables[$referenceClass])) {
+			$this->tables[$referenceClass] = $this->orm->getTable($referenceClass);
 		}
 
-		$reference = $this->shadows[$referenceClass];
+		$reference = $this->tables[$referenceClass];
 
 		$joinTableName = '';
 		$tableName = '';
@@ -243,15 +243,15 @@ class TableManager
 			$joinTableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$joinTableName .= $joinTable->getTableName();
+		$joinTableName .= $joinTable->getName();
 
-		if (!empty($shadow->getSchema())) {
-			$tableName .= $shadow->getSchema() . '.';
+		if (!empty($table->getSchema())) {
+			$tableName .= $table->getSchema() . '.';
 		} elseif (!empty($this->connection->getDefaultSchema())) {
 			$tableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$tableName .= $shadow->getTableName();
+		$tableName .= $table->getName();
 
 		if (!empty($reference->getSchema())) {
 			$referenceTableName .= $reference->getSchema() . '.';
@@ -259,14 +259,31 @@ class TableManager
 			$referenceTableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$referenceTableName .= $reference->getTableName();
+		$referenceTableName .= $reference->getName();
 
-		$columns[] = $this->resolveCreateColumn($shadow->getId(), null, $joinTable->getJoinColumnName());
-		$columns[] = $this->resolveCreateColumn($reference->getId(), null, $joinTable->getInverseJoinColumnName());
+		$columns[] = $this->resolveCreateColumn(
+			$table->getId(),
+			null,
+			$joinTable->getJoinName()
+		);
+		$columns[] = $this->resolveCreateColumn(
+			$reference->getId(),
+			null,
+			$joinTable->getInverseName()
+		);
 
 		if ($driver->FK_ENABLE) {
-			$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getJoinColumnName(), $tableName, $shadow->getId()->getName());
-			$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $joinTable->getInverseJoinColumnName(), $referenceTableName, $reference->getId()->getName());
+			$foreigns[] = sprintf(
+				"\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE,
+				$joinTable->getJoinName(),
+				$tableName,
+				$table->getId()->getName()
+			);
+			$foreigns[] = sprintf(
+				"\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE,
+				$joinTable->getInverseName(),
+				$referenceTableName,
+				$reference->getId()->getName());
 		}
 
 		$columns = array_merge($columns, $foreigns);
@@ -278,7 +295,12 @@ class TableManager
 		}
 
 		if (!$exists) {
-			$create = sprintf(self::CREATE_TABLE_TEMPLATE, $ifNotExists, $joinTableName, implode(', ', $columns));
+			$create = sprintf(
+				self::CREATE_TABLE_TEMPLATE,
+				$ifNotExists,
+				$joinTableName,
+				implode(', ', $columns)
+			);
 		}
 
 		return $create;
@@ -289,19 +311,19 @@ class TableManager
 		return sprintf(self::CREATE_SEQUENCE_TEMPLATE, $sequenceName);
 	}
 
-	private function resolveDropTable(Shadow $shadow, Join $join = null) : Array
+	private function resolveDropTable(Table $table, Join $join = null) : Array
 	{
-		if (in_array($shadow->getClass(), $this->droped)) {
+		if (in_array($table->getClass(), $this->droped)) {
 			return [];
 		}
 
-		$this->droped[] = $shadow->getClass();
+		$this->droped[] = $table->getClass();
 
 		$driver = $this->connection->getDriver();
 		$ifExists = $driver->SUPPORTS_IF_EXISTS ? 'IF EXISTS ' : null;
 		$drops = [];
 
-		foreach ($shadow->getJoins() as $_join) {
+		foreach ($table->getJoins() as $_join) {
 			if ($_join->getType() === 'belongsTo') {
 				continue;
 			}
@@ -312,11 +334,11 @@ class TableManager
 				continue;
 			}
 
-			if (!isset($this->shadows[$reference])) {
-				$this->shadows[$reference] = $this->orm->getShadow($reference);
+			if (!isset($this->tables[$reference])) {
+				$this->tables[$reference] = $this->orm->getTable($reference);
 			}
 
-			$_drops = $this->resolveDropTable($this->shadows[$reference], $_join);
+			$_drops = $this->resolveDropTable($this->tables[$reference], $_join);
 			$drops = array_merge($drops, $_drops);
 		}
 
@@ -328,12 +350,12 @@ class TableManager
 			} else {
 				$reference = $join->getReference();
 
-				if (!isset($this->shadows[$reference])) {
-					$this->shadows[$reference] = $this->orm->getShadow($reference);
+				if (!isset($this->tables[$reference])) {
+					$this->tables[$reference] = $this->orm->getTable($reference);
 				}
 
-				$_shadow = $this->shadows[$reference];
-				$_joins = $_shadow->getJoins('property', $join->getMappedBy());
+				$_table = $this->tables[$reference];
+				$_joins = $_table->getJoins('property', $join->getMappedBy());
 
 				if (!empty($_joins) && count($_joins) === 1) {
 					$_join = $_joins[0];
@@ -351,7 +373,7 @@ class TableManager
 					$joinTableName .= $this->connection->getDefaultSchema() . '.';
 				}
 
-				$joinTableName .= $joinTable->getTableName();
+				$joinTableName .= $joinTable->getName();
 
 				if (!$driver->SUPPORTS_IF_EXISTS) {
 					$joinTableExists = $this->checkIfExists($joinTableName);
@@ -366,13 +388,13 @@ class TableManager
 		$tableExists = true;
 		$tableName = '';
 
-		if (!empty($shadow->getSchema())) {
-			$tableName .= $shadow->getSchema() . '.';
+		if (!empty($table->getSchema())) {
+			$tableName .= $table->getSchema() . '.';
 		} elseif (!empty($this->connection->getDefaultSchema())) {
 			$tableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$tableName .= $shadow->getTableName();
+		$tableName .= $table->getName();
 
 
 		if (!$driver->SUPPORTS_IF_EXISTS) {
@@ -428,15 +450,15 @@ class TableManager
 		return $classes;
 	}
 
-	private function loadShadows() : Array
+	private function loadTables() : Array
 	{
-		$shadows = [];
+		$tables = [];
 
 		foreach ($this->classes as $class) {
-			$shadows[$class] = $this->orm->getShadow($class);
+			$tables[$class] = $this->orm->getTable($class);
 		}
 
-		return $shadows;
+		return $tables;
 	}
 
 }

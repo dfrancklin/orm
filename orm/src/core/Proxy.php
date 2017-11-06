@@ -17,7 +17,7 @@ class Proxy
 
 	private $object;
 
-	private $shadow;
+	private $table;
 
 	private $values;
 
@@ -27,16 +27,16 @@ class Proxy
 		$this->em = $em;
 		$this->object = $object;
 		$this->values = $values;
-		$this->shadow = $this->orm->getShadow(get_class($object));
+		$this->table = $this->orm->getTable(get_class($object));
 	}
 
 	public function __get(String $property)
 	{
-		if (!property_exists($this->shadow->getClass(), $property)) {
-			throw new \Exception('The property "' . $property . '" does not exists on class "' . $this->shadow->getClass() . '"');
+		if (!property_exists($this->table->getClass(), $property)) {
+			throw new \Exception('The property "' . $property . '" does not exists on class "' . $this->table->getClass() . '"');
 		}
 
-		$joins = $this->shadow->getJoins('property', $property);
+		$joins = $this->table->getJoins('property', $property);
 
 		if (!empty($joins) && count($joins) === 1) {
 			$newValue = $this->lazy($joins[0], $property);
@@ -51,8 +51,8 @@ class Proxy
 
 	public function __set(String $property, $value)
 	{
-		if (!property_exists($this->shadow->getClass(), $property)) {
-			throw new \Exception('The property "' . $property . '" does not exists on class "' . $this->shadow->getClass() . '"');
+		if (!property_exists($this->table->getClass(), $property)) {
+			throw new \Exception('The property "' . $property . '" does not exists on class "' . $this->table->getClass() . '"');
 		}
 
 		$this->object->{$property} = $value;
@@ -60,8 +60,8 @@ class Proxy
 
 	public function __call(String $method, Array $arguments)
 	{
-		if (!method_exists($this->shadow->getClass(), $method)) {
-			throw new \Exception('The method "' . $method . '" does not exists on class "' . $this->shadow->getClass() . '"');
+		if (!method_exists($this->table->getClass(), $method)) {
+			throw new \Exception('The method "' . $method . '" does not exists on class "' . $this->table->getClass() . '"');
 		}
 
 		return $this->object->{$method}(...$arguments);
@@ -69,6 +69,7 @@ class Proxy
 
 	public function __isset(String $name) : bool
 	{
+		$this->__get($name);
 		return isset($this->object->{$name});
 	}
 
@@ -91,8 +92,8 @@ class Proxy
 	private function lazyHasOne(Join $join)
 	{
 		$class = $join->getReference();
-		$reference = $this->orm->getShadow($class);
-		$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+		$reference = $this->orm->getTable($class);
+		$referenceJoins = $reference->getJoins('reference', $this->table->getClass());
 
 		$foundedJoins = array_filter($referenceJoins, function($join) {
 			return $join->getType() === 'belongsTo';
@@ -101,9 +102,9 @@ class Proxy
 
 		if (!empty($foundedJoins) && count($foundedJoins) === 1) {
 			$join = $foundedJoins[0];
-			$alias = strtolower($reference->getTableName()[0]);
+			$alias = strtolower($reference->getName()[0]);
 			$prop = $alias . '.' . $join->getProperty();
-			$id = $this->shadow->getId()->getProperty();
+			$id = $this->table->getId()->getProperty();
 			$value = $this->object->{$id};
 			$query = $this->em->createQuery();
 
@@ -120,8 +121,8 @@ class Proxy
 	private function lazyHasMany(Join $join)
 	{
 		$class = $join->getReference();
-		$reference = $this->orm->getShadow($class);
-		$referenceJoins = $reference->getJoins('reference', $this->shadow->getClass());
+		$reference = $this->orm->getTable($class);
+		$referenceJoins = $reference->getJoins('reference', $this->table->getClass());
 
 		$foundedJoins = array_filter($referenceJoins, function($join) {
 			return $join->getType() === 'belongsTo';
@@ -130,9 +131,9 @@ class Proxy
 
 		if (!empty($foundedJoins) && count($foundedJoins) === 1) {
 			$join = $foundedJoins[0];
-			$alias = strtolower($reference->getTableName()[0]);
+			$alias = strtolower($reference->getName()[0]);
 			$prop = $alias . '.' . $join->getProperty();
-			$id = $this->shadow->getId()->getProperty();
+			$id = $this->table->getId()->getProperty();
 			$value = $this->object->{$id};
 			$query = $this->em->createQuery();
 
@@ -151,10 +152,10 @@ class Proxy
 	{
 		$class = $join->getReference();
 		$alias = '_x';
-		$joinClass = $join->getShadow()->getClass();
+		$joinClass = $join->getTable()->getClass();
 		$joinAlias = '_y';
-		$prop = $joinAlias . '.' . $join->getShadow()->getId()->getProperty();
-		$value = $this->object->{$this->shadow->getId()->getProperty()};
+		$prop = $joinAlias . '.' . $join->getTable()->getId()->getProperty();
+		$value = $this->object->{$this->table->getId()->getProperty()};
 
 		$query = $this->em->createQuery();
 
@@ -174,9 +175,9 @@ class Proxy
 		}
 
 		$class = $join->getReference();
-		$reference = $this->orm->getShadow($class);
-		$alias = strtolower($reference->getTableName()[0]);
-		$id = $this->shadow->getId()->getProperty();
+		$reference = $this->orm->getTable($class);
+		$alias = strtolower($reference->getName()[0]);
+		$id = $this->table->getId()->getProperty();
 		$prop = $alias . '.' . $id;
 		$value = $this->values[$join->getProperty()];
 

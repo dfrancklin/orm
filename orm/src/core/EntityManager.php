@@ -27,18 +27,29 @@ class EntityManager implements IEntityManager
 
 	public function find(String $class, $id)
 	{
-		$shadow = $this->orm->getShadow($class);
-		$alias = strtolower($shadow->getTableName()[0]);
-		$prop = $alias . '.' . $shadow->getId()->getProperty();
+		$table = $this->orm->getTable($class);
+		$alias = strtolower($table->getName()[0]);
+		$prop = $alias . '.' . $table->getId()->getProperty();
 
 		$query = $this->createQuery();
 
 		return $query->from($class, $alias)->where($prop)->equals($id)->one();
 	}
 
-	public function createQuery() : Query
+	public function list(String $class)
 	{
-		return new Query($this->connection, $this);
+		return $this->createQuery($class)->list();
+	}
+
+	public function createQuery(String $class = null) : Query
+	{
+		$query = new Query($this->connection, $this);
+
+		if (!empty($class)) {
+			$query->from($class);
+		}
+
+		return $query;
 	}
 
 	public function remove($object)
@@ -77,8 +88,8 @@ class EntityManager implements IEntityManager
 		}
 
 		$class = get_class($object);
-		$shadow = $this->orm->getShadow($class);
-		$id = $shadow->getId();
+		$table = $this->orm->getTable($class);
+		$id = $table->getId();
 		$prop = $id->getProperty();
 
 		if (!empty($object->$prop)) {
@@ -167,8 +178,8 @@ class EntityManager implements IEntityManager
 	private function exists($object) : bool
 	{
 		$class = get_class($object);
-		$shadow = $this->orm->getShadow($class);
-		$id = $shadow->getId();
+		$table = $this->orm->getTable($class);
+		$id = $table->getId();
 		$prop = $id->getProperty();
 		$rs = $this->find($class, $object->$prop);
 

@@ -5,22 +5,22 @@ namespace ORM\Mappers;
 class JoinTable
 {
 
-	private $tableName;
+	private $name;
 
 	private $schema;
 
-	private $joinColumnName;
+	private $joinName;
 
-	private $inverseJoinColumnName;
+	private $inverseName;
 
-	public function getTableName() : String
+	public function getName() : ?String
 	{
-		return $this->tableName;
+		return $this->name;
 	}
 
-	public function setTableName(String $tableName)
+	public function setName(String $name)
 	{
-		$this->tableName = $tableName;
+		$this->name = $name;
 	}
 
 	public function getSchema() : ?String
@@ -33,24 +33,24 @@ class JoinTable
 		$this->schema = $schema;
 	}
 
-	public function getJoinColumnName() : String
+	public function getJoinName() : ?String
 	{
-		return $this->joinColumnName;
+		return $this->joinName;
 	}
 
-	public function setJoinColumnName(String $joinColumnName)
+	public function setJoinName(String $joinName)
 	{
-		$this->joinColumnName = $joinColumnName;
+		$this->joinName = $joinName;
 	}
 
-	public function getInverseJoinColumnName() : String
+	public function getInverseName() : ?String
 	{
-		return $this->inverseJoinColumnName;
+		return $this->inverseName;
 	}
 
-	public function setInverseJoinColumnName(String $inverseJoinColumnName)
+	public function setInverseName(String $inverseName)
 	{
-		$this->inverseJoinColumnName = $inverseJoinColumnName;
+		$this->inverseName = $inverseName;
 	}
 
 }

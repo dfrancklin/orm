@@ -5,7 +5,7 @@ namespace ORM\Mappers;
 class Join
 {
 
-	private $shadow;
+	private $table;
 
 	private $reference;
 
@@ -29,14 +29,14 @@ class Join
 		$this->optional = false;
 	}
 
-	public function getShadow() : Shadow
+	public function getTable() : Table
 	{
-		return $this->shadow;
+		return $this->table;
 	}
 
-	public function setShadow(Shadow $shadow)
+	public function setTable(Table $table)
 	{
-		$this->shadow = $shadow;
+		$this->table = $table;
 	}
 
 	public function getClass() : String

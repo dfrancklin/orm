@@ -5,7 +5,7 @@ namespace ORM\Mappers;
 class Column
 {
 
-	private $shadow;
+	private $table;
 
 	private $property;
 
@@ -39,14 +39,14 @@ class Column
 		$this->unique = false;
 	}
 
-	public function getShadow() : Shadow
+	public function getTable() : Table
 	{
-		return $this->shadow;
+		return $this->table;
 	}
 
-	public function setShadow(Shadow $shadow)
+	public function setTable(Table $table)
 	{
-		$this->shadow = $shadow;
+		$this->table = $table;
 	}
 
 	public function getProperty() : String

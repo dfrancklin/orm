@@ -2,12 +2,12 @@
 
 namespace ORM\Mappers;
 
-class Shadow
+class Table
 {
 
 	private $class;
 
-	private $tableName;
+	private $name;
 
 	private $schema;
 
@@ -32,14 +32,14 @@ class Shadow
 		return $this->class;
 	}
 
-	public function getTableName() : String
+	public function getName() : String
 	{
-		return $this->tableName;
+		return $this->name;
 	}
 
-	public function setTableName(String $tableName)
+	public function setName(String $name)
 	{
-		$this->tableName = $tableName;
+		$this->name = $name;
 	}
 
 	public function getSchema()
@@ -47,7 +47,7 @@ class Shadow
 		return $this->schema;
 	}
 
-	public function setSchema(String $schema) : String
+	public function setSchema(String $schema) : ?String
 	{
 		$this->schema = $schema;
 	}
@@ -74,7 +74,7 @@ class Shadow
 
 	public function addColumn(Column $column)
 	{
-		$column->setShadow($this);
+		$column->setTable($this);
 		array_push($this->columns, $column);
 	}
 
@@ -85,7 +85,7 @@ class Shadow
 
 	public function addJoin(Join $join)
 	{
-		$join->setShadow($this);
+		$join->setTable($this);
 		array_push($this->joins, $join);
 	}
 

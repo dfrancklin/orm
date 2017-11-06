@@ -80,16 +80,16 @@ class Query
 
 	public function from(String $from, String $alias=null) : Query
 	{
-		$shadow = $this->orm->getShadow($from);
+		$table = $this->orm->getTable($from);
 
 		if (empty($alias)) {
-			$alias = strtolower($shadow->getTableName()[0]);
+			$alias = strtolower($table->getName()[0]);
 		}
 
-		$shadow->setAlias($alias);
+		$table->setAlias($alias);
 
-		$this->target = $shadow;
-		$this->joinsByAlias[$alias] = $shadow;
+		$this->target = $table;
+		$this->joinsByAlias[$alias] = $table;
 
 		return $this;
 	}
@@ -121,14 +121,11 @@ class Query
 	public function list() : Array
 	{
 		$query = $this->generateQuery();
-
-		vd($query, $this->values);
-
 		$statement = $this->connection->prepare($query);
-		$hasResults = $statement->execute($this->values);
+		$executed = $statement->execute($this->values);
 		$resultSet = [];
 
-		if ($hasResults) {
+		if ($executed) {
 			$resultSet = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
 			if (empty($this->columns)) {
@@ -143,8 +140,6 @@ class Query
 	{
 		$this->top(1);
 		$query = $this->generateQuery();
-
-		vd($query, $this->values);
 		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);
 		$resultSet = null;
@@ -189,7 +184,7 @@ class Query
 			$tableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$tableName .= $this->target->getTableName();
+		$tableName .= $this->target->getName();
 
 		$query .= "\n" . 'FROM ' . $tableName . ' ' . $this->target->getAlias();
 
@@ -277,6 +272,8 @@ class Query
 				return (float) $value;
 			case 'datetime':
 				return new \DateTime($value);
+			case 'bool':
+				return in_array($value, [1, '1', 'true', 'TRUE', 't', 'T'], true);
 			default:
 				return $value;
 		}

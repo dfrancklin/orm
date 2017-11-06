@@ -6,7 +6,7 @@ use ORM\Builders\Query;
 
 use ORM\Constants\JoinTypes;
 
-use ORM\Mappers\Shadow;
+use ORM\Mappers\Table;
 use ORM\Mappers\Join;
 
 trait JoinHandler
@@ -34,11 +34,11 @@ trait JoinHandler
 			throw new \Exception('The join type informed "' . $type . '" does not exists or is not suppoerted');
 		}
 
-		$shadow = $this->orm->getShadow($join);
-		$shadow->setAlias($alias);
+		$table = $this->orm->getTable($join);
+		$table->setAlias($alias);
 
-		$this->joins[$join] = [$shadow, $type];
-		$this->joinsByAlias[$alias] = [$shadow, $type];
+		$this->joins[$join] = [$table, $type];
+		$this->joinsByAlias[$alias] = [$table, $type];
 
 		return $this;
 	}
@@ -58,29 +58,29 @@ trait JoinHandler
 		return $this;
 	}
 
-	private function preProcessJoins($joinInfo, $shadows)
+	private function preProcessJoins($joinInfo, $tables)
 	{
 		if (is_null($joinInfo)) {
 			return;
 		}
 
-		$next = array_shift($shadows);
-		list($shadow) = $joinInfo;
+		$next = array_shift($tables);
+		list($table) = $joinInfo;
 
-		foreach ($shadow->getJoins() as $join) {
-			$name = $shadow->getTableName() . '.' . $join->getProperty();
+		foreach ($table->getJoins() as $join) {
+			$name = $table->getName() . '.' . $join->getProperty();
 
 			if (!array_key_exists($name, $this->relations)) {
 				$reference = $join->getReference();
-				$inverseShadow = $this->orm->getShadow($reference);
-				$inverseJoins = $inverseShadow->getJoins('reference', $shadow->getClass());
+				$inverse = $this->orm->getTable($reference);
+				$_joins = $inverse->getJoins('reference', $table->getClass());
 
-				if (count($inverseJoins)) {
-					foreach ($inverseJoins as $inverseJoin) {
-						$isValid = $this->validTypes($join, $inverseJoin);
+				if (count($_joins)) {
+					foreach ($_joins as $_join) {
+						$isValid = $this->validTypes($join, $_join);
 
 						if ($isValid) {
-							$inverseName = $inverseShadow->getTableName() . '.' . $inverseJoin->getProperty();
+							$inverseName = $inverse->getName() . '.' . $_join->getProperty();
 
 							if (!array_key_exists($inverseName, $this->relations)) {
 								if (array_key_exists($join->getReference(), $this->joins)) {
@@ -94,7 +94,7 @@ trait JoinHandler
 			}
 		}
 
-		return $this->preProcessJoins($next, $shadows);
+		return $this->preProcessJoins($next, $tables);
 	}
 
 	private function validTypes(Join $join, Join $inverseJoin) : bool
@@ -131,55 +131,55 @@ trait JoinHandler
 
 	private function generateJoins(Array $joinInfo, Join $join) : String
 	{
-		list($shadow, $joinType) = $joinInfo;
+		list($table, $joinType) = $joinInfo;
 
-		if (array_key_exists($join->getShadow()->getClass(), $this->usedTables) &&
-				array_key_exists($shadow->getClass(), $this->usedTables) &&
+		if (array_key_exists($join->getTable()->getClass(), $this->usedTables) &&
+				array_key_exists($table->getClass(), $this->usedTables) &&
 				$join->getType() !== 'manyToMany') {
 			return '';
 		}
 
 		$method = 'resolveJoin' . ucfirst($join->getType());
-		$sql = $this->$method($shadow, $join, $joinType);
-		$this->usedTables[$shadow->getClass()] = $shadow;
+		$sql = $this->$method($table, $join, $joinType);
+		$this->usedTables[$table->getClass()] = $table;
 
 		return $sql;
 	}
 
-	private function resolveJoinHasOne(Shadow $shadow, Join $join, String $joinType) : String
+	private function resolveJoinHasOne(Table $table, Join $join, String $joinType) : String
 	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
-		if (array_key_exists($shadow->getClass(), $this->usedTables)) {
+		if (array_key_exists($table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
-			if (!empty($join->getShadow()->getSchema())) {
-				$tableName .= $join->getShadow()->getSchema() . '.';
+			if (!empty($join->getTable()->getSchema())) {
+				$tableName .= $join->getTable()->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $join->getShadow()->getTableName();
+			$tableName .= $join->getTable()->getName();
 
-			$sql .= $tableName . ' ' . $join->getShadow()->getAlias();
+			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
 		} else {
 			$tableName = '';
 
-			if (!empty($shadow->getSchema())) {
-				$tableName .= $shadow->getSchema() . '.';
+			if (!empty($table->getSchema())) {
+				$tableName .= $table->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $shadow->getTableName();
+			$tableName .= $table->getName();
 
-			$sql .= $tableName . ' ' . $shadow->getAlias();
+			$sql .= $tableName . ' ' . $table->getAlias();
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $join->getShadow()->getAlias() . '.';
+		$sql .= $join->getTable()->getAlias() . '.';
 
-		$_joins = $shadow->getJoins('reference', $join->getShadow()->getClass());
+		$_joins = $table->getJoins('reference', $join->getTable()->getClass());
 		$belongsTo = null;
 
 		foreach ($_joins as $_join) {
@@ -192,52 +192,52 @@ trait JoinHandler
 		if (!empty($belongsTo)) {
 			$sql .= $belongsTo->getName() . ' = ';
 		} else {
-			$sql .= $shadow->getAlias() . '_';
-			$sql .= $shadow->getId()->getName() . ' = ';
+			$sql .= $table->getAlias() . '_';
+			$sql .= $table->getId()->getName() . ' = ';
 		}
 
-		$sql .= $shadow->getAlias() . '.';
-		$sql .= $shadow->getId()->getName();
+		$sql .= $table->getAlias() . '.';
+		$sql .= $table->getId()->getName();
 
 		return $sql;
 	}
 
-	private function resolveJoinHasMany(Shadow $shadow, Join $join, String $joinType) : String
+	private function resolveJoinHasMany(Table $table, Join $join, String $joinType) : String
 	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
-		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
+		if (!array_key_exists($table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
-			if (!empty($shadow->getSchema())) {
-				$tableName .= $shadow->getSchema() . '.';
+			if (!empty($table->getSchema())) {
+				$tableName .= $table->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $shadow->getTableName();
+			$tableName .= $table->getName();
 
-			$sql .= $tableName . ' ' . $shadow->getAlias();
+			$sql .= $tableName . ' ' . $table->getAlias();
 		} else {
 			$tableName = '';
 
-			if (!empty($join->getShadow()->getSchema())) {
-				$tableName .= $join->getShadow()->getSchema() . '.';
+			if (!empty($join->getTable()->getSchema())) {
+				$tableName .= $join->getTable()->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $join->getShadow()->getTableName();
+			$tableName .= $join->getTable()->getName();
 
-			$sql .= $tableName . ' ' . $join->getShadow()->getAlias();
+			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $join->getShadow()->getAlias() . '.';
-		$sql .= $join->getShadow()->getId()->getName() . ' = ';
-		$sql .= $shadow->getAlias() . '.';
+		$sql .= $join->getTable()->getAlias() . '.';
+		$sql .= $join->getTable()->getId()->getName() . ' = ';
+		$sql .= $table->getAlias() . '.';
 
-		$_joins = $shadow->getJoins('reference', $join->getShadow()->getClass());
+		$_joins = $table->getJoins('reference', $join->getTable()->getClass());
 		$belongsTo = null;
 
 		foreach ($_joins as $_join) {
@@ -250,18 +250,18 @@ trait JoinHandler
 		if (!empty($belongsTo)) {
 			$sql .= $belongsTo->getName();
 		} else {
-			$sql .= $join->getShadow()->getTableName() . '_';
-			$sql .= $join->getShadow()->getId()->getName();
+			$sql .= $join->getTable()->getName() . '_';
+			$sql .= $join->getTable()->getId()->getName();
 		}
 
 		return $sql;
 	}
 
-	private function resolveJoinManyToMany(Shadow $shadow, Join $join, String $joinType) : String
+	private function resolveJoinManyToMany(Table $table, Join $join, String $joinType) : String
 	{
 		if ($join->getMappedBy()) {
-			$tempJoin = $shadow->getJoins('property', $join->getMappedBy());
-			$shadow = $join->getShadow();
+			$tempJoin = $table->getJoins('property', $join->getMappedBy());
+			$table = $join->getTable();
 			$join = $tempJoin[0];
 		}
 
@@ -275,92 +275,91 @@ trait JoinHandler
 			$joinTableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$joinTableName .= $join->getJoinTable()->getTableName();
-		$joinTableAlias = $shadow->getAlias() . '_' . $join->getShadow()->getAlias();
+		$joinTableName .= $join->getJoinTable()->getName();
+		$joinTableAlias = $table->getAlias() . '_' . $join->getTable()->getAlias();
 
-		if (!array_key_exists($join->getShadow()->getClass(), $this->usedTables)) {
+		if (!array_key_exists($join->getTable()->getClass(), $this->usedTables)) {
 			$tableName = '';
 
-			if (!empty($join->getShadow()->getSchema())) {
-				$tableName .= $join->getShadow()->getSchema() . '.';
+			if (!empty($join->getTable()->getSchema())) {
+				$tableName .= $join->getTable()->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $join->getShadow()->getTableName();
+			$tableName .= $join->getTable()->getName();
 
 			$sql .= $joinTableName . ' ' . $joinTableAlias;
 			$sql .= "\n\t\t" . 'ON ';
-			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseJoinColumnName() . ' = ';
-			$sql .= $shadow->getAlias() . '.';
-			$sql .= $shadow->getId()->getName();
+			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseName() . ' = ';
+			$sql .= $table->getAlias() . '.';
+			$sql .= $table->getId()->getName();
 
 			$sql .= "\n\t" . $joinType . ' JOIN ';
-			$sql .= $tableName . ' ' . $join->getShadow()->getAlias();
+			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
 		} else {
 			$sql .= $joinTableName . ' ' . $joinTableAlias;
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $join->getShadow()->getAlias() . '.';
-		$sql .= $join->getShadow()->getId()->getName() . ' = ';
-		$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getJoinColumnName();
+		$sql .= $join->getTable()->getAlias() . '.';
+		$sql .= $join->getTable()->getId()->getName() . ' = ';
+		$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getJoinName();
 
-		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
+		if (!array_key_exists($table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
-			if (!empty($shadow->getSchema())) {
-				$tableName .= $shadow->getSchema() . '.';
+			if (!empty($table->getSchema())) {
+				$tableName .= $table->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $shadow->getTableName();
+			$tableName .= $table->getName();
 
-			$sql .= "\n\t" . $joinType . ' JOIN ' . $tableName . ' ' . $shadow->getAlias() . "\n\t\t" . 'ON ';
-			$sql .= $shadow->getAlias() . '.' . $shadow->getId()->getName() . ' = ';
-			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseJoinColumnName();
+			$sql .= "\n\t" . $joinType . ' JOIN ' . $tableName . ' ' . $table->getAlias() . "\n\t\t" . 'ON ';
+			$sql .= $table->getAlias() . '.' . $table->getId()->getName() . ' = ';
+			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseName();
 		}
 
 		return $sql;
 	}
 
-	private function resolveJoinBelongsTo(Shadow $shadow, Join $join, String $joinType) : String
+	private function resolveJoinBelongsTo(Table $table, Join $join, String $joinType) : String
 	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
-		if (!array_key_exists($shadow->getClass(), $this->usedTables)) {
+		if (!array_key_exists($table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
-			if (!empty($shadow->getSchema())) {
-				$tableName .= $shadow->getSchema() . '.';
+			if (!empty($table->getSchema())) {
+				$tableName .= $table->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $shadow->getTableName();
+			$tableName .= $table->getName();
 
 			$sql .= $tableName;
-			$sql .= ' ' . $shadow->getAlias();
+			$sql .= ' ' . $table->getAlias();
 		} else {
 			$tableName = '';
 
-			if (!empty($join->getShadow()->getSchema())) {
-				$tableName .= $join->getShadow()->getSchema() . '.';
+			if (!empty($join->getTable()->getSchema())) {
+				$tableName .= $join->getTable()->getSchema() . '.';
 			} elseif (!empty($this->connection->getDefaultSchema())) {
 				$tableName .= $this->connection->getDefaultSchema() . '.';
 			}
 
-			$tableName .= $join->getShadow()->getTableName();
+			$tableName .= $join->getTable()->getName();
 
-			$sql .= $tableName;
-			$sql .= ' ' . $join->getShadow()->getAlias();
+			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $shadow->getAlias() . '.';
-		$sql .= $shadow->getId()->getName() . ' = ';
-		$sql .= $join->getShadow()->getAlias() . '.';
+		$sql .= $table->getAlias() . '.';
+		$sql .= $table->getId()->getName() . ' = ';
+		$sql .= $join->getTable()->getAlias() . '.';
 		$sql .= $join->getName();
 
 		return $sql;

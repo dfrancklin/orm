@@ -13,7 +13,9 @@ interface IEntityManager
 
 	function find(String $class, $id);
 
-	function createQuery() : Query;
+	function list(String $class);
+
+	function createQuery(String $class = null) : Query;
 
 	function remove($object);
 
