@@ -43,8 +43,8 @@ class Orm
 
 	public function setConnection(String $name, Array $config = [])
 	{
-		$this->addConnection($name, $config);
 		$this->defaultConnection = $name;
+		$this->addConnection($name, $config);
 	}
 
 	public function addConnection(String $name, Array $config = [])
@@ -61,12 +61,41 @@ class Orm
 			}
 
 			$table = new TableManager($this->connections[$name], $config['namespace'], $config['modelsFolder']);
-
+			
 			if (!empty($config) && isset($config['drop']) && $config['drop']) {
+				$this->executeCallback($config['beforeDrop'], $name);
 				$table->drop();
 			}
 
 			$table->create();
+			$this->executeCallback($config['afterCreate'], $name);
+		}
+	}
+	
+	private function executeCallback($callback, String $name)
+	{
+		if (!empty($callback)) {
+			if (
+				$callback instanceof \Closure ||
+				(
+					is_string($callback) && 
+					function_exists($callback)
+				) ||
+				(
+					is_array($callback) && 
+					is_string($callback[0]) && 
+					class_exists($callback[0]) && 
+					method_exists(...$callback)
+				) ||
+				(
+					is_array($callback) && 
+					is_object($callback[0]) && 
+					method_exists(...$callback)
+				)
+			) {
+				$em = $this->createEntityManager($name);
+				$callback($em, $this);
+			}
 		}
 	}
 
