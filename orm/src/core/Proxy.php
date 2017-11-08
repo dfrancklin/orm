@@ -78,6 +78,11 @@ class Proxy
 		unset($this->object->{$name});
 	}
 
+	public function __debugInfo()
+	{
+		return (array) $this->object;
+	}
+
 	private function lazy(Join $join, String $property)
 	{
 		if (!is_null($this->object->{$property})) {

@@ -32,11 +32,17 @@ $staffs = $query
 	->list();
 
 foreach($staffs as $staff) {
-	vd(
-		$staff->name . ' is ' . (
-			empty($staff->supervisor) ?
-				'a supervisor' :
-				'supervised by ' . $staff->supervisor->name
-		)
-	);
+	$staff->supervisor;
+	$staff->supervisees;
+	vd($staff);
 }
+
+// foreach($staffs as $staff) {
+// 	vd(
+// 		$staff->name . ' is ' . (
+// 			empty($staff->supervisor) ?
+// 				'a supervisor' :
+// 				'supervised by ' . $staff->supervisor->name
+// 		)
+// 	);
+// }
