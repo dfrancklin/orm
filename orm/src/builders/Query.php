@@ -86,8 +86,6 @@ class Query
 			$alias = strtolower($table->getName()[0]);
 		}
 
-// 		$table->setAlias($alias);
-
 		$this->target = [$table, $alias];
 		$this->tablesByAlias[$alias] = [$table, $alias];
 
@@ -190,7 +188,7 @@ class Query
 		$query .= "\n" . 'FROM ' . $tableName . ' ' . $alias;
 
 		if (property_exists(__CLASS__, 'usedTables')) {
-			$this->usedTables[$table->getClass()] = $table;
+			$this->usedTables[$alias . ':' . $table->getClass()] = $table;
 		}
 
 		$query .= $this->resolveJoin();
@@ -210,7 +208,7 @@ class Query
 		}
 
 		vd($query);
-		
+
 		return $query;
 	}
 

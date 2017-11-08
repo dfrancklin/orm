@@ -28,6 +28,10 @@ $orm = Orm::getInstance();
 $orm->setConnection('Sakila');
 $em = $orm->createEntityManager();
 
-$proxy = $em->find(Rental::class, 1);
-$entity = $proxy->__getObject();
-vd($entity);
+$proxy = $em->find(Category::class, 1);
+
+if ($proxy) {
+	$proxy->films;
+	$entity = $proxy->__getObject();
+	vd($entity);
+}

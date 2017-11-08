@@ -13,8 +13,6 @@ class Table
 
 	private $mutable;
 
-	private $alias;
-
 	private $columns;
 
 	private $joins;
@@ -60,16 +58,6 @@ class Table
 	public function setMutable(bool $mutable)
 	{
 		$this->mutable = $mutable;
-	}
-
-	public function getAlias() : String
-	{
-		return $this->alias;
-	}
-
-	public function setAlias(String $alias)
-	{
-		$this->alias = $alias;
 	}
 
 	public function addColumn(Column $column)

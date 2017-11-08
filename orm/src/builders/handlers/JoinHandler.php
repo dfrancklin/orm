@@ -79,13 +79,13 @@ trait JoinHandler
 		if (is_null($joinInfo)) {
 			return;
 		}
-		
+
 		$next = array_shift($tables);
 		list($table, $alias) = $joinInfo;
 
 		foreach ($table->getJoins() as $join) {
 			$name = $alias . '_' . $table->getName() . '.' . $join->getProperty();
-			
+
 			if (!array_key_exists($name, $this->relations)) {
 				$reference = $join->getReference();
 				$inverse = $this->orm->getTable($reference);
@@ -100,11 +100,11 @@ trait JoinHandler
 								list($_inverse, $_alias) = $join;
 								return $_inverse === $inverse && $alias !== $_alias;
 							});
-							
+
 							if (!empty($_inverses) && count($_inverses) === 1) {
 								$inverseAlias = array_keys($_inverses)[0];
 								$inverseName = $inverseAlias . '_' . $inverse->getName() . '.' . $_join->getProperty();
-								
+
 								if (!array_key_exists($inverseName, $this->relations)) {
 									if (array_key_exists($join->getReference(), $this->joins)) {
 										$sh = $this->joins[$join->getReference()];
@@ -112,7 +112,7 @@ trait JoinHandler
 									}
 								}
 							}
-							
+
 						}
 					}
 				}
@@ -140,25 +140,41 @@ trait JoinHandler
 	private function generateJoins(Array $joinInfo, Join $join) : String
 	{
 		list($table, $alias, $joinType) = $joinInfo;
+		$referenceClass = $join->getTable()->getClass();
+		$referenceAlias = null;
 
-		if (array_key_exists($join->getTable()->getClass(), $this->usedTables) &&
-				array_key_exists($table->getClass(), $this->usedTables) &&
+		$_references = array_filter($this->tablesByAlias, function($join) use ($alias, $referenceClass) {
+			list($table, $_alias) = $join;
+
+			return $table->getClass() === $referenceClass && $_alias !== $alias;
+		});
+
+		if (!empty($_references) && count($_references) === 1) {
+			$referenceAlias = array_keys($_references)[0];
+		}
+
+		if (empty($referenceAlias)) {
+			return '';
+		}
+
+		if (array_key_exists($referenceAlias . ':' . $referenceClass, $this->usedTables) &&
+				array_key_exists($alias . ':' . $table->getClass(), $this->usedTables) &&
 				$join->getType() !== 'manyToMany') {
 			return '';
 		}
 
 		$method = 'resolveJoin' . ucfirst($join->getType());
-		$sql = $this->$method($table, $join, $joinType);
-		$this->usedTables[$table->getClass()] = $table;
+		$sql = $this->$method($table, $alias, $join, $referenceAlias, $joinType);
+		$this->usedTables[$alias . ':' . $table->getClass()] = $table;
 
 		return $sql;
 	}
 
-	private function resolveJoinHasOne(Table $table, Join $join, String $joinType) : String
+	private function resolveJoinHasOne(Table $table, String $alias, Join $join, String $joinAlias, String $joinType) : String
 	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
-		if (array_key_exists($table->getClass(), $this->usedTables)) {
+		if (array_key_exists($alias . ':' . $table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
 			if (!empty($join->getTable()->getSchema())) {
@@ -168,8 +184,7 @@ trait JoinHandler
 			}
 
 			$tableName .= $join->getTable()->getName();
-
-			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
+			$sql .= $tableName . ' ' . $joinAlias;
 		} else {
 			$tableName = '';
 
@@ -180,12 +195,11 @@ trait JoinHandler
 			}
 
 			$tableName .= $table->getName();
-
-			$sql .= $tableName . ' ' . $table->getAlias();
+			$sql .= $tableName . ' ' . $alias;
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $join->getTable()->getAlias() . '.';
+		$sql .= $joinAlias . '.';
 
 		$_joins = $table->getJoins('reference', $join->getTable()->getClass());
 		$belongsTo = null;
@@ -200,21 +214,20 @@ trait JoinHandler
 		if (!empty($belongsTo)) {
 			$sql .= $belongsTo->getName() . ' = ';
 		} else {
-			$sql .= $table->getAlias() . '_';
+			$sql .= $table->getName() . '_';
 			$sql .= $table->getId()->getName() . ' = ';
 		}
 
-		$sql .= $table->getAlias() . '.';
-		$sql .= $table->getId()->getName();
+		$sql .= $alias . '.' . $table->getId()->getName();
 
 		return $sql;
 	}
 
-	private function resolveJoinHasMany(Table $table, Join $join, String $joinType) : String
+	private function resolveJoinHasMany(Table $table, String $alias, Join $join, String $joinAlias, String $joinType) : String
 	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
-		if (!array_key_exists($table->getClass(), $this->usedTables)) {
+		if (!array_key_exists($alias . ':' . $table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
 			if (!empty($table->getSchema())) {
@@ -224,8 +237,7 @@ trait JoinHandler
 			}
 
 			$tableName .= $table->getName();
-
-			$sql .= $tableName . ' ' . $table->getAlias();
+			$sql .= $tableName . ' ' . $alias;
 		} else {
 			$tableName = '';
 
@@ -236,14 +248,13 @@ trait JoinHandler
 			}
 
 			$tableName .= $join->getTable()->getName();
-
-			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
+			$sql .= $tableName . ' ' . $joinAlias;
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $join->getTable()->getAlias() . '.';
+		$sql .= $joinAlias . '.';
 		$sql .= $join->getTable()->getId()->getName() . ' = ';
-		$sql .= $table->getAlias() . '.';
+		$sql .= $alias . '.';
 
 		$_joins = $table->getJoins('reference', $join->getTable()->getClass());
 		$belongsTo = null;
@@ -265,12 +276,15 @@ trait JoinHandler
 		return $sql;
 	}
 
-	private function resolveJoinManyToMany(Table $table, Join $join, String $joinType) : String
+	private function resolveJoinManyToMany(Table $table, String $alias, Join $join, String $joinAlias, String $joinType) : String
 	{
 		if ($join->getMappedBy()) {
 			$tempJoin = $table->getJoins('property', $join->getMappedBy());
 			$table = $join->getTable();
 			$join = $tempJoin[0];
+			$tempAlias = $alias;
+			$alias = $joinAlias;
+			$joinAlias = $tempAlias;
 		}
 
 		$sql = "\n\t" . $joinType . ' JOIN ';
@@ -284,9 +298,9 @@ trait JoinHandler
 		}
 
 		$joinTableName .= $join->getJoinTable()->getName();
-		$joinTableAlias = $table->getAlias() . '_' . $join->getTable()->getAlias();
+		$joinTableAlias = $alias . '_' . $joinAlias;
 
-		if (!array_key_exists($join->getTable()->getClass(), $this->usedTables)) {
+		if (!array_key_exists($joinAlias . ':' . $join->getTable()->getClass(), $this->usedTables)) {
 			$tableName = '';
 
 			if (!empty($join->getTable()->getSchema())) {
@@ -300,21 +314,20 @@ trait JoinHandler
 			$sql .= $joinTableName . ' ' . $joinTableAlias;
 			$sql .= "\n\t\t" . 'ON ';
 			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseName() . ' = ';
-			$sql .= $table->getAlias() . '.';
-			$sql .= $table->getId()->getName();
+			$sql .= $alias . '.' . $table->getId()->getName();
 
 			$sql .= "\n\t" . $joinType . ' JOIN ';
-			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
+			$sql .= $tableName . ' ' . $joinAlias;
 		} else {
 			$sql .= $joinTableName . ' ' . $joinTableAlias;
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $join->getTable()->getAlias() . '.';
+		$sql .= $joinAlias . '.';
 		$sql .= $join->getTable()->getId()->getName() . ' = ';
 		$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getJoinName();
 
-		if (!array_key_exists($table->getClass(), $this->usedTables)) {
+		if (!array_key_exists($alias . ':' . $table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
 			if (!empty($table->getSchema())) {
@@ -325,19 +338,20 @@ trait JoinHandler
 
 			$tableName .= $table->getName();
 
-			$sql .= "\n\t" . $joinType . ' JOIN ' . $tableName . ' ' . $table->getAlias() . "\n\t\t" . 'ON ';
-			$sql .= $table->getAlias() . '.' . $table->getId()->getName() . ' = ';
+			$sql .= "\n\t" . $joinType . ' JOIN ' . $tableName . ' ' . $alias;
+			$sql .= "\n\t\t" . 'ON ';
+			$sql .= $alias . '.' . $table->getId()->getName() . ' = ';
 			$sql .= $joinTableAlias . '.' . $join->getJoinTable()->getInverseName();
 		}
 
 		return $sql;
 	}
 
-	private function resolveJoinBelongsTo(Table $table, Join $join, String $joinType) : String
+	private function resolveJoinBelongsTo(Table $table, String $alias, Join $join, String $joinAlias, String $joinType) : String
 	{
 		$sql = "\n\t" . $joinType . ' JOIN ';
 
-		if (!array_key_exists($table->getClass(), $this->usedTables)) {
+		if (!array_key_exists($alias . ':' . $table->getClass(), $this->usedTables)) {
 			$tableName = '';
 
 			if (!empty($table->getSchema())) {
@@ -347,9 +361,7 @@ trait JoinHandler
 			}
 
 			$tableName .= $table->getName();
-
-			$sql .= $tableName;
-			$sql .= ' ' . $table->getAlias();
+			$sql .= $tableName . ' ' . $alias;
 		} else {
 			$tableName = '';
 
@@ -360,14 +372,13 @@ trait JoinHandler
 			}
 
 			$tableName .= $join->getTable()->getName();
-
-			$sql .= $tableName . ' ' . $join->getTable()->getAlias();
+			$sql .= $tableName . ' ' . $joinAlias;
 		}
 
 		$sql .= "\n\t\t" . 'ON ';
-		$sql .= $table->getAlias() . '.';
+		$sql .= $alias . '.';
 		$sql .= $table->getId()->getName() . ' = ';
-		$sql .= $join->getTable()->getAlias() . '.';
+		$sql .= $joinAlias . '.';
 		$sql .= $join->getName();
 
 		return $sql;

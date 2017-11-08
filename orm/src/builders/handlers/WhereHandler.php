@@ -117,9 +117,7 @@ trait WhereHandler
 			throw new \Exception('Invalid alias "' . $alias . '"');
 		}
 
-		if (is_array($table)) {
-			$table = $table[0];
-		}
+		list($table) = $table;
 
 		if (!($column = $table->findColumn($property))) {
 			throw new \Exception('Invalid property "' . $property . '"');
@@ -160,11 +158,11 @@ trait WhereHandler
 	{
 		$table = null;
 
-		if (!array_key_exists($alias, $this->joinsByAlias)) {
+		if (!array_key_exists($alias, $this->tablesByAlias)) {
 			throw new \Exception('Invalid alias "' . $alias . '"');
 		}
 
-		return $this->joinsByAlias[$alias];
+		return $this->tablesByAlias[$alias];
 	}
 
 }
