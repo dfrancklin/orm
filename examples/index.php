@@ -8,7 +8,10 @@ include_once '../orm/load.php';
 
 use ORM\Orm;
 
+use ORM\Constants\JoinTypes;
+
 use App\Helpers\InitDatabase;
+use App\Models\Store\Staff;
 
 $ds = DIRECTORY_SEPARATOR;
 
@@ -16,32 +19,24 @@ $orm = Orm::getInstance();
 $orm->setConnection('Store-SQLite', [
 	'namespace' => 'App\\Models\\Store',
 	'modelsFolder' => __DIR__ . $ds . 'models' . $ds . 'store',
-// 	'create' => true,
-// 	'drop' => true,
-// 	'beforeDrop' => [new InitDatabase, 'beforeDrop'],
-// 	'afterCreate' => [new InitDatabase, 'afterCreate'],
+	'create' => true,
+	// 'drop' => true,
+	// 'beforeDrop' => [new InitDatabase, 'beforeDrop'],
+	'afterCreate' => [new InitDatabase, 'afterCreate'],
 ]);
 
 $em = $orm->createEntityManager();
-$query = $em->createQuery(\App\Models\Store\Staff::class);
-$query->join(\App\Models\Store\Staff::class, 'sup', \ORM\Constants\JoinTypes::LEFT);
-// $query->where('s.name')->equals('Diego');
-// $query->where('sup.name')->equals('Diego');
-// $query->where('s.name')->beginsWith('A');
-// $query->where('s.name')->contains('i');
-$staffs = $query->list();
+$query = $em->createQuery(Staff::class);
+$staffs = $query
+	->join(Staff::class, 'sup', JoinTypes::LEFT)
+	->list();
 
-// vd($query);
-// $staffs = $em->list(\App\Models\Store\Staff::class, 2);
 foreach($staffs as $staff) {
-	vd($staff->name . ' is ' . (empty($staff->supervisor) ? '' : 'not ') . 'a supervisor');
+	vd(
+		$staff->name . ' is ' . (
+			empty($staff->supervisor) ?
+				'a supervisor' :
+				'supervised by ' . $staff->supervisor->name
+		)
+	);
 }
-
-// $staff = $em->find(\App\Models\Store\Staff::class, 2);
-// vd($staff->name);
-// $supervisor = $staff->supervisor;
-// vd($supervisor->name);
-
-// foreach($supervisor->supervisees as $supervisee) {
-// 	vd($supervisee->name);
-// }

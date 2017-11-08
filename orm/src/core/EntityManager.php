@@ -36,16 +36,16 @@ class EntityManager implements IEntityManager
 		return $query->from($class, $alias)->where($prop)->equals($id)->one();
 	}
 
-	public function list(String $class, int $page=null, int $quantity=null)
+	public function list(String $class, int $page = null, int $quantity = null)
 	{
 		$query = $this->createQuery($class);
-		
+
 		if (!empty($page) && !empty($quantity)) {
 			$query->page($page, $quantity);
 		} elseif (!empty($page) && empty($quantity)) {
 			$query->top($page);
 		}
-		
+
 		return $query->list();
 	}
 
@@ -69,20 +69,20 @@ class EntityManager implements IEntityManager
 		if (empty($object)) {
 			throw new \Exception('A valid object must be passed as parameter');
 		}
-		
+
 		if (is_array($object)) {
 			$saved = [];
-			
+
 			foreach ($object as $o) {
 				$saved[] = $this->_save($o);
 			}
 		} else {
 			$saved = $this->_save($object);
 		}
-		
+
 		return $saved;
 	}
-	
+
 	private function _save($object)
 	{
 		$proxy = null;
@@ -122,7 +122,7 @@ class EntityManager implements IEntityManager
 		if (empty($object)) {
 			throw new \Exception('A valid object must be passed as parameter');
 		}
-		
+
 		if (is_array($object)) {
 			$saved = 0;
 
@@ -132,10 +132,10 @@ class EntityManager implements IEntityManager
 		} else {
 			$saved = $this->_remove($object);
 		}
-		
+
 		return $saved;
 	}
-	
+
 	private function _remove($object)
 	{
 		$proxy = null;

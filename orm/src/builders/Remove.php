@@ -89,7 +89,6 @@ class Remove
 			throw new \Exception('The object of the class "' . $this->table->getClass() . '" seems to be empty');
 		}
 
-		vd($query, $this->values);
 		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);
 
@@ -152,11 +151,24 @@ class Remove
 			$id = $this->table->getId()->getProperty();
 		}
 
-		$table = $joinTable->getName();
+		$joinTableName = '';
+
+		if (!empty($joinTable->getSchema())) {
+			$joinTableName .= $joinTable->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$joinTableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$joinTableName .= $joinTable->getName();
 		$bind = ':' . $column;
 		$values[$bind] = $this->object->{$id};
 
-		$sql = sprintf(self::DELETE_TEMPLATE, $table, $column, $bind);
+		$sql = sprintf(
+			self::DELETE_TEMPLATE,
+			$joinTableName,
+			$column,
+			$bind
+		);
 
 		$statement = $this->connection->prepare($sql);
 		$statement->execute($values);
@@ -271,11 +283,22 @@ class Remove
 			}
 		}
 
+		$tableName = '';
+
+		if (!empty($this->table->getSchema())) {
+			$tableName .= $this->table->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$tableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$tableName .= $this->table->getName();
+
 		$query = sprintf(
 			self::DELETE_TEMPLATE,
-			$this->table->getName(),
+			$tableName,
 			$idName,
-			$idBind);
+			$idBind
+		);
 		$this->values = $values;
 
 		return ($idName && $idBind) ? $query : null;

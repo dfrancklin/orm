@@ -77,7 +77,6 @@ class Persist
 			throw new \Exception('The object of the class "' . $this->table->getClass() . '" seems to be empty');
 		}
 
-		vd($query, $this->values);
 		if ($id->isGenerated()) {
 			$this->object->{$prop} = $this->fetchNextId();
 		}
@@ -170,13 +169,20 @@ class Persist
 			$joinTable = $join->getJoinTable();
 		}
 
-		$table = $joinTable->getName();
+		$joinTableName = '';
+
+		if (!empty($joinTable->getSchema())) {
+			$joinTableName .= $joinTable->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$joinTableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$joinTableName .= $joinTable->getName();
 		$columns = [$joinTable->getJoinName(), $joinTable->getInverseName()];
 		$binds = [':' . $joinTable->getJoinName(), ':' . $joinTable->getInverseName()];
-		$values = [];
 		$sql = sprintf(
 			self::INSERT_TEMPLATE,
-			$table,
+			$joinTableName,
 			implode(', ', $columns),
 			implode(', ', $binds)
 		);
@@ -185,6 +191,7 @@ class Persist
 		$referenceId = $reference->getId()->getProperty();
 
 		foreach($this->object->{$property} as $p) {
+			$values = [];
 			$values[':' . $joinTable->getJoinName()] = $this->object->{$id};
 			$values[':' . $joinTable->getInverseName()] = $p->{$referenceId};
 
@@ -279,7 +286,12 @@ class Persist
 		}
 
 		$builder = new $builder($this->connection, $this->em);
-		$newValue = $builder->exec($value, $this->original);
+
+		if ($builder instanceof Persist) {
+			$newValue = $builder->exec($value, $this->original);
+		} else {
+			$newValue = $builder->exec($value);
+		}
 
 		if ($newValue) {
 			if ($proxy) {
@@ -322,9 +334,19 @@ class Persist
 			}
 		}
 
+		$tableName = '';
+
+		if (!empty($this->table->getSchema())) {
+			$tableName .= $this->table->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$tableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$tableName .= $this->table->getName();
+
 		$query = sprintf(
 			self::INSERT_TEMPLATE,
-			$this->table->getName(),
+			$tableName,
 			implode(', ', $columns),
 			implode(', ', $binds)
 		);

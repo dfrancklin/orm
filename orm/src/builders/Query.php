@@ -207,8 +207,6 @@ class Query
 			$query = sprintf($driver->TOP_TEMPLATE, $query, $this->top);
 		}
 
-		vd($query);
-
 		return $query;
 	}
 

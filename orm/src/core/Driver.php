@@ -15,8 +15,6 @@ abstract class Driver
 
 	public $IGNORE_ID_DATA_TYPE = false;
 
-	public $SUPPORTS_IF_EXISTS = false;
-
 	public $FK_ENABLE = true;
 
 	public $PAGE_TEMPLATE;

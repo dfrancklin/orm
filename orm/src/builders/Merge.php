@@ -76,7 +76,6 @@ class Merge
 			throw new \Exception('The object of the class "' . $this->table->getClass() . '" seems to be empty');
 		}
 
-		vd($query, $this->values);
 		$statement = $this->connection->prepare($query);
 		$executed = $statement->execute($this->values);
 
@@ -140,13 +139,21 @@ class Merge
 			$id = $this->table->getId()->getProperty();
 		}
 
-		$table = $joinTable->getName();
+		$joinTableName = '';
+
+		if (!empty($joinTable->getSchema())) {
+			$joinTableName .= $joinTable->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$joinTableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$joinTableName .= $joinTable->getName();
 		$bind = ':' . $column;
 		$values[$bind] = $this->object->{$id};
 
 		$sql = sprintf(
 			Remove::DELETE_TEMPLATE,
-			$table,
+			$joinTableName,
 			$column,
 			$bind
 		);
@@ -180,13 +187,20 @@ class Merge
 			$joinTable = $join->getJoinTable();
 		}
 
-		$table = $joinTable->getName();
+		$joinTableName = '';
+
+		if (!empty($joinTable->getSchema())) {
+			$joinTableName .= $joinTable->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$joinTableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$joinTableName .= $joinTable->getName();
 		$columns = [$joinTable->getJoinName(), $joinTable->getInverseName()];
 		$binds = [':' . $joinTable->getJoinName(), ':' . $joinTable->getInverseName()];
-		$values = [];
 		$sql = sprintf(
 			Persist::INSERT_TEMPLATE,
-			$table,
+			$joinTableName,
 			implode(', ', $columns),
 			implode(', ', $binds)
 		);
@@ -195,6 +209,7 @@ class Merge
 		$referenceId = $reference->getId()->getProperty();
 
 		foreach($this->object->{$property} as $p) {
+			$values = [];
 			$values[':' . $joinTable->getJoinName()] = $this->object->{$id};
 			$values[':' . $joinTable->getInverseName()] = $p->{$referenceId};
 
@@ -351,9 +366,19 @@ class Merge
 			}
 		}
 
+		$tableName = '';
+
+		if (!empty($this->table->getSchema())) {
+			$tableName .= $this->table->getSchema() . '.';
+		} elseif (!empty($this->connection->getDefaultSchema())) {
+			$tableName .= $this->connection->getDefaultSchema() . '.';
+		}
+
+		$tableName .= $this->table->getName();
+
 		$query = sprintf(
 			self::UPDATE_TEMPLATE,
-			$this->table->getName(),
+			$tableName,
 			implode(', ', $sets),
 			$idName,
 			$idBind

@@ -15,9 +15,9 @@ class TableManager
 
 	const CHECK_IF_TABLE_EXISTS_TEMPLATE = 'SELECT * FROM %s';
 
-	const CREATE_TABLE_TEMPLATE = 'CREATE TABLE %s%s (%s)';
+	const CREATE_TABLE_TEMPLATE = 'CREATE TABLE %s (%s)';
 
-	const DROP_TABLE_TEMPLATE = 'DROP TABLE %s%s';
+	const DROP_TABLE_TEMPLATE = 'DROP TABLE %s';
 
 	const DROP_SEQUENCE_TEMPLATE = 'DROP SEQUENCE %s';
 
@@ -59,7 +59,7 @@ class TableManager
 		if ($driver->GENERATE_ID_TYPE === 'SEQUENCE') {
 			$drops[] = $this->resolveDropSequence($driver->SEQUENCE_NAME);
 		}
-		
+
 		if (count($drops)) {
 			$callback();
 		}
@@ -88,7 +88,7 @@ class TableManager
 			$statement = $this->connection->prepare($create);
 			$statement->execute();
 		}
-		
+
 		if (count($creates)) {
 			$callback();
 		}
@@ -106,7 +106,6 @@ class TableManager
 		$columns = [];
 		$foreigns = [];
 		$driver = $this->connection->getDriver();
-		$ifNotExists = $driver->SUPPORTS_IF_EXISTS ? 'IF NOT EXISTS ' : null;
 		$exists = false;
 		$tableName = '';
 
@@ -147,18 +146,23 @@ class TableManager
 			$columns[] = $this->resolveCreateColumn($id, $join);
 
 			if ($driver->FK_ENABLE) {
-				$foreigns[] = sprintf("\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE, $join->getName(), $referenceTableName, $id->getName());
+				$foreigns[] = sprintf(
+					"\n\t" . self::FOREIGN_KEY_CONSTRAINT_TEMPLATE,
+					$join->getName(),
+					$referenceTableName,
+					$id->getName()
+				);
 			}
 		}
 
 		$columns = array_merge($columns, $foreigns);
 
-		if (!$driver->SUPPORTS_IF_EXISTS) {
-			$exists = $this->checkIfExists($tableName);
-		}
-
-		if (!$exists) {
-			$creates[] = sprintf(self::CREATE_TABLE_TEMPLATE, $ifNotExists, $tableName, implode(', ', $columns));
+		if (!$this->checkIfExists($tableName)) {
+			$creates[] = sprintf(
+				self::CREATE_TABLE_TEMPLATE,
+				$tableName,
+				implode(', ', $columns)
+			);
 		}
 
 		foreach ($table->getJoins('type', 'manyToMany') as $join) {
@@ -232,7 +236,6 @@ class TableManager
 	{
 		$driver = $this->connection->getDriver();
 		$referenceClass = $join->getReference();
-		$ifNotExists = $driver->SUPPORTS_IF_EXISTS ? 'IF NOT EXISTS ' : null;
 		$joinTable = $join->getJoinTable();
 
 		if (!isset($this->tables[$referenceClass])) {
@@ -296,16 +299,9 @@ class TableManager
 
 		$columns = array_merge($columns, $foreigns);
 
-		$exists = false;
-
-		if (!$driver->SUPPORTS_IF_EXISTS) {
-			$exists = $this->checkIfExists($joinTableName);
-		}
-
-		if (!$exists) {
+		if (!$this->checkIfExists($joinTableName)) {
 			$create = sprintf(
 				self::CREATE_TABLE_TEMPLATE,
-				$ifNotExists,
 				$joinTableName,
 				implode(', ', $columns)
 			);
@@ -326,9 +322,6 @@ class TableManager
 		}
 
 		$this->droped[] = $table->getClass();
-
-		$driver = $this->connection->getDriver();
-		$ifExists = $driver->SUPPORTS_IF_EXISTS ? 'IF EXISTS ' : null;
 		$drops = [];
 
 		foreach ($table->getJoins() as $_join) {
@@ -372,7 +365,6 @@ class TableManager
 			}
 
 			if ($joinTable) {
-				$joinTableExists = true;
 				$joinTableName = '';
 
 				if (!empty($joinTable->getSchema())) {
@@ -383,17 +375,12 @@ class TableManager
 
 				$joinTableName .= $joinTable->getName();
 
-				if (!$driver->SUPPORTS_IF_EXISTS) {
-					$joinTableExists = $this->checkIfExists($joinTableName);
-				}
-
-				if ($joinTableExists) {
-					$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $ifExists, $joinTableName);
+				if ($this->checkIfExists($joinTableName)) {
+					$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $joinTableName);
 				}
 			}
 		}
 
-		$tableExists = true;
 		$tableName = '';
 
 		if (!empty($table->getSchema())) {
@@ -404,13 +391,8 @@ class TableManager
 
 		$tableName .= $table->getName();
 
-
-		if (!$driver->SUPPORTS_IF_EXISTS) {
-			$tableExists = $this->checkIfExists($tableName);
-		}
-
-		if ($tableExists) {
-			$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $ifExists, $tableName);
+		if ($this->checkIfExists($tableName)) {
+			$drops[] = sprintf(self::DROP_TABLE_TEMPLATE, $tableName);
 		}
 
 		return $drops;
