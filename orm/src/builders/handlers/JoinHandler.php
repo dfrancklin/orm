@@ -14,7 +14,7 @@ trait JoinHandler
 
 	private $joins;
 
-	private $joinsByAlias;
+	private $tablesByAlias;
 
 	private $relations;
 
@@ -22,7 +22,7 @@ trait JoinHandler
 
 	public function join(String $join, String $alias, String $type = null) : Query
 	{
-		if (array_key_exists($alias, $this->joinsByAlias)) {
+		if (array_key_exists($alias, $this->tablesByAlias)) {
 			throw new \Exception('A class with the alias "' . $alias . '" already exist');
 		}
 
@@ -35,10 +35,9 @@ trait JoinHandler
 		}
 
 		$table = $this->orm->getTable($join);
-		$table->setAlias($alias);
 
-		$this->joins[$join] = [$table, $type];
-		$this->joinsByAlias[$alias] = [$table, $type];
+		$this->joins[$join] = [$table, $alias, $type];
+		$this->tablesByAlias[$alias] = [$table, $alias, $type];
 
 		return $this;
 	}
@@ -58,18 +57,35 @@ trait JoinHandler
 		return $this;
 	}
 
+	private function resolveJoin() : String
+	{
+		if (empty($this->joins)) {
+			return '';
+		}
+
+		$this->preProcessJoins($this->target, $this->joins);
+
+		$sql = '';
+
+		foreach ($this->relations as $relation) {
+			$sql .= $this->generateJoins(...$relation);
+		}
+
+		return $sql;
+	}
+
 	private function preProcessJoins($joinInfo, $tables)
 	{
 		if (is_null($joinInfo)) {
 			return;
 		}
-
+		
 		$next = array_shift($tables);
-		list($table) = $joinInfo;
+		list($table, $alias) = $joinInfo;
 
 		foreach ($table->getJoins() as $join) {
-			$name = $table->getName() . '.' . $join->getProperty();
-
+			$name = $alias . '_' . $table->getName() . '.' . $join->getProperty();
+			
 			if (!array_key_exists($name, $this->relations)) {
 				$reference = $join->getReference();
 				$inverse = $this->orm->getTable($reference);
@@ -80,14 +96,23 @@ trait JoinHandler
 						$isValid = $this->validTypes($join, $_join);
 
 						if ($isValid) {
-							$inverseName = $inverse->getName() . '.' . $_join->getProperty();
-
-							if (!array_key_exists($inverseName, $this->relations)) {
-								if (array_key_exists($join->getReference(), $this->joins)) {
-									$sh = $this->joins[$join->getReference()];
-									$this->relations[$name] = [$sh, $join];
+							$_inverses = array_filter($this->tablesByAlias, function($join) use ($alias, $inverse) {
+								list($_inverse, $_alias) = $join;
+								return $_inverse === $inverse && $alias !== $_alias;
+							});
+							
+							if (!empty($_inverses) && count($_inverses) === 1) {
+								$inverseAlias = array_keys($_inverses)[0];
+								$inverseName = $inverseAlias . '_' . $inverse->getName() . '.' . $_join->getProperty();
+								
+								if (!array_key_exists($inverseName, $this->relations)) {
+									if (array_key_exists($join->getReference(), $this->joins)) {
+										$sh = $this->joins[$join->getReference()];
+										$this->relations[$name] = [$sh, $join];
+									}
 								}
 							}
+							
 						}
 					}
 				}
@@ -112,26 +137,9 @@ trait JoinHandler
 		return $valid;
 	}
 
-	private function resolveJoin() : String
-	{
-		if (empty($this->joins)) {
-			return '';
-		}
-
-		$this->preProcessJoins([$this->target], $this->joins);
-
-		$sql = '';
-
-		foreach ($this->relations as $relation) {
-			$sql .= $this->generateJoins(...$relation);
-		}
-
-		return $sql;
-	}
-
 	private function generateJoins(Array $joinInfo, Join $join) : String
 	{
-		list($table, $joinType) = $joinInfo;
+		list($table, $alias, $joinType) = $joinInfo;
 
 		if (array_key_exists($join->getTable()->getClass(), $this->usedTables) &&
 				array_key_exists($table->getClass(), $this->usedTables) &&

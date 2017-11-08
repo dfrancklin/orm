@@ -60,7 +60,7 @@ class Query
 
 		$this->columns = [];
 		$this->joins = [];
-		$this->joinsByAlias = [];
+		$this->tablesByAlias = [];
 		$this->relations = [];
 		$this->usedTables = [];
 		$this->aggregations = [];
@@ -86,10 +86,10 @@ class Query
 			$alias = strtolower($table->getName()[0]);
 		}
 
-		$table->setAlias($alias);
+// 		$table->setAlias($alias);
 
-		$this->target = $table;
-		$this->joinsByAlias[$alias] = $table;
+		$this->target = [$table, $alias];
+		$this->tablesByAlias[$alias] = [$table, $alias];
 
 		return $this;
 	}
@@ -169,27 +169,28 @@ class Query
 
 		$groupBy = $this->resolveGroupBy();
 		$aggregations = $this->resolveAggregations();
+		list($table, $alias) = $this->target;
 
 		if (empty($this->columns)) {
-			$query .= $this->target->getAlias() . '.*';
+			$query .= $alias . '.*';
 		} else {
 			$query .= join(', ', $this->columns);
 		}
 
 		$tableName = '';
 
-		if (!empty($this->target->getSchema())) {
-			$tableName .= $this->target->getSchema() . '.';
+		if (!empty($table->getSchema())) {
+			$tableName .= $table->getSchema() . '.';
 		} elseif (!empty($this->connection->getDefaultSchema())) {
 			$tableName .= $this->connection->getDefaultSchema() . '.';
 		}
 
-		$tableName .= $this->target->getName();
+		$tableName .= $table->getName();
 
-		$query .= "\n" . 'FROM ' . $tableName . ' ' . $this->target->getAlias();
+		$query .= "\n" . 'FROM ' . $tableName . ' ' . $alias;
 
 		if (property_exists(__CLASS__, 'usedTables')) {
-			$this->usedTables[$this->target->getClass()] = $this->target;
+			$this->usedTables[$table->getClass()] = $table;
 		}
 
 		$query .= $this->resolveJoin();
@@ -199,13 +200,17 @@ class Query
 		$query .= $this->resolveOrderBy();
 
 		if (is_numeric($this->offset) && is_numeric($this->quantity)) {
-			$query = sprintf($this->connection->getDriver()->PAGE_TEMPLATE, $query, $this->offset, $this->quantity);
+			$driver = $this->connection->getDriver();
+			$query = sprintf($driver->PAGE_TEMPLATE, $query, $this->offset, $this->quantity);
 		}
 
 		if ($this->top) {
-			$query = sprintf($this->connection->getDriver()->TOP_TEMPLATE, $query, $this->top);
+			$driver = $this->connection->getDriver();
+			$query = sprintf($driver->TOP_TEMPLATE, $query, $this->top);
 		}
 
+		vd($query);
+		
 		return $query;
 	}
 
@@ -223,10 +228,11 @@ class Query
 
 	private function mapOne($resultSet)
 	{
-		$class = $this->target->getClass();
+		list($table) = $this->target;
+		$class = $table->getClass();
 		$object = new $class;
 
-		foreach ($this->target->getColumns() as $column) {
+		foreach ($table->getColumns() as $column) {
 			$name = $column->getName();
 
 			if (isset($resultSet[$name])) {
@@ -238,7 +244,7 @@ class Query
 			}
 		}
 
-		$joins = $this->target->getJoins();
+		$joins = $table->getJoins();
 
 		if (empty($joins)) {
 			return $object;

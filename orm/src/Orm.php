@@ -63,16 +63,16 @@ class Orm
 			$table = new TableManager($this->connections[$name], $config['namespace'], $config['modelsFolder']);
 			
 			if (!empty($config) && isset($config['drop']) && $config['drop']) {
-				$this->executeCallback($config['beforeDrop'], $name);
-				$table->drop();
+				$callback = $this->createCallback($config['beforeDrop'], $name);
+				$table->drop($callback);
 			}
 
-			$table->create();
-			$this->executeCallback($config['afterCreate'], $name);
+			$callback = $this->createCallback($config['afterCreate'], $name);
+			$table->create($callback);
 		}
 	}
 	
-	private function executeCallback($callback, String $name)
+	private function createCallback($callback, String $name) : ?\Closure
 	{
 		if (!empty($callback)) {
 			if (
@@ -94,7 +94,11 @@ class Orm
 				)
 			) {
 				$em = $this->createEntityManager($name);
-				$callback($em, $this);
+				$orm = $this;
+				
+				return function() use ($callback, $em, $orm) {
+					$callback($em, $orm);	
+				};
 			}
 		}
 	}

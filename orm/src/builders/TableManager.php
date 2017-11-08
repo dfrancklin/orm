@@ -46,7 +46,7 @@ class TableManager
 		$this->created = [];
 	}
 
-	public function drop()
+	public function drop(?\Closure $callback=null)
 	{
 		$drops = [];
 		$driver = $this->connection->getDriver();
@@ -59,6 +59,10 @@ class TableManager
 		if ($driver->GENERATE_ID_TYPE === 'SEQUENCE') {
 			$drops[] = $this->resolveDropSequence($driver->SEQUENCE_NAME);
 		}
+		
+		if (count($drops)) {
+			$callback();
+		}
 
 		foreach($drops as $drop) {
 			$statement = $this->connection->prepare($drop);
@@ -66,7 +70,7 @@ class TableManager
 		}
 	}
 
-	public function create()
+	public function create(?\Closure $callback=null)
 	{
 		$creates = [];
 		$driver = $this->connection->getDriver();
@@ -83,6 +87,10 @@ class TableManager
 		foreach($creates as $create) {
 			$statement = $this->connection->prepare($create);
 			$statement->execute();
+		}
+		
+		if (count($creates)) {
+			$callback();
 		}
 	}
 

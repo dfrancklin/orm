@@ -15,6 +15,16 @@ class Staff
 	 */
 	public $id;
 
+	public $name;
 
+	/**
+	 * @ORM/BelongsTo(class=App\Models\Store\Staff, optional=true)
+	 */	
+	public $supervisor;
+	
+	/**
+	 * @ORM/HasMany(class=App\Models\Store\Staff)
+	 */	
+	public $supervisees;
 
 }

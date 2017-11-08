@@ -36,9 +36,17 @@ class EntityManager implements IEntityManager
 		return $query->from($class, $alias)->where($prop)->equals($id)->one();
 	}
 
-	public function list(String $class)
+	public function list(String $class, int $page=null, int $quantity=null)
 	{
-		return $this->createQuery($class)->list();
+		$query = $this->createQuery($class);
+		
+		if (!empty($page) && !empty($quantity)) {
+			$query->page($page, $quantity);
+		} elseif (!empty($page) && empty($quantity)) {
+			$query->top($page);
+		}
+		
+		return $query->list();
 	}
 
 	public function createQuery(String $class = null) : Query
@@ -52,24 +60,6 @@ class EntityManager implements IEntityManager
 		return $query;
 	}
 
-	public function remove($object)
-	{
-		$proxy = null;
-
-		if ($object instanceof Proxy) {
-			$proxy = $object;
-			$object = $object->__getObject();
-		}
-
-		if ($this->exists($object)) {
-			$remove = new Remove($this->connection, $this);
-
-			return $remove->exec($proxy ?? $object);
-		}
-
-		return;
-	}
-
 	public function save($object)
 	{
 		if (!$this->transactionActive) {
@@ -79,7 +69,22 @@ class EntityManager implements IEntityManager
 		if (empty($object)) {
 			throw new \Exception('A valid object must be passed as parameter');
 		}
-
+		
+		if (is_array($object)) {
+			$saved = [];
+			
+			foreach ($object as $o) {
+				$saved[] = $this->_save($o);
+			}
+		} else {
+			$saved = $this->_save($object);
+		}
+		
+		return $saved;
+	}
+	
+	private function _save($object)
+	{
 		$proxy = null;
 
 		if ($object instanceof Proxy) {
@@ -106,6 +111,47 @@ class EntityManager implements IEntityManager
 		}
 
 		return $saved;
+	}
+
+	public function remove($object)
+	{
+		if (!$this->transactionActive) {
+			throw new \Exception('A transaction must be active in order to save an object');
+		}
+
+		if (empty($object)) {
+			throw new \Exception('A valid object must be passed as parameter');
+		}
+		
+		if (is_array($object)) {
+			$saved = 0;
+
+			foreach ($object as $o) {
+				$saved += $this->_remove($o);
+			}
+		} else {
+			$saved = $this->_remove($object);
+		}
+		
+		return $saved;
+	}
+	
+	private function _remove($object)
+	{
+		$proxy = null;
+
+		if ($object instanceof Proxy) {
+			$proxy = $object;
+			$object = $object->__getObject();
+		}
+
+		if ($this->exists($object)) {
+			$remove = new Remove($this->connection, $this);
+
+			return $remove->exec($proxy ?? $object);
+		}
+
+		return 0;
 	}
 
 	public function beginTransaction() : bool
