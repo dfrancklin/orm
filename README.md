@@ -148,7 +148,7 @@ Figura 6: Definindo criação de tabelas no ORM
 Fonte: Autor, 2018
 
 Pode ser necessário também, apagar as tabelas antes de criá-las, para isso, basta informar também na configuração da conexão:
- 
+
 Figura 7: Definindo criação e deleção de tabelas no ORM
 ```php
 <?php
