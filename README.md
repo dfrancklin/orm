@@ -8,8 +8,8 @@ O Lamberjack"s ORM trabalha com mapeamento de tabelas em classes do modelo de da
 
 ## Tabela de Conteúdos
 
-1. [INSTALAÇÃO](#1-instalação)
-1. [DEFININDO CONEXÕES](#2-definindo-conexões)
+1. [INSTALAÇÃO](#1-instalaÇÃo)
+1. [DEFININDO CONEXÕES](#2-definindo-conexÕes)
 	1. [Criar Tabelas Automaticamente](#21-criar-tabelas-automaticamente)
 1. [DEFININDO MODELOS](#3-definindo-modelos)
 	1. [_Annotations_](#31-annotations)
@@ -23,7 +23,7 @@ O Lamberjack"s ORM trabalha com mapeamento de tabelas em classes do modelo de da
 		1. [Muitos para Muitos](#333-muitos-para-muitos)
 1. [_ENTITY MANAGER_](#4-entity-manager)
 	1. [Obtendo Uma Instância do _EntityManager_](#41-obtendo-uma-instância-do-entitymanager)
-	1. [Transações](#42-transações)
+	1. [Transações](#42-transaÇÕes)
 		1. [_BeginTransaction_](#421-begintransaction)
 		1. [_Commit_](#422-commit)
 		1. [_Rollback_](#423-rollback)
@@ -35,10 +35,10 @@ O Lamberjack"s ORM trabalha com mapeamento de tabelas em classes do modelo de da
 		1. [Criando uma consulta simples usando _one_](#453-criando-uma-consulta-simples-usando-one)
 		1. [_Join_](#454-join)
 		1. [_Where_](#455-where)
-		1. [Paginação](#456-paginação)
+		1. [Paginação](#456-paginaÇÃo)
 		1. [_OrderBy_](#457-orderby)
 		1. [_GroupBy_](#458-groupby)
-		1. [Agregação](#459-agregação)
+		1. [Agregação](#459-agregaÇÃo)
 		1. [_Having_](#4510-having)
 	1. [_Save_](#46-save)
 	1. [_Remove_](#47-remove)
