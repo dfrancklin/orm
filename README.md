@@ -46,7 +46,6 @@ O _Lumberjack's ORM_ trabalha com mapeamento de tabelas em classes do modelo de 
 - [6. _DRIVER_](#6-driver)
 
 ## 1. INSTALAÇÃO
----
 
 Para usar o _Lumberjack's ORM_, pode-se obtê-lo no repositório orm no __GitHub__ no link: https://github.com/dfrancklin/orm.
 
@@ -63,7 +62,6 @@ __Código Exemplo 1:__ Incluir o _ORM_ ao projeto
 [Voltar](#tabela-de-conteúdos)
 
 ## 2. DEFININDO CONEXÕES
----
 
 As conexões que serão utilizadas pelo _ORM_ devem ser declaradas em um arquivo com extensão `.php`. Por padrão, o arquivo é esperado que esteja na pasta raiz do _ORM_ com o nome `connection.config.php`, ou seja, supondo que o _ORM_ esteja localizado `/home/user/app/orm/`, então o caminho para o arquivo seria `/home/user/app/orm/connection.config.php`.
 
@@ -135,7 +133,7 @@ __Código Exemplo 5:__ Definindo conexões que o _ORM_ poderá utilizar
 [Voltar](#tabela-de-conteúdos)
 
 ### 2.1. Criar Tabelas Automaticamente
----
+------
 
 O _ORM_ tem a habilidade de criar as tabelas a partir das classes modelo. Para que o _ORM_ saiba como criar, é necessário informar o caminho para a pasta que contém os modelos e o _namespace_ no momento em que estiver configurando a conexão no _ORM_. Por exemplo:
 
@@ -223,7 +221,6 @@ O _ORM_ passa uma instância de um _EntityManager_ por parâmetro para os métod
 [Voltar](#tabela-de-conteúdos)
 
 ## 3. DEFININDO MODELOS
----
 
 Um modelo é uma classe que representa uma tabela no banco de dados e pode ser mapeada da classe para a tabela e da tabela para a classe em operações de consulta, inserção, alteração e deleção.
 
@@ -232,7 +229,7 @@ Para que um modelo possa representar devidamente uma tabela no banco de dados de
 [Voltar](#tabela-de-conteúdos)
 
 ### 3.1. _Annotations_
----
+------
 
 As _annotations_ são "etiquetas" que adicionam metadados relevantes sobre classes, métodos e propriedades. Ou seja, através do uso de _annotations_, pode-se adicionar às classes informações para mapear tabelas do banco de dados, e adicionar às propriedades da classe para mapear as colunas de uma tabela do banco de dados, para que posteriormente, em tempo de execução, os metadados indicados pelas _annotations_ sejam analisados e a partir disso, o _ORM_ irá trabalhar de acordo com essas informações.
 
@@ -241,7 +238,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.1.1. _Annotations_ de Classes
----
+------
 
 - __*Annotation:*__ `@ORM/Entity`.
 
@@ -279,7 +276,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.1.2. _Annotations_ de Propriedades
----
+------
 
 - __*Annotation:*__ `@ORM/Id`.
 
@@ -349,7 +346,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.1.3. _Annotations_ de Relacionamentos
----
+------
 
 - __*Annotation:*__ `@ORM/HasOne`.
 
@@ -516,7 +513,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 ### 3.2. Exemplo de Mapeamento Simples
----
+------
 
 Um exemplo básico de como criar uma classe do modelo, pode ser encontrado no exemplo a seguir. A classe "Empregado" mapeia a tabela "empregados" no banco de dados:
 
@@ -558,14 +555,14 @@ O exemplo acima, de acordo com a __Código Exemplo 11__, exibe o mapeamento da c
 [Voltar](#tabela-de-conteúdos)
 
 ### 3.3. Exemplos de Mapeamento de Relacionamentos
----
+------
 
 Relacionamento entre tabelas é um recurso essencial nos bancos de dados, para representar isso devidamente, no mundo orientado a objetos, existe as seguintes opções.
 
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.3.1. Um para Um
----
+------
 
 Um exemplo básico de como mapear um relacionamento do tipo "um para um", pode ser encontrado no exemplo a seguir. A classe "Empregado" mapeia o relacionamento através do atributo `$informacoes`:
 
@@ -629,7 +626,7 @@ O exemplo acima, de acordo com a __Código Exemplo 13__, exibe o mapeamento da c
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.3.2. Um para Muitos
----
+------
 
 Um exemplo básico de como mapear um relacionamento do tipo "um para muitos", pode ser encontrado no exemplo a seguir. A classe "Cliente" mapeia o relacionamento através do atributo `$pedidos`:
 
@@ -690,7 +687,7 @@ O exemplo acima, de acordo com a __Código Exemplo 15__, exibe o mapeamento da c
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.3.3. Muitos para Muitos
----
+------
 
 Um exemplo básico de como mapear um relacionamento do tipo "muitos para muitos", pode ser encontrado no exemplo a seguir. A classe "Empregado" mapeia o relacionamento através do atributo `$projetos`:
 
@@ -752,7 +749,6 @@ O exemplo acima, de acordo com a __Código Exemplo 17__, exibe o mapeamento da c
 [Voltar](#tabela-de-conteúdos)
 
 ## 4. _ENTITY MANAGER_
----
 
 O _EntityManager_ é o gerenciador de entidades do _ORM_, através dele é que o desenvolvedor tem acesso às funções de consulta, persistência e deleção.
 
@@ -761,7 +757,7 @@ Essa seção irá abordar as funcionalidades que envolvem o _EntityManager_.
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.1. Obtendo Uma Instância do _EntityManager_
----
+------
 
 Para obter uma instância, basta que o _ORM_ crie uma, da seguinte maneira:
  
@@ -796,7 +792,7 @@ Agora o método _createEntityManager_ irá retorna uma instância do _EntityMana
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.2. Transações
----
+------
 
 A transação no banco de dados, é uma unidade que realiza um trabalho, ou seja, qualquer trabalho realizado no banco de dados, mesmo que em etapas, é realizado dentro de uma transação e todas as operações realizadas dentro dessa transação tem a garantia de ser executada integralmente no banco de dados, isso significa que caso um problema ocorra durante a execução de uma transação, as operações já realizadas dentro da mesma transação serão desfeitas.
 
@@ -810,7 +806,7 @@ Bernstein (2009) define que uma transação de banco de dados deve ser atômica,
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.2.1. _BeginTransaction_
----
+------
 
 Para iniciar uma transação no _ORM_, o desenvolvedor deve usar o método _beginTransaction_.
 
@@ -830,7 +826,7 @@ O método _beginTransaction_ irá criar iniciar uma transação para a conexão 
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.2.2. _Commit_
----
+------
 
 O método _commit_ irá confirmar a transação atual para que as operações realizadas no banco de dados sejam efetivadas. Liberando assim o _EntityManager_ para criar uma nova transação.
 
@@ -850,7 +846,7 @@ __Código Exemplo 21:__ Exemplo de como aplicar alterações de uma trasação
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.2.3. _Rollback_
----
+------
 
 O método _rollback_ irá desfazer as operações realizadas na transação atual, liberando assim o _EntityManager_ para criar uma nova transação. Esse método é normalmente utilizado em um `try/catch` para tratamento de erros.
 
@@ -875,7 +871,7 @@ __Código Exemplo 22:__ Exemplo de como desfazer alterações de uma trasação
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.3. _Find_
----
+------
 
 O método _find_ é utilizado para carregar um registro do banco de dados através da chave primária dessa tabela.
 
@@ -896,7 +892,7 @@ O método _find_ espera como parâmetro a classe que mapeia a tabela a ser utili
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.4. _List_
----
+------
 
 O método _list_ é utilizado para carregar uma lista de registros do banco de dados, porém, sem utilizar filtros (clausula _where_).
 
@@ -921,14 +917,14 @@ O método _list_ pode ser usado de três formas. A primeira, passando como parâ
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.5. _QueryBuilder_
----
+------
 
 Para criar consultas, desde as simples até as complexas, o desenvolvedor pode optar por usar o _QueryBuilder_.
 
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.1. Obtendo o _QueryBuilder_
----
+------
 
 Para obter uma instância, basta que o _EntityManager_ crie uma, da seguinte maneira:
 
@@ -949,7 +945,7 @@ O método _createQuery_ retorna uma instância do _QueryBuilder_ e pode ser util
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.2. Criando uma consulta simples usando _list_
----
+------
 
 Para realizar uma consulta simples, o desenvolvedor pode fazer da seguinte maneira:
 
@@ -1006,7 +1002,7 @@ Para tabelas que possuem um número muito grande de registros, recomenda-se pagi
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.3. Criando uma consulta simples usando _one_
----
+------
 
 Além do método _list_ o _QueryBuilder_ possui o método _one_, que nesse caso, retorna apenas um registro mapeado em uma instância da classe indicada no método from. Por exemplo:
 
@@ -1028,7 +1024,7 @@ A consulta acima, de acordo com a __Código Exemplo 29__, irá retornar um regis
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.4. _Join_
----
+------
 
 Para realizar uma consulta com múltiplas tabelas, o desenvolvedor pode fazer da seguinte maneira:
 
@@ -1081,7 +1077,7 @@ Observação: o método _join_ não implica que a tabela informada como parâmet
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.5. _Where_
----
+------
 
 Para realizar uma consulta com utilizando filtro, o desenvolvedor pode fazer da seguinte maneira:
  
@@ -1176,7 +1172,7 @@ As operações permitidas são:
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.6. Paginação
----
+------
 
 A paginação é um recurso muito útil para o desenvolvedor, ele permite que os registros sejam divididos em páginas menores para serem listados em tela para o usuário, caso contrário, todos os registros que existem na tabela seriam exibidos de uma só vez.
 
@@ -1239,7 +1235,7 @@ As queries acima, de acordo com a __Código Exemplo 37__, realizam uma consulta 
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.7. _OrderBy_
----
+------
 
 O método _orderBy_ define a ordem em que os registros devem ser retornados na consulta.
 
@@ -1267,7 +1263,7 @@ O método _orderBy_ é acumulativo, pode ser chamado quantas vezes forem necess�
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.8. _GroupBy_
----
+------
 
 O método _groupBy_ define um agrupamento para criar relatórios e totalizações separados em grupos. A instrução de agrupamento é frequentemente usada com funções de agregação para agrupar o conjunto de resultados em uma ou mais colunas.
  
@@ -1296,7 +1292,7 @@ O método _groupBy_ pode receber por parâmetro quantos parâmetros forem necess
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.9. Agregação
----
+------
 
 Uma função de agregação executa um cálculo em um conjunto de valores e retorna um único valor. As funções de agregação frequentemente são usadas com a cláusula `GROUP BY` em uma consulta.
  
@@ -1337,7 +1333,7 @@ As funções de agregação permitidas são:
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.10. _Having_
----
+------
 
 O método _having_ especifica um critério de filtro utilizando uma função de agregação, pois a clausula `where` não consegue realizar esse tipo de filtro. Na maioria dos bancos de dados, é obrigatório usado com a cláusula `GROUP BY` antes de usar o `having`.
 
@@ -1367,7 +1363,7 @@ As funções de agregação são as mesmas das descritas na seção [_4.5.10 Hav
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.6. _Save_
----
+------
 
 O método _save_ é utilizado para cadastrar ou alterar um registro no banco de dados. Caso o registro já exista e a chave primária esteja preenchida, o método _save_ irá atualizar o registro existente no banco de dados, caso contrário, um novo registro será adicionado ao banco.
 
@@ -1421,7 +1417,7 @@ O exemplo acima, de acordo com a __Código Exemplo 43__, irá atualizar um regis
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.7. _Remove_
----
+------
 
 O método _remove_ é utilizado para deletar um registro no banco de dados, caso o mesmo exista.
 
@@ -1450,7 +1446,6 @@ O exemplo acima, de acordo com a __Código Exemplo 44__, irá remover um registr
 [Voltar](#tabela-de-conteúdos)
 
 ## 5. _LOGGER_
----
 
 É possível definir um `log` para que o _ORM_ possa registrar as operações que ele realiza. Através de alguns métodos o desenvolvedor pode configurar o _Logger_ para as suas necessidades.
 
@@ -1469,7 +1464,6 @@ O método `getLogger` retorna a instância que está sendo utilizada pelo _ORM_.
 [Voltar](#tabela-de-conteúdos)
 
 ## 6. _DRIVER_
----
 
 O desenvolvedor pode criar o próprio _Driver_ para um banco de dados ou uma versão ainda não suportada pelo _ORM_. O _Driver_ permite que o _ORM_ consiga se comunicar com o banco de dados correspondente, por exemplo, o banco de dados _MySQL_, possui um _Driver_ correspondente para permitir a comunicação do _ORM_ com este banco de dados.
 
