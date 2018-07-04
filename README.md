@@ -202,7 +202,7 @@ __Código Exemplo 9:__ Definindo ação para executar antes criação e da dele�
 ?>
 ```
 
-Ou uma _`string`_ contendo o nome de uma função:
+Ou uma `string` contendo o nome de uma função:
 
 __Código Exemplo 10:__ Definindo ação para executar antes criação e da deleção de tabelas no _ORM_
 
@@ -720,7 +720,7 @@ class Empregado {
 ```
 
 O exemplo acima, de acordo com a __Código Exemplo 16__, exibe o mapeamento da classe "Empregado", ela representa a tabela "empregado" e possui o atributo `$projetos`, que por sua vez, mapeia o relacionamento do tipo "muitos para muitos" com a classe "Projeto" e é o lado principal do relacionamento, isso quer dizer que é o lado do relacionamento que define as informações da tabela de ligação.
- 
+
 A classe "Projeto" referenciada pela classe "Empregado" seria:
 
 __Código Exemplo 17:__ Exemplo de relacionamento "muitos para muitos" (outra ponta)
@@ -1197,7 +1197,6 @@ __Código Exemplo 35:__ Exemplo de como realizar consultas com paginação
     $emprs = $em->list(Empregado::class, 2, 10);
 ?>
 ```
-
 
 __Código Exemplo 36:__ Exemplo de como realizar consultas com paginação usando QueryBuilder
 
