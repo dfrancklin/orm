@@ -56,7 +56,7 @@ __Código Exemplo 1:__ Incluir o _ORM_ ao projeto
 
 ```php
 <?php
-    require_once "./orm/load.php";
+    require_once './orm/load.php';
 ?>
 ```
 
@@ -73,8 +73,8 @@ __Código Exemplo 2:__ Definindo qual arquivo de conexões o _ORM_ utilizará
 
 ```php
 <?php
-	$orm = ORM\Orm::getInstance();
-	$orm->setConnectionsFile(__DIR__ . "/db/connections.php");
+    $orm = ORM\Orm::getInstance();
+    $orm->setConnectionsFile(__DIR__ . '/db/connections.php');
 ?>
 ```
 
@@ -84,21 +84,21 @@ __Código Exemplo 3:__ Definindo arquivo de conexões
 
 ```php
 <?php
-	return [
-		'exemplo-mysql' => [
-			'db' => 'mysql',
-			'version' => '5.7.11',
-			'host' => 'localhost',
-			'schema' => 'app',
-			'user' => 'root'
-			'pass' => 'root'
-		],
-		'exemplo-sqlite' => [
-			'db' => 'sqlite',
-			'version' => '3',
-			'file' => '../data/app-storage.sq3',
-		],
-	];
+    return [
+        'exemplo-mysql' => [
+            'db' => 'mysql',
+            'version' => '5.7.11',
+            'host' => 'localhost',
+            'schema' => 'app',
+            'user' => 'root'
+            'pass' => 'root'
+        ],
+        'exemplo-sqlite' => [
+            'db' => 'sqlite',
+            'version' => '3',
+            'file' => '../data/app-storage.sq3',
+        ],
+    ];
 ?>
 ```
 
@@ -112,9 +112,9 @@ __Código Exemplo 4:__ Definindo conexões que o _ORM_ poderá utilizar
 
 ```php
 <?php
-	$orm = ORM\Orm::getInstance();
-	$orm->setConnection('exemplo-mysql');
-	$orm->addConnection('exemplo-sqlite');
+    $orm = ORM\Orm::getInstance();
+    $orm->setConnection('exemplo-mysql');
+    $orm->addConnection('exemplo-sqlite');
 ?>
 ```
 
@@ -126,9 +126,9 @@ __Código Exemplo 5:__ Definindo conexões que o _ORM_ poderá utilizar
 
 ```php
 <?php
-	$orm = ORM\Orm::getInstance();
-	$orm->addConnection('exemplo-mysql');
-	$orm->setDefaultConnection('exemplo-mysql');
+    $orm = ORM\Orm::getInstance();
+    $orm->addConnection('exemplo-mysql');
+    $orm->setDefaultConnection('exemplo-mysql');
 ?>
 ```
 
@@ -143,12 +143,12 @@ __Código Exemplo 6:__ Definindo criação de tabelas no _ORM_
 
 ```php
 <?php
-	$orm = ORM\Orm::getInstance();
-	$orm->setConnection('exemplo-mysql', [
-		'namespace' => 'App\\Models',
-		'modelsFolder' => '/home/user/app/models',
-		'create' => true
-	]);
+    $orm = ORM\Orm::getInstance();
+    $orm->setConnection('exemplo-mysql', [
+        'namespace' => 'App\\Models',
+        'modelsFolder' => '/home/user/app/models',
+        'create' => true
+    ]);
 ?>
 ```
 
@@ -158,13 +158,13 @@ __Código Exemplo 7:__ Definindo criação e deleção de tabelas no _ORM_
 
 ```php
 <?php
-	$orm = ORM\Orm::getInstance();
-	$orm->setConnection('exemplo-mysql', [
-		'namespace' => 'App\\Models',
-		'modelsFolder' => '/home/user/app/models',
-		'create' => true,
-		'drop' => true
-	]);
+    $orm = ORM\Orm::getInstance();
+    $orm->setConnection('exemplo-mysql', [
+        'namespace' => 'App\\Models',
+        'modelsFolder' => '/home/user/app/models',
+        'create' => true,
+        'drop' => true
+    ]);
 ?>
 ```
 
@@ -174,16 +174,16 @@ __Código Exemplo 8:__ Definindo ação para executar antes criação e da dele�
 
 ```php
 <?php
-	$dbHelper = new App\Helpers\InitDatabase();
-	$orm = ORM\Orm::getInstance();
-	$orm->setConnection('exemplo-mysql', [
-		'namespace' => 'App\\Models',
-		'modelsFolder' => '/home/user/app/models',
-		'drop' => true,
-		'create' => true,
-		'beforeDrop' => [ $dbHelper, 'beforeDrop' ],
-		'afterCreate' => [ $dbHelper, 'afterCreate' ]
-	]);
+    $dbHelper = new App\Helpers\InitDatabase();
+    $orm = ORM\Orm::getInstance();
+    $orm->setConnection('exemplo-mysql', [
+        'namespace' => 'App\\Models',
+        'modelsFolder' => '/home/user/app/models',
+        'drop' => true,
+        'create' => true,
+        'beforeDrop' => [ $dbHelper, 'beforeDrop' ],
+        'afterCreate' => [ $dbHelper, 'afterCreate' ]
+    ]);
 ?>
 ```
 
@@ -195,10 +195,10 @@ __Código Exemplo 9:__ Definindo ação para executar antes criação e da dele�
 
 ```php
 <?php
-	...
-		'beforeDrop' => function($entityManager) { ... },
-		'afterCreate' => function($entityManager) { ... }
-	...
+    ...
+        'beforeDrop' => function($entityManager) { ... },
+        'afterCreate' => function($entityManager) { ... }
+    ...
 ?>
 ```
 
@@ -208,13 +208,13 @@ __Código Exemplo 10:__ Definindo ação para executar antes criação e da dele
 
 ```php
 <?php
-	...
-		'beforeDrop' => 'beforeDrop',
-		'afterCreate' => 'afterCreate'
-	...
+    ...
+        'beforeDrop' => 'beforeDrop',
+        'afterCreate' => 'afterCreate'
+    ...
 
-	function beforeDrop($entityManager) { ... }
-	function afterCreate($entityManager) { ... }
+    function beforeDrop($entityManager) { ... }
+    function afterCreate($entityManager) { ... }
 ?>
 ```
 
