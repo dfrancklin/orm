@@ -735,14 +735,14 @@ namespace App\Models;
  */
 class Projeto {
 
-	...
+    ...
 
-	/**
-	 * @ORM/ManyToMany(class=App\Models\Empregado, mappedBy=projetos)
-	 */
-	public $empregados;
+    /**
+     * @ORM/ManyToMany(class=App\Models\Empregado, mappedBy=projetos)
+     */
+    public $empregados;
 
-	...
+    ...
 
 }
 ```
