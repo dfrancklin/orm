@@ -8,42 +8,42 @@ O _Lumberjack's ORM_ trabalha com mapeamento de tabelas em classes do modelo de 
 
 ## Tabela de Conteúdos
 
-- [1. INSTALAÇÃO](#1-instalaÇÃo)
-- [2. DEFININDO CONEXÕES](#2-definindo-conexÕes)
-	- [2.1. Criar Tabelas Automaticamente](#21-criar-tabelas-automaticamente)
-- [3. DEFININDO MODELOS](#3-definindo-modelos)
-	- [3.1. _Annotations_](#31-annotations)
-		- [3.1.1. _Annotations_ de Classes](#311-annotations-de-classes)
-		- [3.1.2. _Annotations_ de Propriedades](#312-annotations-de-propriedades)
-		- [3.1.3. _Annotations_ de Relacionamentos](#313-annotations-de-relacionamentos)
-	- [3.2. Exemplo de Mapeamento Simples](#32-exemplo-de-mapeamento-simples)
-	- [3.3. Exemplos de Mapeamento de Relacionamentos](#33-exemplos-de-mapeamento-de-relacionamentos)
-		- [3.3.1. Um para Um](#331-um-para-um)
-		- [3.3.2. Um para Muitos](#332-um-para-muitos)
-		- [3.3.3. Muitos para Muitos](#333-muitos-para-muitos)
-- [4. _ENTITY MANAGER_](#4-entity-manager)
-	- [4.1. Obtendo Uma Instância do _EntityManager_](#41-obtendo-uma-instância-do-entitymanager)
-	- [4.2. Transações](#42-transaÇÕes)
-		- [4.2.1. _BeginTransaction_](#421-begintransaction)
-		- [4.2.2. _Commit_](#422-commit)
-		- [4.2.3. _Rollback_](#423-rollback)
-	- [4.3. _Find_](#43-find)
-	- [4.4. _List_](#44-list)
-	- [4.5. _QueryBuilder_](#45-querybuilder)
-		- [4.5.1. Obtendo o _QueryBuilder_](#451-obtendo-o-querybuilder)
-		- [4.5.2. Criando uma consulta simples usando _list_](#452-criando-uma-consulta-simples-usando-list)
-		- [4.5.3. Criando uma consulta simples usando _one_](#453-criando-uma-consulta-simples-usando-one)
-		- [4.5.4. _Join_](#454-join)
-		- [4.5.5. _Where_](#455-where)
-		- [4.5.6. Paginação](#456-paginaÇÃo)
-		- [4.5.7. _OrderBy_](#457-orderby)
-		- [4.5.8. _GroupBy_](#458-groupby)
-		- [4.5.9. Agregação](#459-agregaÇÃo)
-		- [4.5.10. _Having_](#4510-having)
-	- [4.6. _Save_](#46-save)
-	- [4.7. _Remove_](#47-remove)
-- [5. _LOGGER_](#5-logger)
-- [6. _DRIVER_](#6-driver)
+* [1. INSTALAÇÃO](#1-instalaÇÃo)
+* [2. DEFININDO CONEXÕES](#2-definindo-conexÕes)
+	* [2.1. Criar Tabelas Automaticamente](#21-criar-tabelas-automaticamente)
+* [3. DEFININDO MODELOS](#3-definindo-modelos)
+	* [3.1. _Annotations_](#31-annotations)
+		* [3.1.1. _Annotations_ de Classes](#311-annotations-de-classes)
+		* [3.1.2. _Annotations_ de Propriedades](#312-annotations-de-propriedades)
+		* [3.1.3. _Annotations_ de Relacionamentos](#313-annotations-de-relacionamentos)
+	* [3.2. Exemplo de Mapeamento Simples](#32-exemplo-de-mapeamento-simples)
+	* [3.3. Exemplos de Mapeamento de Relacionamentos](#33-exemplos-de-mapeamento-de-relacionamentos)
+		* [3.3.1. Um para Um](#331-um-para-um)
+		* [3.3.2. Um para Muitos](#332-um-para-muitos)
+		* [3.3.3. Muitos para Muitos](#333-muitos-para-muitos)
+* [4. _ENTITY MANAGER_](#4-entity-manager)
+	* [4.1. Obtendo Uma Instância do _EntityManager_](#41-obtendo-uma-instância-do-entitymanager)
+	* [4.2. Transações](#42-transaÇÕes)
+		* [4.2.1. _BeginTransaction_](#421-begintransaction)
+		* [4.2.2. _Commit_](#422-commit)
+		* [4.2.3. _Rollback_](#423-rollback)
+	* [4.3. _Find_](#43-find)
+	* [4.4. _List_](#44-list)
+	* [4.5. _QueryBuilder_](#45-querybuilder)
+		* [4.5.1. Obtendo o _QueryBuilder_](#451-obtendo-o-querybuilder)
+		* [4.5.2. Criando uma consulta simples usando _list_](#452-criando-uma-consulta-simples-usando-list)
+		* [4.5.3. Criando uma consulta simples usando _one_](#453-criando-uma-consulta-simples-usando-one)
+		* [4.5.4. _Join_](#454-join)
+		* [4.5.5. _Where_](#455-where)
+		* [4.5.6. Paginação](#456-paginaÇÃo)
+		* [4.5.7. _OrderBy_](#457-orderby)
+		* [4.5.8. _GroupBy_](#458-groupby)
+		* [4.5.9. Agregação](#459-agregaÇÃo)
+		* [4.5.10. _Having_](#4510-having)
+	* [4.6. _Save_](#46-save)
+	* [4.7. _Remove_](#47-remove)
+* [5. _LOGGER_](#5-logger)
+* [6. _DRIVER_](#6-driver)
 
 ## 1. INSTALAÇÃO
 
@@ -133,7 +133,7 @@ __Código Exemplo 5:__ Definindo conexões que o _ORM_ poderá utilizar
 [Voltar](#tabela-de-conteúdos)
 
 ### 2.1. Criar Tabelas Automaticamente
-------
+---
 
 O _ORM_ tem a habilidade de criar as tabelas a partir das classes modelo. Para que o _ORM_ saiba como criar, é necessário informar o caminho para a pasta que contém os modelos e o _namespace_ no momento em que estiver configurando a conexão no _ORM_. Por exemplo:
 
@@ -229,7 +229,7 @@ Para que um modelo possa representar devidamente uma tabela no banco de dados de
 [Voltar](#tabela-de-conteúdos)
 
 ### 3.1. _Annotations_
-------
+---
 
 As _annotations_ são "etiquetas" que adicionam metadados relevantes sobre classes, métodos e propriedades. Ou seja, através do uso de _annotations_, pode-se adicionar às classes informações para mapear tabelas do banco de dados, e adicionar às propriedades da classe para mapear as colunas de uma tabela do banco de dados, para que posteriormente, em tempo de execução, os metadados indicados pelas _annotations_ sejam analisados e a partir disso, o _ORM_ irá trabalhar de acordo com essas informações.
 
@@ -238,15 +238,15 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.1.1. _Annotations_ de Classes
-------
+---
 
-- __*Annotation:*__ `@ORM/Entity`.
+* ___Annotation:___ `@ORM/Entity`.
 
 	__Descrição:__ Define que a classe deve ser considerada como uma tabela no banco de dados.
 
 	__Preenchimento:__ Obrigatório. O não preenchimento resulta em erro.
 
-- __*Annotation:*__ `@ORM/Table`.
+* ___Annotation:___ `@ORM/Table`.
 
 	__Descrição:__ Define informações sobre a tabela mapeada.
 
@@ -254,19 +254,19 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `name`.
+	* __Nome:__ `name`.
 
 		__Descrição:__ Define o nome da tabela mapeada.
 
 		__Preenchimento:__ Opcional. Caso não preenchido, o _ORM_ assume que o nome da tabela é o mesmo que o nome da classe.
 
-	- __Nome:__ `schema`.
+	* __Nome:__ `schema`.
 
 		__Descrição:__ Define qual é o conjunto de tabelas ou banco de dados ao qual a tabela mapeada em questão existe.
 
 		__Preenchimento:__ Opcional. Caso não preenchido, o _ORM_ assume que o `schema` a ser usado é o padrão definido na conexão ou nenhum, dependendo do banco de dados usado.
 
-	- __Nome:__ `mutable`.
+	* __Nome:__ `mutable`.
 
 		__Descrição:__ Caso o valor seja `true` define que a tabela não pode ser modificada pelas operações de inserção, alteração e deleção. O valor padrão é `false`. Normalmente utilizado para mapear uma view.
 
@@ -276,21 +276,21 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.1.2. _Annotations_ de Propriedades
-------
+---
 
-- __*Annotation:*__ `@ORM/Id`.
+* ___Annotation:___ `@ORM/Id`.
 
 	__Descrição:__ Define que a propriedade representa a chave primária da tabela mapeada.
 
 	__Preenchimento:__ Obrigatório. O não preenchimento resulta em erro.
 
-- __*Annotation:*__ `@ORM/Generated`.
+* ___Annotation:___ `@ORM/Generated`.
 
 	__Descrição:__ Define que o valor da chave primaria é auto gerado, seja através de sequence ou qualquer tipo de `autoincrement` (isso é definido no driver para cada banco de dados).
 
 	__Preenchimento:__ Opcional. O não preenchimento indica que o preenchimento e o incremento deverão ser feitos manualmente.
 
-- __*Annotation:*__ `@ORM/Column`.
+* ___Annotation:___ `@ORM/Column`.
 
 	__Descrição:__ Define informações sobre a coluna ser mapeada.
 
@@ -298,13 +298,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `name`.
+	* __Nome:__ `name`.
 
 		__Descrição:__ Define o nome da coluna a ser mapeada.
 
 		__Preenchimento:__ Opcional. Caso não seja preenchido, o _ORM_ assume que o nome da coluna é o mesmo nome do atributo.
 
-	- __Nome:__ `type`.
+	* __Nome:__ `type`.
 
 		__Descrição:__ Define o tipo da coluna a ser mapeada.
 
@@ -312,31 +312,31 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 		__Preenchimento:__ Opcional. Caso não seja preenchido, o _ORM_ assume que o tipo da coluna é `string`.
 
-	- __Nome:__ `length`.
+	* __Nome:__ `length`.
 
 		__Descrição:__ Define o tamanho da coluna a ser mapeada quando a coluna é do tipo `string`.
 
 		__Preenchimento:__ Opcional. Caso não seja preenchido, o _ORM_ assume que o tamanho da coluna é 255.
 
-	- __Nome:__ `scale`.
+	* __Nome:__ `scale`.
 
 		__Descrição:__ Define o tamanho da coluna a ser mapeada quando a coluna é do tipo `float`.
 
 		__Preenchimento:__ Opcional. Caso não seja preenchido, o _ORM_ assume que o tamanho da coluna é 14.
 
-	- __Nome:__ `precision`.
+	* __Nome:__ `precision`.
 
 		__Descrição:__ Define a precisão da coluna (quantidade de dígitos após a virgula) a ser mapeada quando a coluna é do tipo `float`.
 
 		__Preenchimento:__ Opcional. Caso não seja preenchido, o _ORM_ assume que a precisão da coluna é 2.
 
-	- __Nome:__ `unique`.
+	* __Nome:__ `unique`.
 
 		__Descrição:__ Se o valor do campo for `true`, define que o campo deve ser conter um valor único.
 
 		__Preenchimento:__ Opcional. Valor padrão é `false`.
 
-	- __Nome:__ `nullable`.
+	* __Nome:__ `nullable`.
 
 		__Descrição:__ Se o valor do campo for `false`, define que o campo não pode receber valores nulos.
 
@@ -346,9 +346,9 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.1.3. _Annotations_ de Relacionamentos
-------
+---
 
-- __*Annotation:*__ `@ORM/HasOne`.
+* ___Annotation:___ `@ORM/HasOne`.
 
 	__Descrição:__ Define um relacionamento do tipo "um para um". É necessário que a classe de referência tem um atributo equivalente à outra ponta do relacionamento com a _annotation_ `@ORM/BelongsTo`.
 
@@ -356,13 +356,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `class`.
+	* __Nome:__ `class`.
 
 		__Descrição:__ Define qual classe deve ser referenciada no mapeamento.
 
 		__Preenchimento:__ Obrigatório. O não preenchimento resulta em erro.
 
-	- __Nome:__ `cascade`.
+	* __Nome:__ `cascade`.
 
 		__Descrição:__ Define que as operações de inserção, alteração e deleção pode acontecer em cascata, ou seja, a operação realizada na classe que mapeia essa _annotation_, deve ser estendida para a classe referenciada.
 
@@ -370,7 +370,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 		__Preenchimento:__ Opcional. Caso não seja preenchida, a operação não é estendida.
 
-- __*Annotation:*__ `@ORM/HasMany`.
+* ___Annotation:___ `@ORM/HasMany`.
 
 	__Descrição:__ Define um relacionamento do tipo "um para muitos". É necessário que a classe de referência tem um atributo equivalente à outra ponta do relacionamento com a _annotation_ `@ORM/BelongsTo`.
 
@@ -378,13 +378,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `class`.
+	* __Nome:__ `class`.
 
 		__Descrição:__ Define qual classe deve ser referenciada no mapeamento.
 
 		__Preenchimento:__ Obrigatório. O não preenchimento resulta em erro.
 
-	- __Nome:__ `cascade`.
+	* __Nome:__ `cascade`.
 
 		__Descrição:__ Define que as operações de inserção, alteração e deleção pode acontecer em cascata, ou seja, a operação realizada na classe que mapeia essa _annotation_, deve ser estendida para a classe referenciada.
 
@@ -392,7 +392,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 		__Preenchimento:__ Opcional. Caso não seja preenchida, a operação não é estendida.
 
-- __*Annotation:*__ `@ORM/BelongsTo`.
+* ___Annotation:___ `@ORM/BelongsTo`.
 
 	__Descrição:__ Define a outra ponta dos relacionamentos do tipo "um para um" e do tipo "um para muitos", ou seja, define a chave estrangeira para o relacionamento. É necessário que a classe de referência tem um atributo equivalente à outra ponta do relacionamento com a _annotation_ `@ORM/HasOne` ou `@ORM/HasMany`.
 
@@ -400,13 +400,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `class`.
+	* __Nome:__ `class`.
 
 		__Descrição:__ Define qual classe deve ser referenciada no mapeamento.
 
 		__Preenchimento:__ Obrigatório. O Não preenchimento resulta em erro.
 
-	- __Nome:__ `cascade`.
+	* __Nome:__ `cascade`.
 
 		__Descrição:__ Define que as operações de inserção, alteração e deleção pode acontecer em cascata, ou seja, a operação realizada na classe que mapeia essa _annotation_, deve ser estendida para a classe referenciada.
 
@@ -414,13 +414,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 		__Preenchimento:__ Opcional. Caso não seja preenchida, a operação não é estendida.
 
-	- __Nome:__ `optional`.
+	* __Nome:__ `optional`.
 
 		__Descrição:__ Define se o relacionamento é opcional, ou seja, indica que o valor pode ou não ser nulo.
 
 		__Preenchimento:__ Opcional. Valor padrão é "false".
 
-- __*Annotation:*__ `@ORM/JoinColumn`.
+* ___Annotation:___ `@ORM/JoinColumn`.
 
 	__Descrição:__ Define as informações da coluna que deve ser a chave estrangeira. Somente a propriedade que possui a _annotation_ `@ORM/BelongsTo` deve possuir essa _annotation_ para complementar as informações.
 
@@ -428,13 +428,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `name`.
+	* __Nome:__ `name`.
 
 		__Descrição:__ Define o nome da coluna a ser mapeada como chave estrangeira.
 
 		__Preenchimento:__ Opcional. O valor padrão é o nome da propriedade mais o sufixo "_id", por exemplo, "pessoa_id".
 
-- __*Annotation:*__ `@ORM/ManyToMany`.
+* ___Annotation:___ `@ORM/ManyToMany`.
 
 	__Descrição:__ Define um relacionamento de do tipo "muitos para muitos". É necessário que a classe de referência tem um atributo equivalente à outra ponta do relacionamento com a _annotation_ `@ORM/ManyToMany`.
 
@@ -442,13 +442,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `class`.
+	* __Nome:__ `class`.
 
 		__Descrição:__ Define qual classe deve ser referenciada no mapeamento.
 
 		__Preenchimento:__ Obrigatório. O não preenchimento resulta em erro.
 
-	- __Nome:__ `cascade`.
+	* __Nome:__ `cascade`.
 
 		__Descrição:__ Define que as operações de inserção, alteração e deleção pode acontecer em cascata, ou seja, a operação realizada na classe que mapeia essa _annotation_, deve ser estendida para a classe referenciada.
 
@@ -456,13 +456,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 		__Preenchimento:__ Opcional. Caso não seja preenchida, a operação não é estendida.
 
-	- __Nome:__ `mappedBy`.
+	* __Nome:__ `mappedBy`.
 
 		__Descrição:__ Define que o lado principal do mapeamento é a classe referenciada e define também qual é o atributo ao qual é o equivalente. O lado principal pode definir também as informações da tabela de ligação.
 
 		__Preenchimento:__ Opcional.
 
-- __*Annotation:*__ `@ORM/JoinTable`.
+* ___Annotation:___ `@ORM/JoinTable`.
 
 	__Descrição:__ Define informações para a tabela de ligação. Somente o lado principal do relacionamento deve possuir essa _annotation_ para complementar as informações.
 
@@ -470,19 +470,19 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 	__Propriedades:__
 
-	- __Nome:__ `tableName`.
+	* __Nome:__ `tableName`.
 
 		__Descrição:__ Define o nome da tabela de ligação.
 
 		__Preenchimento:__ Opcional. O valor padrão e composto pelo nome das duas tabelas que compõe o relacionamento, por exemplo, "empregado_role".
 
-	- __Nome:__ `schema`.
+	* __Nome:__ `schema`.
 
 		__Descrição:__ Define qual é o conjunto de tabelas ou banco de dados ao qual a tabela de ligação em questão existe.
 
 		__Preenchimento:__ Opcional. Caso não preenchido, o _ORM_ assume que o schema a ser usado é o padrão definido na conexão ou nenhum, dependendo do banco de dados usado.
 
-	- __Nome:__ `join`.
+	* __Nome:__ `join`.
 
 		__Descrição:__ Define o nome da coluna que é a chave estrangeira que aponta para o lado principal do relacionamento.
 
@@ -490,13 +490,13 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 		__Propriedades:__
 
-		- __Nome:__ `name`.
+		* __Nome:__ `name`.
 
 			__Descrição:__ Define o nome da coluna a ser mapeada como chave estrangeira.
 
 			__Preenchimento:__ Opcional. O valor padrão é o nome da propriedade mais o sufixo "_id", por exemplo, "empregado_id".
 
-	- __Nome:__ `inverse`.
+	* __Nome:__ `inverse`.
 
 		__Descrição:__ Define o nome da coluna que é a chave estrangeira que aponta para o lado secundário do relacionamento.
 
@@ -504,7 +504,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 
 		__Propriedades:__
 
-		- __Nome:__ `name`.
+		* __Nome:__ `name`.
 
 			__Descrição:__ Define o nome da coluna a ser mapeada como chave estrangeira.
 
@@ -513,7 +513,7 @@ Abaixo, uma lista completa das _annotations_ e suas propriedades:
 [Voltar](#tabela-de-conteúdos)
 
 ### 3.2. Exemplo de Mapeamento Simples
-------
+---
 
 Um exemplo básico de como criar uma classe do modelo, pode ser encontrado no exemplo a seguir. A classe "Empregado" mapeia a tabela "empregados" no banco de dados:
 
@@ -555,14 +555,14 @@ O exemplo acima, de acordo com a __Código Exemplo 11__, exibe o mapeamento da c
 [Voltar](#tabela-de-conteúdos)
 
 ### 3.3. Exemplos de Mapeamento de Relacionamentos
-------
+---
 
 Relacionamento entre tabelas é um recurso essencial nos bancos de dados, para representar isso devidamente, no mundo orientado a objetos, existe as seguintes opções.
 
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.3.1. Um para Um
-------
+---
 
 Um exemplo básico de como mapear um relacionamento do tipo "um para um", pode ser encontrado no exemplo a seguir. A classe "Empregado" mapeia o relacionamento através do atributo `$informacoes`:
 
@@ -626,7 +626,7 @@ O exemplo acima, de acordo com a __Código Exemplo 13__, exibe o mapeamento da c
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.3.2. Um para Muitos
-------
+---
 
 Um exemplo básico de como mapear um relacionamento do tipo "um para muitos", pode ser encontrado no exemplo a seguir. A classe "Cliente" mapeia o relacionamento através do atributo `$pedidos`:
 
@@ -687,7 +687,7 @@ O exemplo acima, de acordo com a __Código Exemplo 15__, exibe o mapeamento da c
 [Voltar](#tabela-de-conteúdos)
 
 #### 3.3.3. Muitos para Muitos
-------
+---
 
 Um exemplo básico de como mapear um relacionamento do tipo "muitos para muitos", pode ser encontrado no exemplo a seguir. A classe "Empregado" mapeia o relacionamento através do atributo `$projetos`:
 
@@ -757,7 +757,7 @@ Essa seção irá abordar as funcionalidades que envolvem o _EntityManager_.
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.1. Obtendo Uma Instância do _EntityManager_
-------
+---
 
 Para obter uma instância, basta que o _ORM_ crie uma, da seguinte maneira:
  
@@ -792,21 +792,21 @@ Agora o método _createEntityManager_ irá retorna uma instância do _EntityMana
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.2. Transações
-------
+---
 
 A transação no banco de dados, é uma unidade que realiza um trabalho, ou seja, qualquer trabalho realizado no banco de dados, mesmo que em etapas, é realizado dentro de uma transação e todas as operações realizadas dentro dessa transação tem a garantia de ser executada integralmente no banco de dados, isso significa que caso um problema ocorra durante a execução de uma transação, as operações já realizadas dentro da mesma transação serão desfeitas.
 
 Bernstein (2009) define que uma transação de banco de dados deve ser atômica, consistente, isolada e durável conhecido pela sigla ACID:
 
-- Atômica: uma série indivisível e irredutível de operações de banco de dados;
-- Consistente: toda e qualquer transação deve alterar os dados no banco apenas de formas permitidas, ou seja, quaisquer dados gravados devem ser válidos de acordo com todas as regras definidas na tabela;
-- Isolada: determina como a integridade da transação é visível para outros usuários e sistemas;
-- Durável: garante que as transações que foram confirmadas sobreviverão permanentemente no banco de dados.
+* Atômica: uma série indivisível e irredutível de operações de banco de dados;
+* Consistente: toda e qualquer transação deve alterar os dados no banco apenas de formas permitidas, ou seja, quaisquer dados gravados devem ser válidos de acordo com todas as regras definidas na tabela;
+* Isolada: determina como a integridade da transação é visível para outros usuários e sistemas;
+* Durável: garante que as transações que foram confirmadas sobreviverão permanentemente no banco de dados.
 
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.2.1. _BeginTransaction_
-------
+---
 
 Para iniciar uma transação no _ORM_, o desenvolvedor deve usar o método _beginTransaction_.
 
@@ -826,7 +826,7 @@ O método _beginTransaction_ irá criar iniciar uma transação para a conexão 
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.2.2. _Commit_
-------
+---
 
 O método _commit_ irá confirmar a transação atual para que as operações realizadas no banco de dados sejam efetivadas. Liberando assim o _EntityManager_ para criar uma nova transação.
 
@@ -846,7 +846,7 @@ __Código Exemplo 21:__ Exemplo de como aplicar alterações de uma trasação
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.2.3. _Rollback_
-------
+---
 
 O método _rollback_ irá desfazer as operações realizadas na transação atual, liberando assim o _EntityManager_ para criar uma nova transação. Esse método é normalmente utilizado em um `try/catch` para tratamento de erros.
 
@@ -871,7 +871,7 @@ __Código Exemplo 22:__ Exemplo de como desfazer alterações de uma trasação
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.3. _Find_
-------
+---
 
 O método _find_ é utilizado para carregar um registro do banco de dados através da chave primária dessa tabela.
 
@@ -892,7 +892,7 @@ O método _find_ espera como parâmetro a classe que mapeia a tabela a ser utili
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.4. _List_
-------
+---
 
 O método _list_ é utilizado para carregar uma lista de registros do banco de dados, porém, sem utilizar filtros (clausula _where_).
 
@@ -917,14 +917,14 @@ O método _list_ pode ser usado de três formas. A primeira, passando como parâ
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.5. _QueryBuilder_
-------
+---
 
 Para criar consultas, desde as simples até as complexas, o desenvolvedor pode optar por usar o _QueryBuilder_.
 
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.1. Obtendo o _QueryBuilder_
-------
+---
 
 Para obter uma instância, basta que o _EntityManager_ crie uma, da seguinte maneira:
 
@@ -945,7 +945,7 @@ O método _createQuery_ retorna uma instância do _QueryBuilder_ e pode ser util
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.2. Criando uma consulta simples usando _list_
-------
+---
 
 Para realizar uma consulta simples, o desenvolvedor pode fazer da seguinte maneira:
 
@@ -1002,7 +1002,7 @@ Para tabelas que possuem um número muito grande de registros, recomenda-se pagi
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.3. Criando uma consulta simples usando _one_
-------
+---
 
 Além do método _list_ o _QueryBuilder_ possui o método _one_, que nesse caso, retorna apenas um registro mapeado em uma instância da classe indicada no método from. Por exemplo:
 
@@ -1024,7 +1024,7 @@ A consulta acima, de acordo com a __Código Exemplo 29__, irá retornar um regis
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.4. _Join_
-------
+---
 
 Para realizar uma consulta com múltiplas tabelas, o desenvolvedor pode fazer da seguinte maneira:
 
@@ -1077,7 +1077,7 @@ Observação: o método _join_ não implica que a tabela informada como parâmet
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.5. _Where_
-------
+---
 
 Para realizar uma consulta com utilizando filtro, o desenvolvedor pode fazer da seguinte maneira:
  
@@ -1172,7 +1172,7 @@ As operações permitidas são:
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.6. Paginação
-------
+---
 
 A paginação é um recurso muito útil para o desenvolvedor, ele permite que os registros sejam divididos em páginas menores para serem listados em tela para o usuário, caso contrário, todos os registros que existem na tabela seriam exibidos de uma só vez.
 
@@ -1235,7 +1235,7 @@ As queries acima, de acordo com a __Código Exemplo 37__, realizam uma consulta 
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.7. _OrderBy_
-------
+---
 
 O método _orderBy_ define a ordem em que os registros devem ser retornados na consulta.
 
@@ -1263,7 +1263,7 @@ O método _orderBy_ é acumulativo, pode ser chamado quantas vezes forem necess�
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.8. _GroupBy_
-------
+---
 
 O método _groupBy_ define um agrupamento para criar relatórios e totalizações separados em grupos. A instrução de agrupamento é frequentemente usada com funções de agregação para agrupar o conjunto de resultados em uma ou mais colunas.
  
@@ -1292,7 +1292,7 @@ O método _groupBy_ pode receber por parâmetro quantos parâmetros forem necess
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.9. Agregação
-------
+---
 
 Uma função de agregação executa um cálculo em um conjunto de valores e retorna um único valor. As funções de agregação frequentemente são usadas com a cláusula `GROUP BY` em uma consulta.
  
@@ -1333,7 +1333,7 @@ As funções de agregação permitidas são:
 [Voltar](#tabela-de-conteúdos)
 
 #### 4.5.10. _Having_
-------
+---
 
 O método _having_ especifica um critério de filtro utilizando uma função de agregação, pois a clausula `where` não consegue realizar esse tipo de filtro. Na maioria dos bancos de dados, é obrigatório usado com a cláusula `GROUP BY` antes de usar o `having`.
 
@@ -1363,7 +1363,7 @@ As funções de agregação são as mesmas das descritas na seção [_4.5.10 Hav
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.6. _Save_
-------
+---
 
 O método _save_ é utilizado para cadastrar ou alterar um registro no banco de dados. Caso o registro já exista e a chave primária esteja preenchida, o método _save_ irá atualizar o registro existente no banco de dados, caso contrário, um novo registro será adicionado ao banco.
 
@@ -1417,7 +1417,7 @@ O exemplo acima, de acordo com a __Código Exemplo 43__, irá atualizar um regis
 [Voltar](#tabela-de-conteúdos)
 
 ### 4.7. _Remove_
-------
+---
 
 O método _remove_ é utilizado para deletar um registro no banco de dados, caso o mesmo exista.
 
@@ -1469,26 +1469,26 @@ O desenvolvedor pode criar o próprio _Driver_ para um banco de dados ou uma ver
 
 Para criar um novo _Driver_, o desenvolvedor precisa atender a algumas regras:
 
-- __Nome do arquivo:__ o nome do arquivo precisa conter o nome do banco de dados de acordo com o nome esperado pelo `PDO` (_PHP Data Object_, é uma interface do _PHP_ para acessar banco de dados), por exemplo, `sqlite.php`. Caso o _Driver_ seja para uma vesão específica, a versão precisa estar também no nome do arquivo, por exemplo, para a versão 5.11 do banco de dados _MySQL_, o nome do arquivo seria `mysql-5.11.php`;
-- __Nome da classe:__ o nome da classe precisa ser equivalente ao nome do arquivo conforme definido acima, por exemplo, para a versão 5.11 do banco de dados _MySQL_, o nome da classe seria `MySQLDriver_5_11`. E caso não possua uma versão definida, `MySQLDriver`. Essa é mais uma sugestão do que uma regra, mas ajuda evitar problemas de classe com nomes iguais;
-- __Retonar o nome da classe:__ o nome da classe precisa ser retornado ao final do arquivo, por exemplo, `return MySQLDriver::class;` ;
-- __Localização do arquivo:__ o arquivo precisa estar localizado na pasta `driver` dentro da pasta raiz do _ORM_, por exemplo, `/home/user/app/orm/driver`;
-- __Precisa estender de `ORM\Core\Driver`:__ a classe para o novo _Driver_ precisa extender a classe `ORM\Core\Driver`, do contrário, o _ORM_ não irá considerar como válido.
-- __O novo _Driver_ precisa ser _Singleton_:__ a classe precisa seguir o _Desing Pattern Singleton_ para que o _ORM_ use uma instância única do _ORM_. Caso a classe não seja _Singleton_, o _ORM_ irá emitir um erro.
-- __As configurações do novo _Driver_:__ o _Driver_ possui uma série de configurações para que o _ORM_ consiga se comunicar com o banco de dados. Elas devem ser feitas no método construtor da classe. As configurações serão listadas mais à frente.
+* __Nome do arquivo:__ o nome do arquivo precisa conter o nome do banco de dados de acordo com o nome esperado pelo `PDO` (_PHP Data Object_, é uma interface do _PHP_ para acessar banco de dados), por exemplo, `sqlite.php`. Caso o _Driver_ seja para uma vesão específica, a versão precisa estar também no nome do arquivo, por exemplo, para a versão 5.11 do banco de dados _MySQL_, o nome do arquivo seria `mysql-5.11.php`;
+* __Nome da classe:__ o nome da classe precisa ser equivalente ao nome do arquivo conforme definido acima, por exemplo, para a versão 5.11 do banco de dados _MySQL_, o nome da classe seria `MySQLDriver_5_11`. E caso não possua uma versão definida, `MySQLDriver`. Essa é mais uma sugestão do que uma regra, mas ajuda evitar problemas de classe com nomes iguais;
+* __Retonar o nome da classe:__ o nome da classe precisa ser retornado ao final do arquivo, por exemplo, `return MySQLDriver::class;` ;
+* __Localização do arquivo:__ o arquivo precisa estar localizado na pasta `driver` dentro da pasta raiz do _ORM_, por exemplo, `/home/user/app/orm/driver`;
+* __Precisa estender de `ORM\Core\Driver`:__ a classe para o novo _Driver_ precisa extender a classe `ORM\Core\Driver`, do contrário, o _ORM_ não irá considerar como válido.
+* __O novo _Driver_ precisa ser _Singleton_:__ a classe precisa seguir o _Desing Pattern Singleton_ para que o _ORM_ use uma instância única do _ORM_. Caso a classe não seja _Singleton_, o _ORM_ irá emitir um erro.
+* __As configurações do novo _Driver_:__ o _Driver_ possui uma série de configurações para que o _ORM_ consiga se comunicar com o banco de dados. Elas devem ser feitas no método construtor da classe. As configurações serão listadas mais à frente.
 
 O _Driver_ possui as seguintes configurações:
 
-- __$GENERATE_ID_TYPE:__ indica como o banco de dados faz a incrementação do valor da chave primária. Os valores esperados são: `ATTR`, `QUERY` ou `SEQUENCE`;
-- __$GENERATE_ID_ATTR:__ caso o tipo de incrementação seja igual a `ATTR`, aqui é definida qual é o atributo que o _ORM_ irá usar, por exemplo, `AUTO_INCREMENT` para o banco de dados _MySQL_;
-- __$GENERATE_ID_QUERY:__ caso o tipo de incrementação seja igual a `QUERY` ou `SEQUENCE`, aqui é definida query que o _ORM_ irá usar para realizar a incrementação do valor da chave primária, por exemplo, `select orm_sequence.nextval from dual` para o banco de dados Oracle;
-- __$SEQUENCE_NAME:__ define o nome da sequence que o _ORM_ irá criar caso o _ORM_ precise criar as tabelas no banco de dados. O valor padrão é `orm_sequence`;
-- __$IGNORE_ID_DATA_TYPE:__ caso o valor desse atributo seja `true`, o _ORM_ irá ignorar o valor definido para a coluna, como pode acontecer, por exemplo, com o banco de dados _PostgreSQL_;
-- __$FK_ENABLE:__ indica de o _ORM_ deve criar o campo como chave estrangeira. O valor padrão é `true`;
-- __$PAGE_TEMPLATE:__ define como o banco de dados faz uma consulta paginada, por exemplo, o banco de dados _MySQL_ possui a clausula `LIMIT` para realiza essa tarefa;
-- __$TOP_TEMPLATE:__ define como o banco de dados faz uma consulta trazendo somente um determinado número de registros, por exemplo, o banco de dados _MySQL_ possui a clausula `LIMIT` para realiza essa tarefa;
-- __$DATA_TYPES:__ define os tipos de dados aceitos pelo _ORM_ e mapeia para os dados suportados pelo banco de dados. Os tipos recomendados são: `string`, `int`, `float`, `lob` (_Large Object_, por exemplo, `BLOB` ou `CLOB`), `date`, `time`, `datetime`, `bool`;
-- __$FORMATS:__ define os formatos que o banco de dados aceita para os tipos `date`, `time` e `datetime`.
+* __$GENERATE_ID_TYPE:__ indica como o banco de dados faz a incrementação do valor da chave primária. Os valores esperados são: `ATTR`, `QUERY` ou `SEQUENCE`;
+* __$GENERATE_ID_ATTR:__ caso o tipo de incrementação seja igual a `ATTR`, aqui é definida qual é o atributo que o _ORM_ irá usar, por exemplo, `AUTO_INCREMENT` para o banco de dados _MySQL_;
+* __$GENERATE_ID_QUERY:__ caso o tipo de incrementação seja igual a `QUERY` ou `SEQUENCE`, aqui é definida query que o _ORM_ irá usar para realizar a incrementação do valor da chave primária, por exemplo, `select orm_sequence.nextval from dual` para o banco de dados Oracle;
+* __$SEQUENCE_NAME:__ define o nome da sequence que o _ORM_ irá criar caso o _ORM_ precise criar as tabelas no banco de dados. O valor padrão é `orm_sequence`;
+* __$IGNORE_ID_DATA_TYPE:__ caso o valor desse atributo seja `true`, o _ORM_ irá ignorar o valor definido para a coluna, como pode acontecer, por exemplo, com o banco de dados _PostgreSQL_;
+* __$FK_ENABLE:__ indica de o _ORM_ deve criar o campo como chave estrangeira. O valor padrão é `true`;
+* __$PAGE_TEMPLATE:__ define como o banco de dados faz uma consulta paginada, por exemplo, o banco de dados _MySQL_ possui a clausula `LIMIT` para realiza essa tarefa;
+* __$TOP_TEMPLATE:__ define como o banco de dados faz uma consulta trazendo somente um determinado número de registros, por exemplo, o banco de dados _MySQL_ possui a clausula `LIMIT` para realiza essa tarefa;
+* __$DATA_TYPES:__ define os tipos de dados aceitos pelo _ORM_ e mapeia para os dados suportados pelo banco de dados. Os tipos recomendados são: `string`, `int`, `float`, `lob` (_Large Object_, por exemplo, `BLOB` ou `CLOB`), `date`, `time`, `datetime`, `bool`;
+* __$FORMATS:__ define os formatos que o banco de dados aceita para os tipos `date`, `time` e `datetime`.
 
 A seguir, um exemplo de implementação para uma classe do `Driver`:
 
